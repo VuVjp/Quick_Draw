@@ -30,14 +30,23 @@ export default function AppNavigator() {
         contentStyle: { backgroundColor: 'transparent' },
       }}
     >
-      <Stack.Screen name="Splash" component={SplashScreen} />
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen 
+        name="Splash" 
+        component={SplashScreen} 
+        options={{ animation: 'fade' }}
+      />
+      <Stack.Screen 
+        name="Home" 
+        component={HomeScreen} 
+        options={{ animation: 'fade' }}
+      />
       <Stack.Screen name="MainTabs" component={MainTabs} />
       <Stack.Screen
         name="Drawing"
         component={DrawingScreen}
         options={{ animation: 'slide_from_right', gestureEnabled: false }}
       />
+
       <Stack.Screen
         name="Win"
         component={WinScreen}

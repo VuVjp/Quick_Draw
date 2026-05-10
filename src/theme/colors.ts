@@ -1,9 +1,9 @@
 export const Colors = {
   // Reference Palette
-  notebookWhite: '#FFF9E3', // Light Cream Yellow Background
+  notebookWhite: '#ECE7D5', // Matches NotebookBackground
   paperWhite: '#FEFBF0',    // Very Light Cream Paper
   primaryYellow: '#F6C445', // Primary Yellow
-  softBlue: '#B9D7EA',      // Soft Blue
+  softBlue: '#D8D2BE',      // Matches NotebookBackground lines
   pastelRed: '#F4978E',     // Pastel Red
   lightPink: '#F7D6D0',     // Pastel Pink
   warmBlack: '#4A443F',     // Softer brown-black
@@ -12,3 +12,4 @@ export const Colors = {
   goldAccent: '#F5D184',    // Softer gold
   successGreen: '#C1E1C1',  // Softer green
 } as const;
+

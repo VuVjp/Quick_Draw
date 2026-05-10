@@ -6,113 +6,153 @@ import Animated, {
   withTiming,
   withSpring,
   withSequence,
-  withRepeat,
+  useDerivedValue,
   runOnJS,
 } from 'react-native-reanimated';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
+import SpiralBinder from '../components/SpiralBinder';
+import FloatingDoodles from '../components/FloatingDoodles';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 
+const TITLE = "Quick Draw!";
+const CHARS = TITLE.split("");
+
 const SplashScreen = ({ navigation }: Props) => {
-  const logoOpacity = useSharedValue(0);
-  const logoScale = useSharedValue(0.6);
-  const pencilRotate = useSharedValue(-30);
-  const pencilTranslateX = useSharedValue(-80);
-  const pencilOpacity = useSharedValue(0);
-  const taglineOpacity = useSharedValue(0);
-  const dotScale = useSharedValue(1);
+  const progress = useSharedValue(0);
+  const pencilX = useSharedValue(-width * 0.4);
+  const pencilY = useSharedValue(0);
+  const pencilRotate = useSharedValue(-15);
+  const containerOpacity = useSharedValue(1);
+  const containerScale = useSharedValue(1);
+
+  // Wobble effect for when drawing is done
+  const logoWobble = useSharedValue(0);
 
   useEffect(() => {
-    // Logo entrance
-    logoOpacity.value = withTiming(1, { duration: 600 });
-    logoScale.value = withSpring(1, { damping: 12, stiffness: 100 });
-
-    // Pencil draw animation
-    setTimeout(() => {
-      pencilOpacity.value = withTiming(1, { duration: 300 });
-      pencilTranslateX.value = withTiming(80, { duration: 900 });
-      pencilRotate.value = withTiming(15, { duration: 900 });
-    }, 400);
-
-    // Tagline fade in
-    setTimeout(() => {
-      taglineOpacity.value = withTiming(1, { duration: 500 });
-    }, 900);
-
-    // Loading dots pulse
-    dotScale.value = withRepeat(
-      withSequence(
-        withTiming(1.3, { duration: 400 }),
-        withTiming(0.9, { duration: 400 }),
-      ),
-      -1,
-      true,
-    );
-
-    // Navigate to Home
+    // Start drawing animation with a slight delay
+    // No more background fading to prevent flashing
     const timer = setTimeout(() => {
-      navigation.replace('Home');
-    }, 2800);
+      pencilX.value = withTiming(width * 0.35, { duration: 1800 }, (finished) => {
+        if (finished) {
+          logoWobble.value = withSequence(
+            withTiming(1, { duration: 150 }),
+            withTiming(-1, { duration: 150 }),
+            withTiming(0, { duration: 150 })
+          );
+
+          setTimeout(() => {
+            containerOpacity.value = withTiming(0, { duration: 400 });
+            containerScale.value = withTiming(1.05, { duration: 400 }, (ok) => {
+              if (ok) runOnJS(navigation.replace)('Home');
+            });
+          }, 800);
+        }
+      });
+
+      progress.value = withTiming(1, { duration: 1800 });
+
+      pencilY.value = withSequence(
+        withTiming(-12, { duration: 300 }),
+        withTiming(0, { duration: 300 }),
+        withTiming(-8, { duration: 300 }),
+        withTiming(0, { duration: 300 }),
+        withTiming(-4, { duration: 300 }),
+        withTiming(0, { duration: 300 })
+      );
+
+      pencilRotate.value = withTiming(20, { duration: 1800 });
+    }, 200);
 
     return () => clearTimeout(timer);
   }, []);
 
-  const logoStyle = useAnimatedStyle(() => ({
-    opacity: logoOpacity.value,
-    transform: [{ scale: logoScale.value }],
+  const containerStyle = useAnimatedStyle(() => ({
+    opacity: containerOpacity.value,
+    transform: [{ scale: containerScale.value }],
   }));
 
   const pencilStyle = useAnimatedStyle(() => ({
-    opacity: pencilOpacity.value,
     transform: [
-      { translateX: pencilTranslateX.value },
+      { translateX: pencilX.value },
+      { translateY: pencilY.value },
       { rotate: `${pencilRotate.value}deg` },
     ],
   }));
 
-  const taglineStyle = useAnimatedStyle(() => ({
-    opacity: taglineOpacity.value,
-  }));
-
-  const dotStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: dotScale.value }],
+  const logoStyle = useAnimatedStyle(() => ({
+    transform: [
+      { rotate: `${logoWobble.value * 2}deg` },
+      { scale: 1 + Math.abs(logoWobble.value) * 0.05 }
+    ],
   }));
 
   return (
-    <View style={styles.container}>
-      {/* Paper texture lines */}
-      {Array.from({ length: 18 }).map((_, i) => (
-        <View
-          key={i}
-          style={[styles.paperLine, { top: 60 + i * 44 }]}
-        />
-      ))}
-      <View style={styles.redLine} />
+    <Animated.View style={[styles.container, containerStyle]}>
+      {/* Static Background elements to prevent flashing */}
+      <View style={styles.paperBase}>
+        {Array.from({ length: 22 }).map((_, i) => (
+          <View key={i} style={[styles.paperLine, { top: 40 + i * 42 }]} />
+        ))}
+        <View style={styles.redLine} />
+      </View>
 
-      {/* Logo block */}
-      <Animated.View style={[styles.logoContainer, logoStyle]}>
-        <Text style={styles.logoEmoji}>🎨</Text>
-        <Text style={styles.logoTitle}>Quick Draw!</Text>
-        <Animated.Text style={[styles.pencilAnim, pencilStyle]}>✏️</Animated.Text>
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <SpiralBinder />
+      </View>
+
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <FloatingDoodles />
+      </View>
+
+      {/* Title with sequential appearance */}
+      <Animated.View style={[styles.logoWrapper, logoStyle]}>
+        <View style={styles.charContainer}>
+          {CHARS.map((char, index) => {
+            const charOpacity = useDerivedValue(() => {
+              const threshold = index / CHARS.length;
+              return progress.value > threshold ? 1 : 0;
+            });
+            const charScale = useDerivedValue(() => {
+              const threshold = index / CHARS.length;
+              return progress.value > threshold ? withSpring(1) : 0.4;
+            });
+
+            const charStyle = useAnimatedStyle(() => ({
+              opacity: charOpacity.value,
+              transform: [{ scale: charScale.value }],
+            }));
+
+            return (
+              <Animated.Text key={index} style={[styles.logoTitle, charStyle]}>
+                {char === " " ? "\u00A0" : char}
+              </Animated.Text>
+            );
+          })}
+        </View>
+
+        {/* Animated Pencil */}
+        <Animated.View style={[styles.pencilContainer, pencilStyle]}>
+          <Text style={styles.pencilEmoji}>✏️</Text>
+        </Animated.View>
       </Animated.View>
 
-      {/* Tagline */}
-      <Animated.Text style={[styles.tagline, taglineStyle]}>
-        Draw • Guess • Win
+      <Animated.Text style={[styles.tagline, { opacity: progress }]}>
+        From Doodles to Victory
       </Animated.Text>
 
-      {/* Loading dots */}
-      <Animated.View style={[styles.dots, dotStyle]}>
+      {/* Decorative dots at bottom */}
+      <View style={styles.footer}>
         {['🟡', '🔵', '🔴'].map((dot, i) => (
           <Text key={i} style={styles.dot}>{dot}</Text>
         ))}
-      </Animated.View>
-    </View>
+      </View>
+    </Animated.View>
   );
 };
 
@@ -126,59 +166,67 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
+  paperBase: {
+    ...StyleSheet.absoluteFillObject,
+  },
   paperLine: {
     position: 'absolute',
     left: 0,
     right: 0,
     height: 1,
     backgroundColor: Colors.softBlue,
-    opacity: 0.35,
+    opacity: 0.25,
   },
   redLine: {
     position: 'absolute',
     top: 0,
     bottom: 0,
-    left: 64,
+    left: 55,
     width: 2,
     backgroundColor: Colors.pastelRed,
-    opacity: 0.4,
+    opacity: 0.25,
   },
-  logoContainer: {
+  logoWrapper: {
     alignItems: 'center',
-    marginBottom: 32,
-    position: 'relative',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    height: 120,
+    width: '100%',
   },
-  logoEmoji: {
-    fontSize: 72,
-    marginBottom: 8,
+  charContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   logoTitle: {
     fontFamily: FontFamily.indieFlower,
     fontSize: FontSize.hero,
     color: Colors.warmBlack,
-    textAlign: 'center',
-    letterSpacing: 2,
   },
-  pencilAnim: {
-    fontSize: 40,
+  pencilContainer: {
     position: 'absolute',
-    bottom: -20,
+    zIndex: 10,
+  },
+  pencilEmoji: {
+    fontSize: 48,
   },
   tagline: {
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.xl,
     color: Colors.warmBlack,
     opacity: 0.7,
-    letterSpacing: 4,
-    marginBottom: 60,
+    marginTop: 24,
+    letterSpacing: 2,
   },
-  dots: {
+  footer: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 12,
     position: 'absolute',
-    bottom: 80,
+    bottom: 60,
   },
   dot: {
-    fontSize: 18,
+    fontSize: 16,
   },
 });
+
+
+
