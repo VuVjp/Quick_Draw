@@ -1,0 +1,25 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Pencil (Diagonal \) -->
+  <g transform="rotate(-45 100 100)">
+    <rect x="30" y="90" width="140" height="20" rx="10" fill="#6D665E" />
+    <rect x="32" y="92" width="110" height="16" rx="8" fill="#F6C445" />
+    <rect x="32" y="92" width="20" height="16" rx="4" fill="#F7D6D0" />
+    <rect x="52" y="92" width="6" height="16" fill="#D9D9D9" />
+    <path d="M142 92 L160 100 L142 108 Z" fill="#E8E4DE" />
+    <path d="M154 96 L160 100 L154 104 Z" fill="#4A443F" />
+  </g>
+
+  <!-- Brush (Diagonal /) -->
+  <g transform="rotate(45 100 100)">
+    <rect x="30" y="90" width="140" height="20" rx="10" fill="#6D665E" />
+    <rect x="32" y="92" width="100" height="16" rx="8" fill="#F6C445" />
+    <rect x="132" y="92" width="12" height="16" fill="#D9D9D9" />
+    <path d="M144 92 C155 92 165 95 165 100 C165 105 155 108 144 108 Z" fill="#C19A6B" />
+    <path d="M158 96 C165 96 165 100 165 100 C165 100 165 104 158 104 Z" fill="#F4B942" />
+  </g>
+
+  <!-- Paint Stroke Underneath -->
+  <path d="M40 160 Q100 150 160 160 Q100 170 40 160" fill="#4A443F" />
+  
+  <text x="100" y="185" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="20" fill="#6D665E" letter-spacing="2">ART</text>
+</svg>

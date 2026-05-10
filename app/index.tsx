@@ -1,15 +1,3 @@
-import { Text, View } from "react-native";
-
-export default function Index() {
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-    </View>
-  );
-}
+// This file is intentionally left minimal.
+// All navigation is handled by AppNavigator mounted in app/_layout.tsx
+export { default } from '../src/screens/HomeScreen';
