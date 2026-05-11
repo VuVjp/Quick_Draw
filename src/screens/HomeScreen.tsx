@@ -1,13 +1,11 @@
-import React from 'react';
-import { View, Text, StyleSheet, Dimensions, Platform, Image } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-} from 'react-native-reanimated';
+import { View, Text, StyleSheet, Dimensions, Platform, Image, TouchableOpacity } from 'react-native';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { Feather } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
-import { Spacing } from '../theme/spacing';
+import { Spacing, Radius } from '../theme/spacing';
 import AnimatedButton from '../components/AnimatedButton';
 import NotebookBackground from '../components/NotebookBackground';
 import FloatingDoodles from '../components/FloatingDoodles';
@@ -33,6 +31,15 @@ const HomeScreen = ({ navigation }: Props) => {
   return (
     <NotebookBackground>
       <FloatingDoodles />
+      
+      {/* Profile Link */}
+      <TouchableOpacity 
+        style={styles.profileLink}
+        onPress={() => navigation.navigate('MainTabs')}
+      >
+        <Feather name="user" size={24} color={Colors.warmBlack} />
+      </TouchableOpacity>
+
       <View style={styles.centre}>
         {/* Title & Logo */}
         <Animated.View style={[styles.logoBlock, titleStyle]}>
@@ -80,6 +87,17 @@ const styles = StyleSheet.create({
   logoImage: {
     width: 240,
     height: 240,
+  },
+  profileLink: {
+    position: 'absolute',
+    top: 60,
+    right: Spacing.xl,
+    padding: Spacing.sm,
+    backgroundColor: Colors.paperWhite,
+    borderRadius: Radius.full,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    zIndex: 10,
   },
   buttonStack: {
     width: '100%',

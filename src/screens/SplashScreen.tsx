@@ -15,6 +15,8 @@ import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import SpiralBinder from '../components/SpiralBinder';
 import FloatingDoodles from '../components/FloatingDoodles';
+import { auth } from '../firebaseConfig';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const { width } = Dimensions.get('window');
 
@@ -36,7 +38,6 @@ const SplashScreen = ({ navigation }: Props) => {
 
   useEffect(() => {
     // Start drawing animation with a slight delay
-    // No more background fading to prevent flashing
     const timer = setTimeout(() => {
       pencilX.value = withTiming(width * 0.35, { duration: 1800 }, (finished) => {
         if (finished) {
@@ -49,7 +50,9 @@ const SplashScreen = ({ navigation }: Props) => {
           setTimeout(() => {
             containerOpacity.value = withTiming(0, { duration: 400 });
             containerScale.value = withTiming(1.05, { duration: 400 }, (ok) => {
-              if (ok) runOnJS(navigation.replace)('Home');
+              if (ok) {
+                runOnJS(checkAuthAndNavigate)();
+              }
             });
           }, 800);
         }
@@ -91,6 +94,17 @@ const SplashScreen = ({ navigation }: Props) => {
       { scale: 1 + Math.abs(logoWobble.value) * 0.05 }
     ],
   }));
+
+  const checkAuthAndNavigate = () => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe();
+      if (user) {
+        navigation.replace('MainTabs');
+      } else {
+        navigation.replace('Login');
+      }
+    });
+  };
 
   return (
     <Animated.View style={[styles.container, containerStyle]}>

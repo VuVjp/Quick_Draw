@@ -6,10 +6,14 @@ import MainTabs from './MainTabs';
 import DrawingScreen from '../screens/DrawingScreen';
 import WinScreen from '../screens/WinScreen';
 import LoseScreen from '../screens/LoseScreen';
+import LoginScreen from '../screens/Auth/LoginScreen';
+import SignupScreen from '../screens/Auth/SignupScreen';
 
 // ── Route param types ─────────────────────────────────────────────────────────
 export type RootStackParamList = {
   Splash: undefined;
+  Login: undefined;
+  Signup: undefined;
   Home: undefined;
   MainTabs: undefined;
   Drawing: undefined;
@@ -33,6 +37,16 @@ export default function AppNavigator() {
       <Stack.Screen 
         name="Splash" 
         component={SplashScreen} 
+        options={{ animation: 'fade' }}
+      />
+      <Stack.Screen 
+        name="Login" 
+        component={LoginScreen} 
+        options={{ animation: 'fade' }}
+      />
+      <Stack.Screen 
+        name="Signup" 
+        component={SignupScreen} 
         options={{ animation: 'fade' }}
       />
       <Stack.Screen 

@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, ScrollView } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
@@ -11,6 +12,8 @@ import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
 import AnimatedButton from '../components/AnimatedButton';
 import PaperCard from '../components/PaperCard';
+import { auth } from '../firebaseConfig';
+import { signOut } from 'firebase/auth';
 
 const { height } = Dimensions.get('window');
 
@@ -20,8 +23,24 @@ type Props = CompositeScreenProps<
 >;
 
 const ProfileScreen = ({ navigation }: Props) => {
+  const insets = useSafeAreaInsets();
+  const user = auth.currentUser;
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+  
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Background */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         {Array.from({ length: Math.floor(height / 40) }).map((_, i) => (
@@ -29,64 +48,82 @@ const ProfileScreen = ({ navigation }: Props) => {
         ))}
       </View>
 
-      <Animated.View entering={FadeInDown.springify().damping(14)} style={styles.content}>
-        
-        {/* Avatar Section */}
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatarFrame}>
-            <Text style={styles.avatar}>🧑‍🎨</Text>
-          </View>
-          <View style={styles.starBadge}>
-            <Text style={styles.starText}>⭐</Text>
-          </View>
-        </View>
-
-        {/* Info */}
-        <Text style={styles.name}>Artist</Text>
-        <Text style={styles.subtitle}>The First</Text>
-
-        {/* XP */}
-        <View style={styles.xpHeader}>
-          <Text style={styles.levelText}>Level 12</Text>
-          <Text style={styles.xpText}>1,250 / 2,000 XP</Text>
-        </View>
-        <View style={styles.xpTrack}>
-          <View style={[styles.xpBar, { width: '60%' }]} />
-        </View>
-
-        {/* Edit Button */}
-        <AnimatedButton
-          label="Edit Profile"
-          icon="✏️"
-          onPress={() => {}}
-          variant="ghost"
-          style={styles.editBtn}
-          textStyle={styles.editBtnText}
-        />
-
-        {/* Stats Grid */}
-        <View style={styles.statsGrid}>
-          <PaperCard style={styles.statCard} variant="yellow">
-            <Text style={styles.statIcon}>🏆</Text>
-            <Text style={styles.statValue}>15,420</Text>
-            <Text style={styles.statLabel}>TOTAL SCORE</Text>
-          </PaperCard>
+      <ScrollView 
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: Spacing.xl, paddingBottom: Spacing.xl }
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Animated.View entering={FadeInDown.springify().damping(14)} style={styles.content}>
           
-          <PaperCard style={styles.statCard} variant="pink">
-            <Text style={styles.statIcon}>🍷</Text>
-            <Text style={styles.statValue}>142</Text>
-            <Text style={styles.statLabel}>WINS</Text>
-          </PaperCard>
-          
-          <PaperCard style={styles.statCard} variant="blue">
-            <Text style={styles.statIcon}>🎯</Text>
-            <Text style={styles.statValue}>210</Text>
-            <Text style={styles.statLabel}>GUESSES</Text>
-          </PaperCard>
-        </View>
+          {/* Avatar Section */}
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatarFrame}>
+              <Text style={styles.avatar}>{user?.photoURL || '🧑‍🎨'}</Text>
+            </View>
+            <View style={styles.starBadge}>
+              <Text style={styles.starText}>⭐</Text>
+            </View>
+          </View>
 
-      </Animated.View>
-    </View>
+          {/* Info */}
+          <Text style={styles.name}>{user?.displayName || 'Họa sĩ'}</Text>
+          <Text style={styles.subtitle}>{user?.email || 'Chưa cập nhật email'}</Text>
+
+          {/* XP */}
+          <View style={styles.xpHeader}>
+            <Text style={styles.levelText}>Level 12</Text>
+            <Text style={styles.xpText}>1,250 / 2,000 XP</Text>
+          </View>
+          <View style={styles.xpTrack}>
+            <View style={[styles.xpBar, { width: '60%' }]} />
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.actionRow}>
+            <AnimatedButton
+              label="Đăng xuất"
+              icon="🚪"
+              onPress={handleLogout}
+              variant="danger"
+              style={styles.actionBtn}
+              textStyle={styles.actionBtnText}
+            />
+            <AnimatedButton
+              label="Chỉnh sửa"
+              icon="✏️"
+              onPress={() => {}}
+              variant="ghost"
+              style={styles.actionBtn}
+              textStyle={styles.actionBtnText}
+            />
+          </View>
+
+          {/* Stats Grid */}
+          <View style={styles.statsGrid}>
+            <PaperCard style={styles.statCard} variant="yellow">
+              <Text style={styles.statIcon}>🏆</Text>
+              <Text style={styles.statValue}>15,420</Text>
+              <Text style={styles.statLabel}>TOTAL SCORE</Text>
+            </PaperCard>
+            
+            <PaperCard style={styles.statCard} variant="pink">
+              <Text style={styles.statIcon}>🍷</Text>
+              <Text style={styles.statValue}>142</Text>
+              <Text style={styles.statLabel}>WINS</Text>
+            </PaperCard>
+            
+            <PaperCard style={styles.statCard} variant="blue">
+              <Text style={styles.statIcon}>🎯</Text>
+              <Text style={styles.statValue}>210</Text>
+              <Text style={styles.statLabel}>GUESSES</Text>
+            </PaperCard>
+          </View>
+
+        </Animated.View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -96,7 +133,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.notebookWhite,
-    paddingHorizontal: Spacing.xl,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   paperLine: {
     position: 'absolute', left: 0, right: 0, height: 1,
@@ -105,7 +144,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     alignItems: 'center',
-    paddingTop: 80,
+    paddingHorizontal: Spacing.xl,
   },
   avatarContainer: {
     position: 'relative',
@@ -182,13 +221,17 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryYellow,
     borderRadius: Radius.full,
   },
-  editBtn: {
+  actionRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginBottom: Spacing.xxl,
+  },
+  actionBtn: {
     paddingVertical: Spacing.xs,
     paddingHorizontal: Spacing.md,
     borderRadius: Radius.md,
-    marginBottom: Spacing.xxl,
   },
-  editBtnText: {
+  actionBtnText: {
     fontSize: FontSize.sm,
   },
   statsGrid: {
