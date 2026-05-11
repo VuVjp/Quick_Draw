@@ -1,0 +1,39 @@
+diff --git a/node_modules/@shopify/react-native-skia/lib/commonjs/sksg/Container.native.js b/node_modules/@shopify/react-native-skia/lib/commonjs/sksg/Container.native.js
+index 91b2235..f1653d1 100644
+--- a/node_modules/@shopify/react-native-skia/lib/commonjs/sksg/Container.native.js
++++ b/node_modules/@shopify/react-native-skia/lib/commonjs/sksg/Container.native.js
+@@ -69,7 +69,7 @@ class NativeReanimatedContainer extends _StaticContainer.Container {
+   }
+ }
+ const createContainer = (Skia, nativeId) => {
+-  if (_renderHelpers.HAS_REANIMATED_3 && nativeId !== -1) {
++  if (false && _renderHelpers.HAS_REANIMATED_3 && nativeId !== -1) {
+     return new NativeReanimatedContainer(Skia, nativeId);
+   } else {
+     return new _StaticContainer.StaticContainer(Skia, nativeId);
+diff --git a/node_modules/@shopify/react-native-skia/lib/module/sksg/Container.native.js b/node_modules/@shopify/react-native-skia/lib/module/sksg/Container.native.js
+index 1baab98..2970eef 100644
+--- a/node_modules/@shopify/react-native-skia/lib/module/sksg/Container.native.js
++++ b/node_modules/@shopify/react-native-skia/lib/module/sksg/Container.native.js
+@@ -63,7 +63,7 @@ class NativeReanimatedContainer extends Container {
+   }
+ }
+ export const createContainer = (Skia, nativeId) => {
+-  if (HAS_REANIMATED_3 && nativeId !== -1) {
++  if (false && HAS_REANIMATED_3 && nativeId !== -1) {
+     return new NativeReanimatedContainer(Skia, nativeId);
+   } else {
+     return new StaticContainer(Skia, nativeId);
+diff --git a/node_modules/@shopify/react-native-skia/src/sksg/Container.native.ts b/node_modules/@shopify/react-native-skia/src/sksg/Container.native.ts
+index 08c16a9..3d73189 100644
+--- a/node_modules/@shopify/react-native-skia/src/sksg/Container.native.ts
++++ b/node_modules/@shopify/react-native-skia/src/sksg/Container.native.ts
+@@ -68,7 +68,7 @@ class NativeReanimatedContainer extends Container {
+ }
+ 
+ export const createContainer = (Skia: Skia, nativeId: number) => {
+-  if (HAS_REANIMATED_3 && nativeId !== -1) {
++  if (false && HAS_REANIMATED_3 && nativeId !== -1) {
+     return new NativeReanimatedContainer(Skia, nativeId);
+   } else {
+     return new StaticContainer(Skia, nativeId);
