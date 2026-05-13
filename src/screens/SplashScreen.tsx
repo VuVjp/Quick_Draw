@@ -15,8 +15,7 @@ import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import SpiralBinder from '../components/SpiralBinder';
 import FloatingDoodles from '../components/FloatingDoodles';
-import { auth } from '../firebaseConfig';
-import { onAuthStateChanged } from 'firebase/auth';
+import { useAuthStore } from '../store/useAuthStore';
 
 const { width } = Dimensions.get('window');
 
@@ -26,6 +25,7 @@ const TITLE = "Quick Draw!";
 const CHARS = TITLE.split("");
 
 const SplashScreen = ({ navigation }: Props) => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const progress = useSharedValue(0);
   const pencilX = useSharedValue(-width * 0.4);
   const pencilY = useSharedValue(0);
@@ -96,14 +96,11 @@ const SplashScreen = ({ navigation }: Props) => {
   }));
 
   const checkAuthAndNavigate = () => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      unsubscribe();
-      if (user) {
-        navigation.replace('MainTabs');
-      } else {
-        navigation.replace('Login');
-      }
-    });
+    if (isAuthenticated) {
+      navigation.replace('MainTabs');
+    } else {
+      navigation.replace('Login');
+    }
   };
 
   return (

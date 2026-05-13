@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3000' || 'https://localhost:8081',
   credentials: true,
 }));
 
@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 // Initialize Firebase Admin (MUST BE FIRST)
 // Make sure to set up your Firebase credentials in .env or via service account file
 try {
-  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT 
+  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
     ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
     : require('./config/serviceAccountKey.json');
 
@@ -58,7 +58,7 @@ console.log('✓ Drawings routes loaded');
 
 // Routes
 app.get('/', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'Quick Draw Server is running',
     status: 'ok',
     timestamp: new Date().toISOString()
@@ -67,7 +67,7 @@ app.get('/', (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'healthy',
     timestamp: new Date().toISOString()
   });
@@ -80,7 +80,7 @@ app.use('/api/drawings', drawingsRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
-  res.status(err.status || 500).json({ 
+  res.status(err.status || 500).json({
     error: err.message || 'Internal server error'
   });
 });

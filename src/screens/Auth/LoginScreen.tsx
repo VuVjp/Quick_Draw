@@ -15,7 +15,12 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { authApi } from '../../api/auth';
+import { useAuthStore } from '../../store/useAuthStore';
+import { useUserStore } from '../../store/useUserStore';
+
 const LoginScreen = ({ navigation }: Props) => {
+  const setAuth = useAuthStore((state) => state.setAuth);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +33,12 @@ const LoginScreen = ({ navigation }: Props) => {
 
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const response = await authApi.login({ email, password });
+      setAuth(response.token, response.user);
+      
+      // Update game store name
+      useUserStore.getState().setName(response.user.name);
+      
       // Success - navigation will be handled by auth state listener or manual navigation
       navigation.replace('MainTabs');
     } catch (error: any) {

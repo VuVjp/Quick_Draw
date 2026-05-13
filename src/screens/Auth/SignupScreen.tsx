@@ -15,7 +15,12 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Signup'>;
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { authApi } from '../../api/auth';
+import { useAuthStore } from '../../store/useAuthStore';
+import { useUserStore } from '../../store/useUserStore';
+
 const SignupScreen = ({ navigation }: Props) => {
+  const setAuth = useAuthStore((state) => state.setAuth);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,8 +40,11 @@ const SignupScreen = ({ navigation }: Props) => {
 
     setLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(userCredential.user, { displayName: name });
+      const response = await authApi.register({ email, password, name });
+      setAuth(response.token, response.user);
+      
+      // Update game store name
+      useUserStore.getState().setName(response.user.name);
       
       Alert.alert('Thành công', 'Tài khoản của bạn đã được tạo!');
       navigation.replace('MainTabs');

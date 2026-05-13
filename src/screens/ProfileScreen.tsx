@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions, ScrollView } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
@@ -12,8 +12,7 @@ import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
 import AnimatedButton from '../components/AnimatedButton';
 import PaperCard from '../components/PaperCard';
-import { auth } from '../firebaseConfig';
-import { signOut } from 'firebase/auth';
+import { useAuthStore } from '../store/useAuthStore';
 
 const { height } = Dimensions.get('window');
 
@@ -24,11 +23,11 @@ type Props = CompositeScreenProps<
 
 const ProfileScreen = ({ navigation }: Props) => {
   const insets = useSafeAreaInsets();
-  const user = auth.currentUser;
+  const { user, logout } = useAuthStore();
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      logout();
       navigation.reset({
         index: 0,
         routes: [{ name: 'Login' }],
@@ -68,7 +67,7 @@ const ProfileScreen = ({ navigation }: Props) => {
           </View>
 
           {/* Info */}
-          <Text style={styles.name}>{user?.displayName || 'Họa sĩ'}</Text>
+          <Text style={styles.name}>{user?.name || 'Họa sĩ'}</Text>
           <Text style={styles.subtitle}>{user?.email || 'Chưa cập nhật email'}</Text>
 
           {/* XP */}
