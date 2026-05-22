@@ -9,8 +9,6 @@ import Animated, {
   useDerivedValue,
   runOnJS,
 } from 'react-native-reanimated';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import SpiralBinder from '../components/SpiralBinder';
@@ -18,12 +16,13 @@ import FloatingDoodles from '../components/FloatingDoodles';
 
 const { width } = Dimensions.get('window');
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
+import { useRouter } from 'expo-router';
 
 const TITLE = "Quick Draw!";
 const CHARS = TITLE.split("");
 
-const SplashScreen = ({ navigation }: Props) => {
+const SplashScreen = () => {
+  const router = useRouter();
   const progress = useSharedValue(0);
   const pencilX = useSharedValue(-width * 0.4);
   const pencilY = useSharedValue(0);
@@ -49,7 +48,7 @@ const SplashScreen = ({ navigation }: Props) => {
           setTimeout(() => {
             containerOpacity.value = withTiming(0, { duration: 400 });
             containerScale.value = withTiming(1.05, { duration: 400 }, (ok) => {
-              if (ok) runOnJS(navigation.replace)('Home');
+              if (ok) runOnJS(router.replace)('/home');
             });
           }, 800);
         }

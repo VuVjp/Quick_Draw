@@ -6,8 +6,7 @@ import Animated, {
   withTiming,
   withDelay,
 } from 'react-native-reanimated';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { useRouter } from 'expo-router';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
@@ -15,9 +14,9 @@ import AnimatedButton from '../components/AnimatedButton';
 import { useGameStore } from '../store/useGameStore';
 import { useShakeAnimation } from '../animations/useAnimations';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Lose'>;
 
-const LoseScreen = ({ navigation }: Props) => {
+const LoseScreen = () => {
+  const router = useRouter();
   const leaveRoom = useGameStore((s) => s.leaveRoom);
   const { translateX, shake } = useShakeAnimation();
 
@@ -64,7 +63,7 @@ const LoseScreen = ({ navigation }: Props) => {
           />
           <AnimatedButton
             label="Sảnh chính"
-            onPress={() => { leaveRoom(); navigation.popToTop(); }}
+            onPress={() => { leaveRoom(); router.dismissAll(); router.replace('/home'); }}
             variant="ghost"
             style={styles.actionBtn}
             textStyle={styles.btnText}

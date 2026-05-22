@@ -3,8 +3,6 @@ import { View, Text, StyleSheet, Dimensions, Platform, Image } from 'react-nativ
 import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing } from '../theme/spacing';
@@ -13,11 +11,14 @@ import NotebookBackground from '../components/NotebookBackground';
 import FloatingDoodles from '../components/FloatingDoodles';
 import { useEntranceAnimation } from '../animations/useAnimations';
 
+import { useRouter } from 'expo-router';
+import { useGameStore } from '../store/useGameStore';
+
 const { width, height } = Dimensions.get('window');
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
-
-const HomeScreen = ({ navigation }: Props) => {
+const HomeScreen = () => {
+  const router = useRouter();
+  const startSinglePlayer = useGameStore((s) => s.startSinglePlayer);
   const { opacity: titleOpacity, scale: titleScale } = useEntranceAnimation(100);
   const { opacity: btnOpacity } = useEntranceAnimation(400);
 
@@ -46,14 +47,17 @@ const HomeScreen = ({ navigation }: Props) => {
         {/* Buttons */}
         <Animated.View style={[styles.buttonStack, btnStyle]}>
           <AnimatedButton
-            label="Let's Draw ✏️"
-            onPress={() => navigation.navigate('MainTabs')}
+            label="Chơi Đơn 🧑"
+            onPress={() => {
+              startSinglePlayer();
+              router.push('/drawing');
+            }}
             variant="primary"
             fullWidth
           />
           <AnimatedButton
-            label="EXIT ✖️"
-            onPress={() => {}}
+            label="Chơi Online 🌐"
+            onPress={() => router.push('/(tabs)/lobby')}
             variant="primary"
             fullWidth
           />

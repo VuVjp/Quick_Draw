@@ -15,6 +15,7 @@ export type Player = {
 };
 
 export type GamePhase = 'waiting' | 'choosing' | 'drawing' | 'roundEnd' | 'gameEnd';
+export type Difficulty = 'Dễ' | 'Trung bình' | 'Khó';
 
 type GameStore = {
   // Room
@@ -25,6 +26,9 @@ type GameStore = {
   rounds: number;
   currentRound: number;
   drawTime: number;
+  difficulty: Difficulty;
+  peerReviewEnabled: boolean;
+  isSinglePlayer: boolean;
 
   // Drawing phase
   phase: GamePhase;
@@ -42,6 +46,8 @@ type GameStore = {
   endGame: () => void;
   setPhase: (phase: GamePhase) => void;
   setTimeLeft: (t: number) => void;
+  setRoomConfig: (config: Partial<GameStore>) => void;
+  startSinglePlayer: () => void;
   addPlayer: (player: Player) => void;
   removePlayer: (id: string) => void;
   updateScore: (playerId: string, points: number) => void;
@@ -56,6 +62,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   rounds: 5,
   currentRound: 0,
   drawTime: 80,
+  difficulty: 'Trung bình',
+  peerReviewEnabled: false,
+  isSinglePlayer: false,
   phase: 'waiting',
   currentWord: '',
   wordHint: '',
@@ -100,6 +109,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setPhase: (phase) => set({ phase }),
 
   setTimeLeft: (t) => set({ timeLeft: t }),
+
+  setRoomConfig: (config) => set((state) => ({ ...state, ...config })),
+
+  startSinglePlayer: () => {
+    const word = getRandomWord();
+    const hint = word.replace(/[a-zA-Z]/g, '_');
+    set({
+      isSinglePlayer: true,
+      phase: 'drawing',
+      players: [{ ...MOCK_PLAYERS[0], isDrawing: true, score: 0 }],
+      currentDrawerId: MOCK_PLAYERS[0].id,
+      currentRound: 1,
+      currentWord: word,
+      wordHint: hint,
+      timeLeft: 80,
+      difficulty: 'Trung bình', // Default for single player
+      peerReviewEnabled: false,
+    });
+  },
 
   addPlayer: (player) =>
     set((state) => ({ players: [...state.players, player] })),

@@ -1,11 +1,7 @@
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { CompositeScreenProps } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { MainTabParamList } from '../navigation/MainTabs';
+import { useRouter } from 'expo-router';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
@@ -24,11 +20,6 @@ const MOCK_ROOMS_REF = [
 ];
 
 type Room = typeof MOCK_ROOMS_REF[0];
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, 'LobbyTab'>,
-  NativeStackScreenProps<RootStackParamList>
->;
-
 const RoomCard = React.memo(({ room, index, onJoin }: { room: Room; index: number; onJoin: () => void }) => {
   const isFull = room.players >= room.maxPlayers;
   const rotate = index % 2 === 0 ? '-1deg' : '1deg';
@@ -61,14 +52,14 @@ const RoomCard = React.memo(({ room, index, onJoin }: { room: Room; index: numbe
   );
 });
 RoomCard.displayName = 'RoomCard';
-
-const LobbyScreen = ({ navigation }: Props) => {
+const LobbyScreen = () => {
+  const router = useRouter();
   const joinRoom = useGameStore((s) => s.joinRoom);
 
   const handleJoin = useCallback(() => {
     // Navigate directly to Drawing screen
-    navigation.navigate('Drawing');
-  }, [navigation]);
+    router.push('/drawing');
+  }, [router]);
 
   return (
     <View style={styles.container}>
@@ -81,7 +72,20 @@ const LobbyScreen = ({ navigation }: Props) => {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Phòng Chờ</Text>
+        <View style={styles.headerTop}>
+          <TouchableOpacity onPress={() => router.replace('/home')} style={styles.backBtn}>
+            <Text style={styles.backBtnText}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>Phòng Chờ</Text>
+          <View style={{ width: 44 }} />
+        </View>
+        <AnimatedButton
+          label="Tạo Phòng ➕"
+          onPress={() => router.push('/create-room')}
+          variant="primary"
+          style={styles.createRoomBtn}
+          textStyle={styles.createRoomBtnText}
+        />
       </View>
 
       {/* Room list */}
@@ -109,9 +113,33 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.softGray, opacity: 0.5,
   },
   header: {
-    alignItems: 'center',
     paddingTop: 60,
     paddingBottom: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    alignItems: 'center',
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: Spacing.md,
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.paperWhite,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backBtnText: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: 24,
+    color: Colors.warmBlack,
+    marginTop: -2,
   },
   title: {
     fontFamily: FontFamily.patrickHand,
@@ -120,6 +148,14 @@ const styles = StyleSheet.create({
     textShadowColor: Colors.softGray,
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 0,
+  },
+  createRoomBtn: {
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: Radius.full,
+  },
+  createRoomBtnText: {
+    fontSize: FontSize.md,
   },
   list: {
     paddingHorizontal: Spacing.xxl,

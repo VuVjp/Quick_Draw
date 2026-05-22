@@ -1,0 +1,228 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, Switch, TouchableOpacity, ScrollView } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Colors } from '../theme/colors';
+import { FontFamily, FontSize } from '../theme/typography';
+import { Spacing, Radius } from '../theme/spacing';
+import AnimatedButton from '../components/AnimatedButton';
+import { useGameStore, Difficulty } from '../store/useGameStore';
+import NotebookBackground from '../components/NotebookBackground';
+
+const CreateRoomScreen = () => {
+  const router = useRouter();
+  const setRoomConfig = useGameStore((s) => s.setRoomConfig);
+  const joinRoom = useGameStore((s) => s.joinRoom);
+
+  const [roomName, setRoomName] = useState('Phòng của tôi');
+  const [maxPlayers, setMaxPlayers] = useState(8);
+  const [rounds, setRounds] = useState(5);
+  const [drawTime, setDrawTime] = useState(80);
+  const [difficulty, setDifficulty] = useState<Difficulty>('Trung bình');
+  const [peerReview, setPeerReview] = useState(false);
+
+  const handleCreate = () => {
+    setRoomConfig({
+      maxPlayers,
+      rounds,
+      drawTime,
+      difficulty,
+      peerReviewEnabled: peerReview,
+      isSinglePlayer: false,
+    });
+    // Giả lập tạo phòng và tham gia
+    const roomId = Math.floor(Math.random() * 1000).toString();
+    joinRoom(roomId, roomName);
+    router.replace('/drawing');
+  };
+
+  const renderOptionSelector = (
+    label: string,
+    options: number[] | string[],
+    currentValue: any,
+    onSelect: (val: any) => void
+  ) => (
+    <View style={styles.optionGroup}>
+      <Text style={styles.optionLabel}>{label}</Text>
+      <View style={styles.optionButtons}>
+        {options.map((opt) => (
+          <TouchableOpacity
+            key={opt.toString()}
+            style={[
+              styles.optionBtn,
+              currentValue === opt && styles.optionBtnActive,
+            ]}
+            onPress={() => onSelect(opt)}
+          >
+            <Text
+              style={[
+                styles.optionBtnText,
+                currentValue === opt && styles.optionBtnTextActive,
+              ]}
+            >
+              {opt}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+
+  return (
+    <NotebookBackground>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>Cấu hình phòng</Text>
+        <View style={{ width: 44 }} />
+      </View>
+
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.formCard}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.optionLabel}>Tên phòng</Text>
+            <TextInput
+              style={styles.textInput}
+              value={roomName}
+              onChangeText={setRoomName}
+              placeholder="Nhập tên phòng..."
+              placeholderTextColor={Colors.softGray}
+            />
+          </View>
+
+          {renderOptionSelector('Số người tối đa', [2, 4, 8, 12], maxPlayers, setMaxPlayers)}
+          {renderOptionSelector('Số vòng', [3, 5, 10], rounds, setRounds)}
+          {renderOptionSelector('Thời gian (giây)', [40, 60, 80, 120], drawTime, setDrawTime)}
+          {renderOptionSelector('Độ khó', ['Dễ', 'Trung bình', 'Khó'], difficulty, setDifficulty)}
+
+          <View style={styles.switchGroup}>
+            <View>
+              <Text style={styles.optionLabel}>Đánh giá chéo (Peer Review)</Text>
+              <Text style={styles.optionHint}>Cho phép người chơi chấm điểm bài vẽ của nhau</Text>
+            </View>
+            <Switch
+              value={peerReview}
+              onValueChange={setPeerReview}
+              trackColor={{ false: Colors.softGray, true: Colors.goldAccent }}
+              thumbColor={peerReview ? Colors.paperWhite : Colors.paperWhite}
+            />
+          </View>
+        </View>
+
+        <AnimatedButton
+          label="Bắt đầu 🚀"
+          onPress={handleCreate}
+          variant="primary"
+          style={styles.createBtn}
+        />
+      </ScrollView>
+    </NotebookBackground>
+  );
+};
+
+export default CreateRoomScreen;
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.xl,
+    paddingTop: 60,
+    paddingBottom: Spacing.md,
+  },
+  title: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.xxl,
+    color: Colors.warmBlack,
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.paperWhite,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backBtnText: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: 24,
+    color: Colors.warmBlack,
+    marginTop: -2,
+  },
+  content: {
+    padding: Spacing.xl,
+    paddingBottom: 100,
+  },
+  formCard: {
+    backgroundColor: Colors.paperWhite,
+    borderRadius: Radius.lg,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    padding: Spacing.xl,
+    gap: Spacing.xl,
+    marginBottom: Spacing.xxl,
+  },
+  inputGroup: {
+    gap: Spacing.xs,
+  },
+  optionGroup: {
+    gap: Spacing.sm,
+  },
+  optionLabel: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.lg,
+    color: Colors.warmBlack,
+  },
+  optionHint: {
+    fontFamily: FontFamily.caveat,
+    fontSize: FontSize.sm,
+    color: Colors.warmBlack,
+    opacity: 0.6,
+  },
+  textInput: {
+    fontFamily: FontFamily.indieFlower,
+    fontSize: FontSize.lg,
+    borderBottomWidth: 1.5,
+    borderColor: Colors.border,
+    paddingVertical: Spacing.sm,
+    color: Colors.warmBlack,
+  },
+  optionButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  optionBtn: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.full,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.notebookWhite,
+  },
+  optionBtnActive: {
+    backgroundColor: Colors.primaryYellow,
+  },
+  optionBtnText: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.md,
+    color: Colors.warmBlack,
+  },
+  optionBtnTextActive: {
+    fontFamily: FontFamily.patrickHand,
+  },
+  switchGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  createBtn: {
+    paddingVertical: Spacing.md,
+  },
+});

@@ -8,8 +8,7 @@ import Animated, {
   withDelay,
   withRepeat,
 } from 'react-native-reanimated';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { useRouter } from 'expo-router';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
@@ -18,9 +17,9 @@ import { useGameStore } from '../store/useGameStore';
 
 const { height } = Dimensions.get('window');
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Win'>;
 
-const WinScreen = ({ navigation }: Props) => {
+const WinScreen = () => {
+  const router = useRouter();
   const leaveRoom = useGameStore((s) => s.leaveRoom);
 
   const containerScale = useSharedValue(0.8);
@@ -79,14 +78,14 @@ const WinScreen = ({ navigation }: Props) => {
         <View style={styles.actions}>
           <AnimatedButton
             label="Vẽ tiếp ✏️"
-            onPress={() => { leaveRoom(); navigation.replace('MainTabs'); }}
+            onPress={() => { leaveRoom(); router.replace('/(tabs)/lobby'); }}
             variant="ghost"
             style={styles.actionBtn}
             textStyle={styles.btnText}
           />
           <AnimatedButton
             label="Sảnh chính 🏠"
-            onPress={() => { leaveRoom(); navigation.popToTop(); }}
+            onPress={() => { leaveRoom(); router.dismissAll(); router.replace('/home'); }}
             variant="ghost"
             style={styles.actionBtn}
             textStyle={styles.btnText}

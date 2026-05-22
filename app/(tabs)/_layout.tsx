@@ -1,23 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, Platform, TouchableOpacity } from 'react-native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import Animated, { useAnimatedStyle, withSpring, useSharedValue, withTiming } from 'react-native-reanimated';
-import LobbyScreen from '../screens/LobbyScreen';
-import RankingScreen from '../screens/RankingScreen';
-import ProfileScreen from '../screens/ProfileScreen';
-import { Colors } from '../theme/colors';
-import { FontFamily, FontSize } from '../theme/typography';
-import { Radius, Spacing } from '../theme/spacing';
-import { useHaptics } from '../hooks/useHaptics';
-
-export type MainTabParamList = {
-  LobbyTab: undefined;
-  RankingTab: undefined;
-  ProfileTab: undefined;
-};
-
-const Tab = createBottomTabNavigator<MainTabParamList>();
+import Animated from 'react-native-reanimated';
+import { Colors } from '../../src/theme/colors';
+import { FontFamily, FontSize } from '../../src/theme/typography';
+import { Radius, Spacing } from '../../src/theme/spacing';
+import { useHaptics } from '../../src/hooks/useHaptics';
 
 const AnimatedIcon = Animated.createAnimatedComponent(Feather);
 
@@ -53,37 +42,34 @@ const CustomTabBarButton = ({ children, onPress, accessibilityState, label, icon
   );
 };
 
-export default function MainTabs() {
+export default function TabLayout() {
   return (
-    <Tab.Navigator
+    <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
         tabBarShowLabel: false,
       }}
     >
-      <Tab.Screen 
-        name="LobbyTab" 
-        component={LobbyScreen} 
+      <Tabs.Screen 
+        name="lobby" 
         options={{
           tabBarButton: (props) => <CustomTabBarButton {...props} label="Lobby" icon="grid" />
         }}
       />
-      <Tab.Screen 
-        name="RankingTab" 
-        component={RankingScreen} 
+      <Tabs.Screen 
+        name="ranking" 
         options={{
           tabBarButton: (props) => <CustomTabBarButton {...props} label="Rankings" icon="award" />
         }}
       />
-      <Tab.Screen 
-        name="ProfileTab" 
-        component={ProfileScreen} 
+      <Tabs.Screen 
+        name="profile" 
         options={{
           tabBarButton: (props) => <CustomTabBarButton {...props} label="Profile" icon="user" />
         }}
       />
-    </Tab.Navigator>
+    </Tabs>
   );
 }
 

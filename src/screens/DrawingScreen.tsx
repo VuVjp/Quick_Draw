@@ -16,8 +16,7 @@ import Animated, {
   withSequence,
   withSpring,
 } from 'react-native-reanimated';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { useRouter } from 'expo-router';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius, Shadow } from '../theme/spacing';
@@ -33,7 +32,6 @@ import NotebookBackground from '../components/NotebookBackground';
 const { width, height } = Dimensions.get('window');
 const CANVAS_HEIGHT = height * 0.52;
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Drawing'>;
 
 // ── Timer Ring ──────────────────────────────────────────────────────────────
 const TimerDisplay = React.memo(() => {
@@ -70,7 +68,8 @@ const TimerDisplay = React.memo(() => {
 TimerDisplay.displayName = 'TimerDisplay';
 
 // ── Drawing Screen ────────────────────────────────────────────────────────────
-const DrawingScreen = ({ navigation }: Props) => {
+const DrawingScreen = () => {
+  const router = useRouter();
   const canvasRef = useRef<DrawingCanvasRef>(null);
 
   const players = useGameStore((s) => s.players);
@@ -92,7 +91,7 @@ const DrawingScreen = ({ navigation }: Props) => {
 
   const { progress } = useTimer(undefined, () => {
     endGame();
-    navigation.replace('Win');
+    router.replace('/win');
   });
 
   const isDrawer = currentDrawerId === '1'; // mock: local user is always player 1
@@ -106,7 +105,7 @@ const DrawingScreen = ({ navigation }: Props) => {
       <View style={styles.container}>
         {/* ── Header ── */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeBtn}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn}>
             <Text style={styles.closeBtnText}>X</Text>
           </TouchableOpacity>
 
