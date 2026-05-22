@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Platform, Image } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -9,6 +9,7 @@ import { Spacing } from '../theme/spacing';
 import AnimatedButton from '../components/AnimatedButton';
 import NotebookBackground from '../components/NotebookBackground';
 import FloatingDoodles from '../components/FloatingDoodles';
+import AuthModal from '../components/AuthModal';
 import { useEntranceAnimation } from '../animations/useAnimations';
 
 import { useRouter } from 'expo-router';
@@ -18,6 +19,7 @@ const { width, height } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const router = useRouter();
+  const [showAuth, setShowAuth] = useState(false);
   const startSinglePlayer = useGameStore((s) => s.startSinglePlayer);
   const { opacity: titleOpacity, scale: titleScale } = useEntranceAnimation(100);
   const { opacity: btnOpacity } = useEntranceAnimation(400);
@@ -57,12 +59,17 @@ const HomeScreen = () => {
           />
           <AnimatedButton
             label="Chơi Online 🌐"
-            onPress={() => router.push('/(tabs)/lobby')}
+            onPress={() => setShowAuth(true)}
             variant="primary"
             fullWidth
           />
         </Animated.View>
       </View>
+
+      <AuthModal 
+        visible={showAuth} 
+        onClose={() => setShowAuth(false)} 
+      />
     </NotebookBackground>
   );
 };
