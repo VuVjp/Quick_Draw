@@ -1,13 +1,13 @@
+import { Canvas, PaintStyle, Path, Picture, Skia, SkPath, SkPicture, StrokeCap, StrokeJoin } from '@shopify/react-native-skia';
 import React, {
   forwardRef,
   useCallback,
-  useImperativeHandle,
-  useRef,
-  useReducer,
   useEffect,
+  useImperativeHandle,
+  useReducer,
+  useRef,
 } from 'react';
 import { StyleSheet } from 'react-native';
-import { Canvas, Path, Skia, SkPath, Picture, PaintStyle, StrokeCap, StrokeJoin, SkPicture } from '@shopify/react-native-skia';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useDrawingStore } from '../store/useDrawingStore';
 
@@ -22,6 +22,7 @@ export type DrawingCanvasRef = {
   undo: () => void;
   redo: () => void;
   clear: () => void;
+  getSnapshot: () => string | null; // trả về base64 PNG
 };
 
 type Props = {
@@ -43,7 +44,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(({ width, height, disa
   const completedPaths = useRef<StrokePath[]>([]);
   const currentPath = useRef<SkPath | null>(null);
   const completedPicture = useRef<SkPicture | null>(null);
-  
+
   const currentColorRef = useRef(activeColor);
   const currentWidthRef = useRef(brushSize);
   const isEraserRef = useRef(isEraser);
@@ -57,10 +58,10 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(({ width, height, disa
   // Optimized picture generator for completed paths
   const updatePicture = useCallback(() => {
     if (width <= 0 || height <= 0) return;
-    
+
     const recorder = Skia.PictureRecorder();
     const canvas = recorder.beginRecording(Skia.XYWHRect(0, 0, width, height));
-    
+
     completedPaths.current.forEach(stroke => {
       const paint = Skia.Paint();
       paint.setStyle(PaintStyle.Stroke);
@@ -70,7 +71,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(({ width, height, disa
       paint.setStrokeWidth(stroke.width);
       canvas.drawPath(stroke.path, paint);
     });
-    
+
     completedPicture.current = recorder.finishRecordingAsPicture();
     forceRepaint();
   }, [width, height]);
@@ -117,7 +118,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(({ width, height, disa
     redo: () => {
       const redoHistory = useDrawingStore.getState().redoHistory;
       if (redoHistory.length === 0) return;
-      
+
       const nextStroke = redoHistory[0];
       const nextPath = Skia.Path.MakeFromSVGString(nextStroke.pathData);
       if (nextPath) {
@@ -136,6 +137,38 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(({ width, height, disa
       completedPicture.current = null;
       clearStore();
       updatePicture();
+    },
+    getSnapshot: () => {
+      if (width <= 0 || height <= 0) return null;
+
+      // Vẽ lại toàn bộ completed paths vào một Surface tạm
+      const surface = Skia.Surface.Make(width, height);
+      if (!surface) return null;
+
+      const canvas = surface.getCanvas();
+
+      // Nền trắng
+      canvas.drawColor(Skia.Color('#FFFDF8'));
+
+      // Vẽ picture đã baked (tất cả completed strokes)
+      if (completedPicture.current) {
+        canvas.drawPicture(completedPicture.current);
+      }
+
+      // Vẽ thêm currentPath nếu đang có nét chưa xong
+      if (currentPath.current) {
+        const paint = Skia.Paint();
+        paint.setStyle(PaintStyle.Stroke);
+        paint.setStrokeCap(StrokeCap.Round);
+        paint.setStrokeJoin(StrokeJoin.Round);
+        paint.setColor(Skia.Color(currentColorRef.current));
+        paint.setStrokeWidth(currentWidthRef.current);
+        canvas.drawPath(currentPath.current, paint);
+      }
+
+      // Encode sang base64 PNG
+      const image = surface.makeImageSnapshot();
+      return image.encodeToBase64(); // base64 string, không có prefix
     },
   }));
 

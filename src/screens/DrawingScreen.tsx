@@ -1,33 +1,29 @@
-import React, { useRef, useCallback, useEffect } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
+  Button,
   Dimensions,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
   Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
-  withTiming,
+  useSharedValue,
   withSequence,
-  withSpring,
+  withSpring
 } from 'react-native-reanimated';
-import { useRouter } from 'expo-router';
-import { Colors } from '../theme/colors';
-import { FontFamily, FontSize } from '../theme/typography';
-import { Spacing, Radius, Shadow } from '../theme/spacing';
-import DrawingCanvas, { DrawingCanvasRef } from '../canvas/DrawingCanvas';
 import BrushToolbar from '../canvas/BrushToolbar';
-import WordHint from '../components/WordHint';
-import PlayerAvatar from '../components/PlayerAvatar';
-import { useGameStore } from '../store/useGameStore';
-import { useDrawingStore } from '../store/useDrawingStore';
-import { useTimer } from '../hooks/useTimer';
+import DrawingCanvas, { DrawingCanvasRef } from '../canvas/DrawingCanvas';
 import NotebookBackground from '../components/NotebookBackground';
+import { useDrawingInference } from '../hooks/useDrawingInference';
+import { useTimer } from '../hooks/useTimer';
+import { useGameStore } from '../store/useGameStore';
+import { Colors } from '../theme/colors';
+import { Radius, Shadow, Spacing } from '../theme/spacing';
+import { FontFamily, FontSize } from '../theme/typography';
 
 const { width, height } = Dimensions.get('window');
 const CANVAS_HEIGHT = height * 0.52;
@@ -99,6 +95,7 @@ const DrawingScreen = () => {
   const handleUndo = useCallback(() => canvasRef.current?.undo(), []);
   const handleRedo = useCallback(() => canvasRef.current?.redo(), []);
   const handleClear = useCallback(() => canvasRef.current?.clear(), []);
+  const { runInference, isReady } = useDrawingInference(false);
 
   return (
     <NotebookBackground>
@@ -131,12 +128,29 @@ const DrawingScreen = () => {
 
         {/* ── Toolbar ── */}
         <View style={styles.toolbarWrapper}>
-          <BrushToolbar 
-            onUndo={handleUndo} 
+          <BrushToolbar
+            onUndo={handleUndo}
             onRedo={handleRedo}
-            onClear={handleClear} 
+            onClear={handleClear}
           />
         </View>
+        <Button
+          title={isReady ? 'Test Inference' : 'Model loading...'}
+          disabled={!isReady}
+          onPress={async () => {
+            const base64 = canvasRef.current?.getSnapshot();
+            if (!base64) {
+              console.warn('Canvas trống hoặc chưa sẵn sàng');
+              return;
+            }
+            try {
+              const result = await runInference(base64, currentWord);
+              console.log('Inference result:', result);
+            } catch (e) {
+              console.error('Inference error:', e);
+            }
+          }}
+        />
       </View>
     </NotebookBackground>
   );

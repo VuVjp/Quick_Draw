@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, Platform, Image } from 'react-native';
+import { Dimensions, Image, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { Colors } from '../theme/colors';
-import { FontFamily, FontSize } from '../theme/typography';
-import { Spacing } from '../theme/spacing';
-import AnimatedButton from '../components/AnimatedButton';
-import NotebookBackground from '../components/NotebookBackground';
-import FloatingDoodles from '../components/FloatingDoodles';
-import AuthModal from '../components/AuthModal';
 import { useEntranceAnimation } from '../animations/useAnimations';
+import AnimatedButton from '../components/AnimatedButton';
+import AuthModal from '../components/AuthModal';
+import FloatingDoodles from '../components/FloatingDoodles';
+import NotebookBackground from '../components/NotebookBackground';
+import { Spacing } from '../theme/spacing';
 
 import { useRouter } from 'expo-router';
 import { useGameStore } from '../store/useGameStore';
@@ -39,8 +37,8 @@ const HomeScreen = () => {
       <View style={styles.centre}>
         {/* Title & Logo */}
         <Animated.View style={[styles.logoBlock, titleStyle]}>
-          <Image 
-            source={require('../../assets/logo.png')} 
+          <Image
+            source={require('../../assets/logo.png')}
             style={styles.logoImage}
             resizeMode="contain"
           />
@@ -52,7 +50,7 @@ const HomeScreen = () => {
             label="Chơi Đơn 🧑"
             onPress={() => {
               startSinglePlayer();
-              router.push('/drawing');
+              router.push('/Drawing');
             }}
             variant="primary"
             fullWidth
@@ -66,9 +64,9 @@ const HomeScreen = () => {
         </Animated.View>
       </View>
 
-      <AuthModal 
-        visible={showAuth} 
-        onClose={() => setShowAuth(false)} 
+      <AuthModal
+        visible={showAuth}
+        onClose={() => setShowAuth(false)}
       />
     </NotebookBackground>
   );
