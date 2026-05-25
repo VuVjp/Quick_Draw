@@ -29,6 +29,7 @@ type GameStore = {
   difficulty: Difficulty;
   peerReviewEnabled: boolean;
   isSinglePlayer: boolean;
+  isPrivate: boolean;
 
   // Drawing phase
   phase: GamePhase;
@@ -65,6 +66,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   difficulty: 'Trung bình',
   peerReviewEnabled: false,
   isSinglePlayer: false,
+  isPrivate: false,
   phase: 'waiting',
   currentWord: '',
   wordHint: '',

@@ -10,6 +10,7 @@ import FloatingDoodles from '../components/FloatingDoodles';
 import NotebookBackground from '../components/NotebookBackground';
 import { Spacing } from '../theme/spacing';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useGameStore } from '../store/useGameStore';
 
@@ -21,6 +22,21 @@ const HomeScreen = () => {
   const startSinglePlayer = useGameStore((s) => s.startSinglePlayer);
   const { opacity: titleOpacity, scale: titleScale } = useEntranceAnimation(100);
   const { opacity: btnOpacity } = useEntranceAnimation(400);
+
+  const handleOnlinePress = async () => {
+    try {
+      const token = await AsyncStorage.getItem('user_token');
+      if (token) {
+        // Tự động đăng nhập nếu đã có token
+        router.push('/(tabs)/lobby');
+      } else {
+        setShowAuth(true);
+      }
+    } catch (e) {
+      console.error('Lỗi khi đọc token từ AsyncStorage', e);
+      setShowAuth(true);
+    }
+  };
 
   const titleStyle = useAnimatedStyle(() => ({
     opacity: titleOpacity.value,
@@ -57,7 +73,7 @@ const HomeScreen = () => {
           />
           <AnimatedButton
             label="Chơi Online 🌐"
-            onPress={() => setShowAuth(true)}
+            onPress={handleOnlinePress}
             variant="primary"
             fullWidth
           />

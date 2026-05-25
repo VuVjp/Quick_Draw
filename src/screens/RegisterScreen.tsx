@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
@@ -13,8 +14,15 @@ const RegisterScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     // Tạm thời bỏ qua logic đăng ký
+    if (username.trim()) {
+      try {
+        await AsyncStorage.setItem('user_token', username);
+      } catch (e) {
+        console.error('Failed to save register session', e);
+      }
+    }
     router.replace('/(tabs)/lobby');
   };
 

@@ -35,6 +35,7 @@ type Props = {
 const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(({ width, height, disabled }, ref) => {
   const activeColor = useDrawingStore((s) => s.activeColor);
   const brushSize = useDrawingStore((s) => s.brushSize);
+  const eraserSize = useDrawingStore((s) => s.eraserSize);
   const isEraser = useDrawingStore((s) => s.isEraser);
   const pushStroke = useDrawingStore((s) => s.pushStroke);
   const undoStore = useDrawingStore((s) => s.undo);
@@ -50,7 +51,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(({ width, height, disa
   const isEraserRef = useRef(isEraser);
 
   currentColorRef.current = isEraser ? '#FFFDF8' : activeColor;
-  currentWidthRef.current = isEraser ? brushSize * 3 : brushSize;
+  currentWidthRef.current = isEraser ? eraserSize : brushSize;
   isEraserRef.current = isEraser;
 
   const [, forceRepaint] = useReducer((n: number) => n + 1, 0);

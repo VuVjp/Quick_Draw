@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Switch, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Switch, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
@@ -19,6 +20,9 @@ const CreateRoomScreen = () => {
   const [drawTime, setDrawTime] = useState(80);
   const [difficulty, setDifficulty] = useState<Difficulty>('Trung bình');
   const [peerReview, setPeerReview] = useState(false);
+  const [roomType, setRoomType] = useState('Công khai');
+
+  const insets = useSafeAreaInsets();
 
   const handleCreate = () => {
     setRoomConfig({
@@ -28,6 +32,7 @@ const CreateRoomScreen = () => {
       difficulty,
       peerReviewEnabled: peerReview,
       isSinglePlayer: false,
+      isPrivate: roomType === 'Riêng tư',
     });
     // Giả lập tạo phòng và tham gia
     const roomId = Math.floor(Math.random() * 1000).toString();
@@ -69,7 +74,7 @@ const CreateRoomScreen = () => {
 
   return (
     <NotebookBackground>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top + Spacing.md, 40) }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backBtnText}>←</Text>
         </TouchableOpacity>
@@ -77,9 +82,28 @@ const CreateRoomScreen = () => {
         <View style={{ width: 44 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.formCard}>
-          <View style={styles.inputGroup}>
+      <View style={[styles.content, { flex: 1 }]}>
+        <View style={[styles.formCard, { 
+          flex: 1, 
+          paddingTop: Spacing.md, 
+          paddingBottom: Spacing.md, 
+          paddingLeft: Spacing.sm, 
+          paddingRight: Spacing.md, 
+          gap: 0 
+        }]}>
+          <ScrollView 
+            showsVerticalScrollIndicator={true}
+            persistentScrollbar={true}
+            indicatorStyle="default"
+            contentContainerStyle={{ 
+              paddingTop: Spacing.md, 
+              paddingBottom: Spacing.md, 
+              paddingLeft: Spacing.lg, 
+              paddingRight: Spacing.md, 
+              gap: Spacing.xl 
+            }}
+          >
+            <View style={styles.inputGroup}>
             <Text style={styles.optionLabel}>Tên phòng</Text>
             <TextInput
               style={styles.textInput}
@@ -90,6 +114,7 @@ const CreateRoomScreen = () => {
             />
           </View>
 
+          {renderOptionSelector('Loại phòng', ['Công khai', 'Riêng tư'], roomType, setRoomType)}
           {renderOptionSelector('Số người tối đa', [2, 4, 8, 12], maxPlayers, setMaxPlayers)}
           {renderOptionSelector('Số vòng', [3, 5, 10], rounds, setRounds)}
           {renderOptionSelector('Thời gian (giây)', [40, 60, 80, 120], drawTime, setDrawTime)}
@@ -107,15 +132,18 @@ const CreateRoomScreen = () => {
               thumbColor={peerReview ? Colors.paperWhite : Colors.paperWhite}
             />
           </View>
+        </ScrollView>
         </View>
+      </View>
 
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, Spacing.xl) }]}>
         <AnimatedButton
           label="Bắt đầu 🚀"
           onPress={handleCreate}
           variant="primary"
           style={styles.createBtn}
         />
-      </ScrollView>
+      </View>
     </NotebookBackground>
   );
 };
@@ -128,7 +156,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.xl,
-    paddingTop: 60,
     paddingBottom: Spacing.md,
   },
   title: {
@@ -154,7 +181,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: Spacing.xl,
-    paddingBottom: 100,
+    paddingBottom: Spacing.xl,
   },
   formCard: {
     backgroundColor: Colors.paperWhite,
@@ -163,7 +190,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     padding: Spacing.xl,
     gap: Spacing.xl,
-    marginBottom: Spacing.xxl,
   },
   inputGroup: {
     gap: Spacing.xs,
@@ -224,5 +250,9 @@ const styles = StyleSheet.create({
   },
   createBtn: {
     paddingVertical: Spacing.md,
+  },
+  footer: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.sm,
   },
 });

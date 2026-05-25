@@ -13,10 +13,10 @@ const { height } = Dimensions.get('window');
 
 // Match reference exactly
 const MOCK_ROOMS_REF = [
-  { id: '1', name: 'Vẽ Con Chó', players: 4, maxPlayers: 8, color: 'blue' as const },
-  { id: '2', name: 'Học Sinh', players: 2, maxPlayers: 8, color: 'default' as const },
-  { id: '5', name: 'Siêu Anh Hùng', players: 8, maxPlayers: 8, color: 'yellow' as const },
-  { id: '34', name: 'Unknown', players: 1, maxPlayers: 8, color: 'default' as const },
+  { id: '1', name: 'Doodle to Win ', players: 4, maxPlayers: 8, color: 'blue' as const },
+  { id: '2', name: 'Nét Vẽ Chết Chóc ', players: 2, maxPlayers: 8, color: 'default' as const },
+  { id: '5', name: 'Chiến Thần Hội Họa ', players: 8, maxPlayers: 8, color: 'yellow' as const },
+  { id: '34', name: 'Vẽ Hay Hoặc Chết ', players: 1, maxPlayers: 8, color: 'default' as const },
 ];
 
 type Room = typeof MOCK_ROOMS_REF[0];

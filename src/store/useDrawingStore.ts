@@ -13,6 +13,7 @@ type DrawingStore = {
   // Tool state
   activeColor: BrushColor;
   brushSize: BrushSize;
+  eraserSize: BrushSize;
   isEraser: boolean;
 
   // History
@@ -22,6 +23,7 @@ type DrawingStore = {
   // Actions
   setColor: (color: BrushColor) => void;
   setBrushSize: (size: BrushSize) => void;
+  setEraserSize: (size: BrushSize) => void;
   toggleEraser: () => void;
   pushStroke: (stroke: StrokeRecord) => void;
   undo: () => void;
@@ -44,17 +46,20 @@ export const BRUSH_COLORS: BrushColor[] = [
   '#2196F3', // blue
 ];
 
-export const BRUSH_SIZES: BrushSize[] = [3, 6, 10, 18, 30];
+export const BRUSH_SIZES: BrushSize[] = [15];
+export const ERASER_SIZES: BrushSize[] = [10, 20, 40, 60];
 
 export const useDrawingStore = create<DrawingStore>((set) => ({
   activeColor: '#1E1E1E',
-  brushSize: 6,
+  brushSize: 8,
+  eraserSize: 25,
   isEraser: false,
   strokeHistory: [],
   redoHistory: [],
 
   setColor: (color) => set({ activeColor: color, isEraser: false }),
   setBrushSize: (size) => set({ brushSize: size }),
+  setEraserSize: (size) => set({ eraserSize: size }),
   toggleEraser: () => set((state) => ({ isEraser: !state.isEraser })),
   pushStroke: (stroke) =>
     set((state) => ({ 

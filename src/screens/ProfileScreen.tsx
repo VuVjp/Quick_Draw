@@ -1,25 +1,49 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { CompositeScreenProps } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { MainTabParamList } from '../navigation/MainTabs';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
 import AnimatedButton from '../components/AnimatedButton';
 import PaperCard from '../components/PaperCard';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 const { height } = Dimensions.get('window');
 
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, 'ProfileTab'>,
-  NativeStackScreenProps<RootStackParamList>
->;
+const ProfileScreen = () => {
+  const router = useRouter();
+  const [username, setUsername] = useState('Artist');
 
-const ProfileScreen = ({ navigation }: Props) => {
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+      const loadUsername = async () => {
+        try {
+          const storedToken = await AsyncStorage.getItem('user_token');
+          if (storedToken && isMounted) {
+            setUsername(storedToken);
+          }
+        } catch (e) {
+          console.error('Failed to load username', e);
+        }
+      };
+      loadUsername();
+      return () => {
+        isMounted = false;
+      };
+    }, [])
+  );
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('user_token');
+    } catch(e) {
+      console.error('Error logging out', e);
+    }
+    router.replace('/home');
+  };
+
   return (
     <View style={styles.container}>
       {/* Background */}
@@ -42,7 +66,7 @@ const ProfileScreen = ({ navigation }: Props) => {
         </View>
 
         {/* Info */}
-        <Text style={styles.name}>Artist</Text>
+        <Text style={styles.name}>{username}</Text>
         <Text style={styles.subtitle}>The First</Text>
 
         {/* XP */}
@@ -54,15 +78,25 @@ const ProfileScreen = ({ navigation }: Props) => {
           <View style={[styles.xpBar, { width: '60%' }]} />
         </View>
 
-        {/* Edit Button */}
-        <AnimatedButton
-          label="Edit Profile"
-          icon="✏️"
-          onPress={() => {}}
-          variant="ghost"
-          style={styles.editBtn}
-          textStyle={styles.editBtnText}
-        />
+        {/* Action Buttons */}
+        <View style={styles.actionRow}>
+          <AnimatedButton
+            label="Edit Profile"
+            icon="✏️"
+            onPress={() => {}}
+            variant="ghost"
+            style={styles.editBtn}
+            textStyle={styles.editBtnText}
+          />
+          <AnimatedButton
+            label="Đăng xuất"
+            icon="🚪"
+            onPress={handleLogout}
+            variant="ghost"
+            style={styles.logoutBtn}
+            textStyle={styles.logoutBtnText}
+          />
+        </View>
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
@@ -91,6 +125,7 @@ const ProfileScreen = ({ navigation }: Props) => {
 };
 
 export default ProfileScreen;
+
 
 const styles = StyleSheet.create({
   container: {
@@ -186,10 +221,24 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
     paddingHorizontal: Spacing.md,
     borderRadius: Radius.md,
-    marginBottom: Spacing.xxl,
   },
   editBtnText: {
     fontSize: FontSize.sm,
+  },
+  logoutBtn: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.md,
+    borderColor: Colors.pastelRed,
+  },
+  logoutBtnText: {
+    fontSize: FontSize.sm,
+    color: Colors.pastelRed,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginBottom: Spacing.xxl,
   },
   statsGrid: {
     flexDirection: 'row',
