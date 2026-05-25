@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "quickdraw",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
@@ -20,7 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.Quick_Draw"
+      "package": "com.BeHold.Quick_Draw"
     },
     "web": {
       "output": "static",
@@ -51,6 +51,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4565f035-4bc5-4e15-83c8-c105a77e240b"
+      }
     }
   }
 }

@@ -50,7 +50,7 @@ const HomeScreen = () => {
             label="Chơi Đơn 🧑"
             onPress={() => {
               startSinglePlayer();
-              router.push('/Drawing');
+              router.push('/drawing');
             }}
             variant="primary"
             fullWidth

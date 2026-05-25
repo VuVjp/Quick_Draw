@@ -29,24 +29,80 @@ export function useTFLite() {
         tensor: Float32Array,
         topK = 3
     ): Promise<{ label: string; score: number }[]> {
+
         const model = modelRef.current;
-        if (!model) throw new Error('Model not loaded');
 
-        // Input shape: [1, 64, 64, 1]
-        const output = await model.run([tensor]);
+        if (!model) {
+            throw new Error('Model not loaded');
+        }
 
-        // output[0] là Float32Array với length = số class
-        const scores = Array.from(output[0] as Float32Array);
+        // Debug model info
+        console.log('INPUTS:', model.inputs);
+        console.log('OUTPUTS:', model.outputs);
 
-        // Gắn label và sort
-        const labeled = scores.map((score, i) => ({
-            label: LABELS[i] ?? `class_${i}`,
-            score,
-        }));
+        // Ensure exact input size
+        const input = new Float32Array(1 * 64 * 64 * 1);
 
-        labeled.sort((a, b) => b.score - a.score);
-        return labeled.slice(0, topK);
+        // tensor length phải = 4096
+        input.set(tensor);
+
+        console.log('INPUT LENGTH:', input.length);
+        console.log('INPUT BYTES:', input.byteLength);
+
+        try {
+
+            // Use runSync for stable output
+            const output = model.runSync([input.buffer]);
+
+            console.log('RAW OUTPUT:', output);
+
+            // Validate output
+            if (
+                !output ||
+                !Array.isArray(output) ||
+                output.length === 0
+            ) {
+                throw new Error('Invalid model output');
+            }
+
+
+            const rawScores = output.map((o) => new Float32Array(o))[0];
+
+            if (!rawScores) {
+                throw new Error('Output tensor is empty');
+            }
+
+
+            // Convert output → JS array
+            const scores = Array.from(rawScores as number[]);
+
+            console.log('SCORES:', scores.map((s, i) => `${LABELS?.[i] ?? `class_${i}`}: ${s.toFixed(4)}`).join(', '));
+
+            if (scores.length === 0) {
+                throw new Error('Scores array is empty');
+            }
+
+            // Map labels
+            const labeled = scores.map((score, i) => ({
+                label: LABELS?.[i] ?? `class_${i}`,
+                score,
+            }));
+
+            // Sort descending
+            labeled.sort((a, b) => b.score - a.score);
+
+            const topPredictions = labeled.slice(0, topK);
+
+            console.log('TOP PREDICTIONS:', topPredictions);
+
+            return topPredictions;
+
+        } catch (e) {
+
+            console.error('Inference error:', e);
+
+            return [];
+        }
     }
-
     return { predict, isReady };
 };

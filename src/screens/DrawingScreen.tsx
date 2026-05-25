@@ -144,7 +144,7 @@ const DrawingScreen = () => {
               return;
             }
             try {
-              const result = await runInference(base64, currentWord);
+              const result = await runInference(base64, "snowflake");
               console.log('Inference result:', result);
             } catch (e) {
               console.error('Inference error:', e);

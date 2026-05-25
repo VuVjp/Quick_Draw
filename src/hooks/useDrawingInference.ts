@@ -1,9 +1,9 @@
 // hooks/useDrawingInference.ts
 import { useCallback, useRef } from 'react';
-import { useTFLite } from './useTFLite';
 import { base64ToTensor } from '../utils/imageUtils';
+import { useTFLite } from './useTFLite';
 
-const CONFIDENCE_THRESHOLD_STANDARD   = 0.85;
+const CONFIDENCE_THRESHOLD_STANDARD = 0.85;
 const CONFIDENCE_THRESHOLD_PEER_REVIEW = 0.90;
 
 interface InferenceResult {
@@ -22,6 +22,7 @@ export function useDrawingInference(peerReviewMode: boolean) {
 
       isRunning.current = true;
       try {
+
         const tensor = await base64ToTensor(base64);
         const predictions = await predict(tensor, 3);
         const top1 = predictions[0];

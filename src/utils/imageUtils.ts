@@ -1,59 +1,66 @@
-import { Buffer } from 'buffer'; // Đảm bảo đã cài hoặc có sẵn trong môi trường
-import { ImageManipulator } from 'expo-image-manipulator';
-import { decode as decodePng } from 'fast-png';
+import { Skia, ColorType, AlphaType } from '@shopify/react-native-skia';
 
+/**
+ * Giải mã ảnh base64 PNG, resize về 64x64 bằng Skia, 
+ * và chuyển đổi thành dạng Float32Array grayscale normalized [0, 1]
+ * (Nền trắng -> 0.0, Nét vẽ đen -> 1.0)
+ */
 export async function base64ToTensor(base64: string): Promise<Float32Array> {
-    // ── 1. Resize về 64×64 (Đã sửa lỗi Deprecated) ──────────────────────
-    const context = ImageManipulator.manipulate(`data:image/png;base64,${base64}`);
+  // 1. Giải mã base64 sang Skia Image
+  const data = Skia.Data.fromBase64(base64);
+  const originalImage = Skia.Image.MakeImageFromEncoded(data);
+  if (!originalImage) {
+    throw new Error("Không thể giải mã hình ảnh từ chuỗi base64");
+  }
 
-    // Thực hiện hành động resize
-    context.resize({ width: 64, height: 64 });
+  // 2. Tạo một 64x64 Skia Surface để thực hiện resize chất lượng cao trực tiếp trên native C++
+  const surface = Skia.Surface.Make(64, 64);
+  if (!surface) {
+    throw new Error("Không thể khởi tạo Skia surface 64x64");
+  }
 
-    // Render ảnh vào bộ nhớ tạm
-    const imageRef = await context.renderAsync();
+  const canvas = surface.getCanvas();
+  // Tô nền trắng chuẩn (theo cấu hình tập dữ liệu Quick Draw)
+  canvas.drawColor(Skia.Color('#FFFFFF'));
 
-    // Lưu ảnh kèm cấu hình nén và định dạng đầu ra
-    const result = await imageRef.saveAsync({
-        compress: 1,
-        format: ImageManipulator.SaveFormat.PNG,
-        base64: true
-    });
+  // Tính toán vùng vẽ và thực hiện drawImageRect để co dãn ảnh về đúng 64x64
+  const src = Skia.XYWHRect(0, 0, originalImage.width(), originalImage.height());
+  const dest = Skia.XYWHRect(0, 0, 64, 64);
+  canvas.drawImageRect(originalImage, src, dest, Skia.Paint());
 
-    if (!result.base64) {
-        throw new Error("Không thể lấy chuỗi Base64 từ ImageManipulator");
-    }
+  // 3. Chụp lại snapshot từ surface đã được thu nhỏ
+  const scaledImage = surface.makeImageSnapshot();
 
-    // ── 2. Decode base64 → Uint8Array (Sửa lỗi giải mã trên Mobile) ──────
-    // Không dùng atob() vì nó sẽ bị crash hoặc lỗi font chữ/ký tự đặc biệt trên React Native
-    const pngBytes = new Uint8Array(Buffer.from(result.base64, 'base64'));
+  // 4. Đọc dữ liệu điểm ảnh thô dưới định dạng RGBA_8888
+  const pixels = scaledImage.readPixels(0, 0, {
+    width: 64,
+    height: 64,
+    colorType: ColorType.RGBA_8888,
+    alphaType: AlphaType.Unpremul,
+  });
 
-    // ── 3. Decode PNG → raw pixel data ──────────────────────────────
-    const png = decodePng(pngBytes);
-    const ch = png.channels;
-    const pngData = png.data;
+  if (!pixels) {
+    throw new Error("Không thể đọc dữ liệu điểm ảnh (raw pixels) từ Skia image");
+  }
 
-    // ── 4. Convert sang grayscale Float32 normalized [0, 1] ─────────
-    const pixelCount = 64 * 64;
-    const tensor = new Float32Array(pixelCount);
+  // 5. Chuyển đổi sang Grayscale Float32 normalized [0, 1] và đảo màu (Invert)
+  const pixelCount = 64 * 64;
+  const tensor = new Float32Array(pixelCount);
 
-    // Tối ưu hóa hiệu năng bằng cách đưa điều kiện ch (channels) ra ngoài vòng lặp
-    if (ch === 1) {
-        for (let i = 0; i < pixelCount; i++) {
-            tensor[i] = 1.0 - (pngData[i] / 255.0);
-        }
-    } else if (ch === 3) {
-        for (let i = 0; i < pixelCount; i++) {
-            const idx = i * 3;
-            const gray = 0.299 * pngData[idx] + 0.587 * pngData[idx + 1] + 0.114 * pngData[idx + 2];
-            tensor[i] = 1.0 - (gray / 255.0);
-        }
-    } else { // RGBA (ch === 4)
-        for (let i = 0; i < pixelCount; i++) {
-            const idx = i * 4;
-            const gray = 0.299 * pngData[idx] + 0.587 * pngData[idx + 1] + 0.114 * pngData[idx + 2];
-            tensor[i] = 1.0 - (gray / 255.0);
-        }
-    }
+  // Vì định dạng là RGBA_8888, mỗi pixel chiếm 4 bytes (R, G, B, A)
+  for (let i = 0; i < pixelCount; i++) {
+    const idx = i * 4;
+    const r = pixels[idx];
+    const g = pixels[idx + 1];
+    const b = pixels[idx + 2];
+    
+    // Tính toán độ xám theo công thức chuẩn luminance
+    const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+    
+    // Chuẩn hóa về khoảng [0.0, 1.0] và đảo màu (1.0 - normalized_gray)
+    // Nền trắng (255) -> 0.0, Nét vẽ đen (0) -> 1.0
+    tensor[i] = 1.0 - (gray / 255.0);
+  }
 
-    return tensor;
+  return tensor;
 }
