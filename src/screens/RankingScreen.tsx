@@ -1,15 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { CompositeScreenProps } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { MainTabParamList } from '../navigation/MainTabs';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
 import PaperCard from '../components/PaperCard';
+import { useRouter } from 'expo-router';
 
 const { height } = Dimensions.get('window');
 
@@ -19,11 +15,6 @@ const MOCK_RANKINGS = [
   { id: '3', rank: 3, name: 'Cô Xinh Xắn', title1: 'Nghệ sĩ', title2: 'Tiềm năng', score: '13,200', avatar: '👧', color: 'pink' as const },
   { id: '4', rank: 4, name: 'Tân Binh', title1: 'Người mới', title2: '', score: '10,500', avatar: '🧑', color: 'default' as const },
 ];
-
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, 'RankingTab'>,
-  NativeStackScreenProps<RootStackParamList>
->;
 
 const RankingCard = React.memo(({ item, index }: { item: typeof MOCK_RANKINGS[0]; index: number }) => {
   const isTop3 = item.rank <= 3;
@@ -64,7 +55,9 @@ const RankingCard = React.memo(({ item, index }: { item: typeof MOCK_RANKINGS[0]
 });
 RankingCard.displayName = 'RankingCard';
 
-const RankingScreen = ({ navigation }: Props) => {
+const RankingScreen = () => {
+  const router = useRouter();
+
   return (
     <View style={styles.container}>
       {/* Background */}
@@ -76,7 +69,7 @@ const RankingScreen = ({ navigation }: Props) => {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Text style={styles.backBtnText}>←</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Bảng xếp hạng</Text>

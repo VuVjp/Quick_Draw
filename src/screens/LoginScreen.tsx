@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
@@ -12,8 +13,15 @@ const LoginScreen = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     // Tạm thời bỏ qua logic xác thực
+    if (username.trim()) {
+      try {
+        await AsyncStorage.setItem('user_token', username);
+      } catch (e) {
+        console.error('Failed to save login session', e);
+      }
+    }
     router.replace('/(tabs)/lobby');
   };
 

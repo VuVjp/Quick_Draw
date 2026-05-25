@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Text, Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
-import { BRUSH_COLORS, BRUSH_SIZES, useDrawingStore } from '../store/useDrawingStore';
+import { BRUSH_COLORS, BRUSH_SIZES, ERASER_SIZES, useDrawingStore } from '../store/useDrawingStore';
 import { Colors } from '../theme/colors';
 import { Spacing, Radius, Shadow } from '../theme/spacing';
 
@@ -25,9 +25,11 @@ const EXACT_COLORS = [
 const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
   const activeColor = useDrawingStore((s) => s.activeColor);
   const brushSize = useDrawingStore((s) => s.brushSize);
+  const eraserSize = useDrawingStore((s) => s.eraserSize);
   const isEraser = useDrawingStore((s) => s.isEraser);
   const setColor = useDrawingStore((s) => s.setColor);
   const setBrushSize = useDrawingStore((s) => s.setBrushSize);
+  const setEraserSize = useDrawingStore((s) => s.setEraserSize);
   const toggleEraser = useDrawingStore((s) => s.toggleEraser);
 
   const [showSizeSlider, setShowSizeSlider] = React.useState(false);
@@ -58,21 +60,37 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
       {/* Size Slider (Conditional) */}
       {showSizeSlider && (
         <View style={styles.sliderContainer}>
-          {BRUSH_SIZES.map((size) => (
-            <TouchableOpacity
-              key={size}
-              onPress={() => {
-                setBrushSize(size);
-                setShowSizeSlider(false);
-              }}
-              style={[
-                styles.sizeOption,
-                brushSize === size ? styles.sizeOptionActive : undefined,
-              ]}
-            >
-              <View style={[styles.sizeDot, { width: size, height: size }]} />
-            </TouchableOpacity>
-          ))}
+          {(isEraser ? ERASER_SIZES : BRUSH_SIZES).map((size) => {
+            const isActive = (isEraser ? eraserSize : brushSize) === size;
+            return (
+              <TouchableOpacity
+                key={size}
+                onPress={() => {
+                  if (isEraser) {
+                    setEraserSize(size);
+                  } else {
+                    setBrushSize(size);
+                  }
+                  setShowSizeSlider(false);
+                }}
+                style={[
+                  styles.sizeOption,
+                  isActive ? styles.sizeOptionActive : undefined,
+                ]}
+              >
+                <View style={[
+                  styles.sizeDot,
+                  {
+                    width: Math.min(size, 24),
+                    height: Math.min(size, 24),
+                    backgroundColor: isEraser ? '#F4978E' : Colors.warmBlack,
+                    borderWidth: isEraser ? 1.5 : 0,
+                    borderColor: Colors.border,
+                  }
+                ]} />
+              </TouchableOpacity>
+            );
+          })}
         </View>
       )}
 
@@ -102,7 +120,16 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
           onPress={() => setShowSizeSlider(!showSizeSlider)}
           style={[styles.toolBtn, showSizeSlider ? styles.toolBtnActive : undefined]}
         >
-          <View style={[styles.sizeDot, { width: 12, height: 12, backgroundColor: Colors.warmBlack }]} />
+          <View style={[
+            styles.sizeDot,
+            {
+              width: 12,
+              height: 12,
+              backgroundColor: isEraser ? '#F4978E' : Colors.warmBlack,
+              borderWidth: isEraser ? 1 : 0,
+              borderColor: Colors.border,
+            }
+          ]} />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={onUndo} style={styles.toolBtn}>

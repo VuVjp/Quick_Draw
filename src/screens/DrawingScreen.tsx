@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useEffect } from 'react';
+import React, { useRef, useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,7 @@ import DrawingCanvas, { DrawingCanvasRef } from '../canvas/DrawingCanvas';
 import BrushToolbar from '../canvas/BrushToolbar';
 import WordHint from '../components/WordHint';
 import PlayerAvatar from '../components/PlayerAvatar';
+import InGameRanking from '../components/InGameRanking';
 import { useGameStore } from '../store/useGameStore';
 import { useDrawingStore } from '../store/useDrawingStore';
 import { useTimer } from '../hooks/useTimer';
@@ -71,6 +72,7 @@ TimerDisplay.displayName = 'TimerDisplay';
 const DrawingScreen = () => {
   const router = useRouter();
   const canvasRef = useRef<DrawingCanvasRef>(null);
+  const [canvasSize, setCanvasSize] = useState({ width: width - Spacing.xl * 2, height: CANVAS_HEIGHT });
 
   const players = useGameStore((s) => s.players);
   const currentWord = useGameStore((s) => s.currentWord);
@@ -117,13 +119,24 @@ const DrawingScreen = () => {
           <TimerDisplay />
         </View>
 
+        {/* ── In-Game Ranking Tab ── */}
+        <InGameRanking />
+
         {/* ── Canvas ── */}
         <View style={styles.canvasContainer}>
-          <View style={styles.canvasInner}>
+          <View 
+            style={styles.canvasInner}
+            onLayout={(e) => {
+              const { width: w, height: h } = e.nativeEvent.layout;
+              if (w > 0 && h > 0) {
+                setCanvasSize({ width: w, height: h });
+              }
+            }}
+          >
             <DrawingCanvas
               ref={canvasRef}
-              width={width - Spacing.xl * 2}
-              height={CANVAS_HEIGHT}
+              width={canvasSize.width}
+              height={canvasSize.height}
               disabled={!isDrawer}
             />
           </View>
