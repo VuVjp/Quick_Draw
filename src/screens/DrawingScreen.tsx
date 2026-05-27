@@ -113,7 +113,7 @@ const DrawingScreen = () => {
 
           <View style={styles.wordLabelContainer}>
             <Text style={styles.youDrawText}>HÃY VẼ:</Text>
-            <Text style={styles.wordText}>Con Mèo</Text>
+            <Text style={styles.wordText}>{currentWord}</Text>
           </View>
 
           <TimerDisplay />
@@ -124,7 +124,7 @@ const DrawingScreen = () => {
 
         {/* ── Canvas ── */}
         <View style={styles.canvasContainer}>
-          <View 
+          <View
             style={styles.canvasInner}
             onLayout={(e) => {
               const { width: w, height: h } = e.nativeEvent.layout;

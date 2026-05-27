@@ -92,9 +92,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   startRound: () => {
     const word = getRandomWord();
-    const hint = word.replace(/[a-zA-Z]/g, '_');
     const { drawTime } = get();
-    set({ phase: 'drawing', currentWord: word, wordHint: hint, timeLeft: drawTime });
+    set({ phase: 'drawing', currentWord: word, wordHint: '', timeLeft: drawTime });
   },
 
   endRound: (scores) =>
@@ -116,7 +115,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   startSinglePlayer: () => {
     const word = getRandomWord();
-    const hint = word.replace(/[a-zA-Z]/g, '_');
     set({
       isSinglePlayer: true,
       phase: 'drawing',
@@ -124,7 +122,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       currentDrawerId: MOCK_PLAYERS[0].id,
       currentRound: 1,
       currentWord: word,
-      wordHint: hint,
+      wordHint: '',
       timeLeft: 80,
       difficulty: 'Trung bình', // Default for single player
       peerReviewEnabled: false,
