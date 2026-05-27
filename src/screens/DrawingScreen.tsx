@@ -32,7 +32,6 @@ import DrawingCanvas, { DrawingCanvasRef } from '../canvas/DrawingCanvas';
 const { width, height } = Dimensions.get('window');
 const CANVAS_HEIGHT = height * 0.52;
 
-
 // ── Timer Ring ──────────────────────────────────────────────────────────────
 const TimerDisplay = React.memo(() => {
   const timeLeft = useGameStore((s) => s.timeLeft);
