@@ -15,17 +15,15 @@ export function useJoinRoom() {
             // Tìm room theo code
             const snap = await firestore()
                 .collection('rooms')
-                .where('code', '==', code.toUpperCase().trim())
-                .where('status', '==', 'waiting')
-                .limit(1)
+                .doc(code.toUpperCase().trim())
                 .get();
 
-            if (snap.empty) {
+            if (!snap.exists()) {
                 setError('Không tìm thấy phòng hoặc phòng đã bắt đầu');
                 return null;
             }
 
-            const roomDoc = snap.docs[0];
+            const roomDoc = snap.data()!;
             const roomRef = firestore().collection('rooms').doc(roomDoc.id);
             const playerRef = roomRef.collection('players').doc(playerId);
 

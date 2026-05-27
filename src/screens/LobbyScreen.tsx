@@ -36,7 +36,7 @@ const RoomCard = React.memo(({ room, index, onJoin }: { room: Room; index: numbe
       <PaperCard style={styles.roomCardWrapper} variant={room.color} rotate={rotate}>
         <View style={styles.cardTop}>
           <View style={styles.tag}>
-            <Text style={styles.tagText}>#{room.id.padStart(2, '0')}</Text>
+            <Text style={styles.tagText}>#{room.code.padStart(2, '0')}</Text>
           </View>
           <Text style={styles.playerCount}>
             👤 {room.players}/{room.maxPlayers}{isFull ? ' (Full)' : ''}
