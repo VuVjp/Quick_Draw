@@ -51,7 +51,7 @@ export const ERASER_SIZES: BrushSize[] = [10, 20, 40, 60];
 
 export const useDrawingStore = create<DrawingStore>((set) => ({
   activeColor: '#1E1E1E',
-  brushSize: 8,
+  brushSize: 15,
   eraserSize: 25,
   isEraser: false,
   strokeHistory: [],
@@ -62,7 +62,7 @@ export const useDrawingStore = create<DrawingStore>((set) => ({
   setEraserSize: (size) => set({ eraserSize: size }),
   toggleEraser: () => set((state) => ({ isEraser: !state.isEraser })),
   pushStroke: (stroke) =>
-    set((state) => ({ 
+    set((state) => ({
       strokeHistory: [...state.strokeHistory, stroke],
       redoHistory: [] // Clear redo history when drawing something new
     })),

@@ -32,7 +32,7 @@ export function useDrawingInference(peerReviewMode: boolean) {
           : CONFIDENCE_THRESHOLD_STANDARD;
 
         const accepted =
-          top1.label === targetTopic && top1.score >= threshold;
+          top1.label === targetTopic;
 
         return {
           label: top1.label,
