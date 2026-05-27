@@ -50,7 +50,7 @@ export const BRUSH_SIZES: BrushSize[] = [20];
 export const ERASER_SIZES: BrushSize[] = [10, 20, 40, 60];
 
 export const useDrawingStore = create<DrawingStore>((set) => ({
-  activeColor: '#4A443F',
+  activeColor: '#000000',
   brushSize: 20,
   eraserSize: 40,
   isEraser: false,

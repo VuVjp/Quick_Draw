@@ -5,6 +5,10 @@ const { width } = Dimensions.get('window');
 import { BRUSH_COLORS, BRUSH_SIZES, ERASER_SIZES, useDrawingStore } from '../store/useDrawingStore';
 import { Colors } from '../theme/colors';
 import { Spacing, Radius, Shadow } from '../theme/spacing';
+import BrushIcon from '../../assets/brush-icon.svg';
+import EraserIcon from '../../assets/Icon/eraser.svg';
+import UndoIcon from '../../assets/Icon/arrow-big-left.svg';
+import RedoIcon from '../../assets/Icon/arrow-big-right.svg';
 
 type Props = {
   onUndo: () => void;
@@ -81,7 +85,7 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
           }}
           style={[styles.toolBtn, !isEraser ? styles.toolBtnActive : undefined]}
         >
-          <Text style={styles.toolIcon}>🖌️</Text>
+          <BrushIcon width={24} height={24} color={Colors.warmBlack} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -91,7 +95,7 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
           }}
           style={[styles.toolBtn, isEraser ? styles.toolBtnActive : undefined]}
         >
-          <Text style={styles.toolIcon}>🧽</Text>
+          <EraserIcon width={24} height={24} color={Colors.warmBlack} />
         </TouchableOpacity>
 
         <TouchableOpacity 
@@ -115,11 +119,11 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
           ]} />
         </TouchableOpacity>
         <TouchableOpacity onPress={onUndo} style={styles.toolBtn}>
-          <Text style={styles.toolIcon}>↩️</Text>
+          <UndoIcon width={24} height={24} color={Colors.warmBlack} />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={onRedo} style={styles.toolBtn}>
-          <Text style={styles.toolIcon}>↪️</Text>
+          <RedoIcon width={24} height={24} color={Colors.warmBlack} />
         </TouchableOpacity>
       </View>
     </View>
