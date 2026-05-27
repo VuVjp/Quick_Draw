@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.xl,
-    paddingTop: 60,
+    paddingTop: Spacing.md,
     paddingBottom: Spacing.md,
   },
   title: {

@@ -1,5 +1,6 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity, Modal, KeyboardAvoidingView, TextInput, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -12,6 +13,9 @@ import AnimatedButton from '../components/AnimatedButton';
 import { usePublicRooms, RoomItem } from '../hooks/usePublicRooms';
 import { ActivityIndicator } from 'react-native';
 import { useJoinRoom } from '../hooks/useJoinRoom';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { height } = Dimensions.get('window');
 
@@ -72,6 +76,7 @@ const RoomCard = React.memo(({ room, index, onJoin }: { room: Room; index: numbe
 RoomCard.displayName = 'RoomCard';
 const LobbyScreen = () => {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const joinRoom = useGameStore((s) => s.joinRoom);
   const availableRooms = useGameStore((s) => s.availableRooms);
   const removeRoom = useGameStore((s) => s.removeRoom);
@@ -91,11 +96,6 @@ const LobbyScreen = () => {
     router.replace('/home');
   };
 
-  const handleJoin = useCallback((room: Room) => {
-    joinRoom(room.id, room.name, room.players, room.maxPlayers);
-    router.push(`/room/${room.id}`);
-  }, [router, joinRoom]);
-
   const handleRemove = useCallback((id: string) => {
     removeRoom(id);
   }, [removeRoom]);
@@ -110,11 +110,34 @@ const LobbyScreen = () => {
     color: CARD_COLORS[index % CARD_COLORS.length],
   }));
 
+  const handleJoin = useCallback(async (roomId: string) => {
+    const uid = auth().currentUser?.uid || 'user_001';
+    const username = await AsyncStorage.getItem('user_token') || 'Player 1';
+    try {
+      await firestore()
+        .collection('rooms')
+        .doc(roomId)
+        .collection('players')
+        .doc(uid)
+        .set({
+          displayName: username,
+          score: 0,
+          isOnline: true,
+          joinedAt: firestore.FieldValue.serverTimestamp(),
+        });
+      router.push(`/room/${roomId}`);
+    } catch (e) {
+      console.error('[handleJoin]', e);
+    }
+  }, [router]);
+
   const handleJoinByCode = async () => {
+    const uid = auth().currentUser?.uid || 'user_001';
+    const username = await AsyncStorage.getItem('user_token') || 'Player 1';
     const result = await joinRoomByCode(
       roomCode,
-      'user_001',    // TODO: thay bằng auth uid
-      'Player 1',    // TODO: thay bằng tên thật
+      uid,
+      username,
     );
     if (result) {
       setModalVisible(false);
@@ -133,7 +156,7 @@ const LobbyScreen = () => {
       </View>
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, Spacing.md) }]}>
         <View style={styles.headerTop}>
           <TouchableOpacity onPress={() => router.replace('/home')} style={styles.backBtn}>
             <Text style={styles.backBtnText}>←</Text>
@@ -187,7 +210,7 @@ const LobbyScreen = () => {
         onRequestClose={() => setModalVisible(false)}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
           style={styles.modalOverlay}
         >
           <View style={styles.modalCard}>
@@ -199,12 +222,18 @@ const LobbyScreen = () => {
             <TextInput
               style={styles.codeInput}
               value={roomCode}
-              onChangeText={(t) => setRoomCode(t.toUpperCase())}
+              onChangeText={(t) => setRoomCode(t.toUpperCase().trim())}
               placeholder="ABC123"
               placeholderTextColor={Colors.softGray}
               maxLength={6}
               autoCapitalize="characters"
               autoFocus
+              returnKeyType="go"
+              onSubmitEditing={() => {
+                if (roomCode.length >= 6 && !joinLoading) {
+                  handleJoinByCode();
+                }
+              }}
             />
 
             {/* Error */}
@@ -213,7 +242,7 @@ const LobbyScreen = () => {
             )}
 
             {/* Buttons */}
-            <View style={styles.modalButtons}>
+            <View style={[styles.modalButtons, { justifyContent: 'center' }]}>
               <AnimatedButton
                 label="Huỷ"
                 onPress={() => {
@@ -221,14 +250,16 @@ const LobbyScreen = () => {
                   setRoomCode('');
                 }}
                 variant="ghost"
-                style={styles.modalBtn}
+                style={{ paddingVertical: 10, paddingHorizontal: 20 }}
+                textStyle={{ fontSize: 16 }}
               />
               <AnimatedButton
                 label={joinLoading ? 'Đang vào...' : 'Vào phòng →'}
                 onPress={handleJoinByCode}
                 disabled={roomCode.length < 6 || joinLoading}
                 variant="primary"
-                style={styles.modalBtn}
+                style={{ paddingVertical: 10, paddingHorizontal: 20 }}
+                textStyle={{ fontSize: 16 }}
               />
             </View>
           </View>
@@ -250,7 +281,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.softGray, opacity: 0.5,
   },
   header: {
-    paddingTop: 60,
+    paddingTop: Spacing.md,
     paddingBottom: Spacing.lg,
     paddingHorizontal: Spacing.xl,
     alignItems: 'center',
@@ -408,13 +439,14 @@ const styles = StyleSheet.create({
   },
   codeInput: {
     fontFamily: FontFamily.patrickHand,
-    fontSize: FontSize.hero,
+    fontSize: 36,
     textAlign: 'center',
-    letterSpacing: 12,
     borderBottomWidth: 2,
     borderColor: Colors.primaryYellow,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     color: Colors.warmBlack,
+    width: '80%',
+    alignSelf: 'center',
   },
   errorText: {
     fontFamily: FontFamily.patrickHand,
@@ -428,7 +460,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   modalBtn: {
-    flex: 1,
     paddingVertical: Spacing.sm,
   },
 });

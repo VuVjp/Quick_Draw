@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, Switch, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
@@ -11,6 +11,10 @@ import NotebookBackground from '../components/NotebookBackground';
 import { useCreateRoom } from '../hooks/useCreateRoom';
 import { playClick } from '../store/useAudioStore';
 import { useHaptics } from '../hooks/useHaptics';
+
+import auth from '@react-native-firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CreateRoomScreen = () => {
   const router = useRouter();
@@ -28,9 +32,13 @@ const CreateRoomScreen = () => {
 
   const { light } = useHaptics();
   const insets = useSafeAreaInsets();
+
   const { createRoom, loading } = useCreateRoom();
 
   const handleCreate = async () => {
+    const uid = auth().currentUser?.uid || 'user_001';
+    const username = await AsyncStorage.getItem('user_token') || 'Player 1';
+
     // Vẫn giữ setRoomConfig cho local store
     setRoomConfig({
       maxPlayers,
@@ -43,8 +51,8 @@ const CreateRoomScreen = () => {
     });
 
     const result = await createRoom({
-      hostId: 'user_001',           // TODO: thay bằng auth uid sau
-      hostName: 'Player 1',         // TODO: thay bằng tên thật sau
+      hostId: uid,
+      hostName: username,
       roomName,
       maxPlayers,
       totalRounds: rounds,
@@ -102,10 +110,14 @@ const CreateRoomScreen = () => {
 
   return (
     <NotebookBackground>
-      <View style={[styles.header, { paddingTop: Math.max(insets.top + Spacing.md, 40) }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backBtnText}>←</Text>
-        </TouchableOpacity>
+      <View style={styles.header}>
+        <AnimatedButton
+          label="←"
+          onPress={() => router.back()}
+          variant="ghost"
+          style={{ width: 44, height: 44, paddingHorizontal: 0, paddingVertical: 0 }}
+          textStyle={{ fontSize: 28, marginTop: -4 }}
+        />
         <Text style={styles.title}>Cấu hình phòng</Text>
         <View style={{ width: 44 }} />
       </View>
@@ -164,7 +176,7 @@ const CreateRoomScreen = () => {
         </View>
       </View>
 
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, Spacing.xl) }]}>
+      <View style={styles.footer}>
         <AnimatedButton
           label={loading ? 'Đang tạo...' : 'Bắt đầu '}
           onPress={handleCreate}
@@ -185,6 +197,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
     paddingBottom: Spacing.md,
   },
   title: {
@@ -283,5 +296,6 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xl,
   },
 });

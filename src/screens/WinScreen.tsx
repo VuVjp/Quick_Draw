@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -46,7 +47,7 @@ const WinScreen = () => {
   const s2Style = useAnimatedStyle(() => ({ transform: [{ translateY: star2Y.value }] }));
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Animated.View style={[styles.mainFrame, containerStyle]}>
         
         {/* Floating decorations */}
@@ -100,7 +101,7 @@ const WinScreen = () => {
         </View>
 
       </Animated.View>
-    </View>
+    </SafeAreaView>
   );
 };
 

@@ -97,15 +97,15 @@ const DrawingScreen = () => {
     players.forEach(p => {
       mockScores[p.id] = Math.floor(Math.random() * 50); // Mock points
     });
-    
+
     // Give the local drawer a random high score if they are playing single player to simulate drawing good
     if (useGameStore.getState().isSinglePlayer) {
-       mockScores['1'] = 45 + Math.floor(Math.random() * 15);
+      mockScores['1'] = 45 + Math.floor(Math.random() * 15);
     }
-    
+
     // Save current drawing to store
     const strokes = useDrawingStore.getState().strokeHistory;
-    
+
     useGameStore.getState().endRound(mockScores, strokes);
     router.replace('/round-end' as any);
   });
@@ -160,23 +160,23 @@ const DrawingScreen = () => {
               <View style={styles.waitingOverlay}>
                 <Text style={styles.waitingTitle}>Đang chờ người chơi...</Text>
                 <Text style={styles.waitingCount}>{players.length} / {maxPlayers}</Text>
-                
+
                 <View style={styles.waitingPlayers}>
                   {players.map(p => (
                     <View key={p.id} style={[styles.waitingAvatar, { borderColor: p.color }]}>
-                      <Text style={{fontSize: 24}}>{p.avatar}</Text>
+                      <Text style={{ fontSize: 24 }}>{p.avatar}</Text>
                     </View>
                   ))}
                 </View>
 
-                <AnimatedButton 
+                <AnimatedButton
                   label="Bắt đầu ngay 🚀"
                   onPress={() => {
                     startGame();
                     setTimeout(() => startRound(), 100);
                   }}
                   variant="primary"
-                  style={{marginTop: Spacing.xl}}
+                  style={{ marginTop: Spacing.xl }}
                 />
               </View>
             )}
@@ -224,6 +224,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
   },
   closeBtn: {

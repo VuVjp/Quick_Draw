@@ -36,7 +36,7 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
 
   return (
     <View style={styles.container}>
-      {/* Color Palette Pill (Removed) */}
+      {/* Color Palette Pill removed as requested */}
 
       {/* Eraser Size Slider (Conditional) */}
       {showSizeSlider && isEraser && (
@@ -120,6 +120,10 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
 
         <TouchableOpacity onPress={onRedo} style={styles.toolBtn}>
           <Text style={styles.toolIcon}>↪️</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={onClear} style={styles.toolBtn}>
+          <Text style={styles.toolIcon}>🗑️</Text>
         </TouchableOpacity>
       </View>
     </View>

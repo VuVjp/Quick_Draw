@@ -16,6 +16,8 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initBgm, initClickSound, initBrushSound } from '../src/store/useAudioStore';
 
+import auth from '@react-native-firebase/auth';
+
 // Keep splash visible until fonts load
 SplashScreen.preventAutoHideAsync();
 
@@ -34,6 +36,15 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
+    // Sign in anonymously to ensure everyone has a valid uid
+    auth().signInAnonymously()
+      .then((userCred) => {
+        console.log('✅ Firebase Anonymous Auth success. UID:', userCred.user.uid);
+      })
+      .catch((err) => {
+        console.error('❌ Firebase Anonymous Auth failed:', err);
+      });
+
     if (fontsLoaded || fontsError) {
       SplashScreen.hideAsync();
     }
@@ -56,6 +67,7 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ animation: 'fade' }} />
           <Stack.Screen name="home" options={{ animation: 'fade' }} />
           <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+          <Stack.Screen name="room/[id]" options={{ animation: 'slide_from_right', gestureEnabled: false }} />
           <Stack.Screen name="drawing" options={{ animation: 'slide_from_right', gestureEnabled: false }} />
           <Stack.Screen name="win" options={{ animation: 'fade' }} />
           <Stack.Screen name="lose" options={{ animation: 'fade' }} />

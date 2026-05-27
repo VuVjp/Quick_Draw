@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -33,7 +34,7 @@ const LoseScreen = () => {
   }));
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Animated.View style={[styles.content, style]}>
         
         <Text style={styles.heart}>💔</Text>
@@ -78,7 +79,7 @@ const LoseScreen = () => {
         </View>
 
       </Animated.View>
-    </View>
+    </SafeAreaView>
   );
 };
 
