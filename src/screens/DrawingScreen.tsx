@@ -94,8 +94,22 @@ const DrawingScreen = () => {
 
 
   const { progress } = useTimer(undefined, () => {
-    endGame();
-    router.replace('/win');
+    // End round instead of end game
+    const mockScores: Record<string, number> = {};
+    players.forEach(p => {
+      mockScores[p.id] = Math.floor(Math.random() * 50); // Mock points
+    });
+    
+    // Give the local drawer a random high score if they are playing single player to simulate drawing good
+    if (useGameStore.getState().isSinglePlayer) {
+       mockScores['1'] = 45 + Math.floor(Math.random() * 15);
+    }
+    
+    // Save current drawing to store
+    const strokes = useDrawingStore.getState().strokeHistory;
+    
+    useGameStore.getState().endRound(mockScores, strokes);
+    router.replace('/round-end' as any);
   });
 
   const isDrawer = currentDrawerId === '1'; // mock: local user is always player 1
