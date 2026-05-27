@@ -1,6 +1,13 @@
 // src/hooks/useCreateRoom.ts
 import { useState } from 'react';
-import firestore from '@react-native-firebase/firestore';
+import {
+    FireStore,
+    collection,
+    doc,
+    writeBatch,
+    serverTimestamp,
+} from '@react-native-firebase/firestore';
+import { db } from '../services/firebase';
 
 function generateRoomCode(): string {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -28,8 +35,8 @@ export function useCreateRoom() {
 
         try {
             const code = generateRoomCode();
-            const roomRef = firestore().collection('rooms').doc();
-            const batch = firestore().batch();
+            const roomRef = doc(collection(db, 'rooms'));
+            const batch = writeBatch(db);
 
             // Room document
             batch.set(roomRef, {
@@ -48,19 +55,17 @@ export function useCreateRoom() {
                 currentDrawerId: null,
                 currentTopic: null,
                 playerCount: 1,
-                createdAt: firestore.FieldValue.serverTimestamp(),
+                createdAt: FireStore.FieldValue.serverTimestamp(),
             });
 
             // Host vào players sub-collection
-            batch.set(
-                roomRef.collection('players').doc(options.hostId),
-                {
-                    displayName: options.hostName,
-                    score: 0,
-                    isOnline: true,
-                    joinedAt: firestore.FieldValue.serverTimestamp(),
-                }
-            );
+            const playerRef = doc(db, 'rooms', roomRef.id, 'players', options.hostId);
+            batch.set(playerRef, {
+                displayName: options.hostName,
+                score: 0,
+                isOnline: true,
+                joinedAt: serverTimestamp(),
+            });
 
             await batch.commit();
             return { roomId: roomRef.id, code };

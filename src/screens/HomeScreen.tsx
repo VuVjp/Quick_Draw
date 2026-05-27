@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
-import { Dimensions, Image, StyleSheet, View } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-} from 'react-native-reanimated';
-import { useEntranceAnimation } from '../animations/useAnimations';
+import { Dimensions, StyleSheet, View, Text } from 'react-native';
+import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import AnimatedButton from '../components/AnimatedButton';
 import AuthModal from '../components/AuthModal';
 import FloatingDoodles from '../components/FloatingDoodles';
@@ -13,6 +10,9 @@ import { Spacing } from '../theme/spacing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useGameStore } from '../store/useGameStore';
+import Logo from '../../assets/logo/Group 7.svg';
+import { Colors } from '../theme/colors';
+import { FontFamily, FontSize } from '../theme/typography';
 
 const { width, height } = Dimensions.get('window');
 
@@ -20,15 +20,13 @@ const HomeScreen = () => {
   const router = useRouter();
   const [showAuth, setShowAuth] = useState(false);
   const startSinglePlayer = useGameStore((s) => s.startSinglePlayer);
-  const { opacity: titleOpacity, scale: titleScale } = useEntranceAnimation(100);
-  const { opacity: btnOpacity } = useEntranceAnimation(400);
 
   const handleOnlinePress = async () => {
     try {
       const token = await AsyncStorage.getItem('user_token');
       if (token) {
         // Tự động đăng nhập nếu đã có token
-        router.push('/(tabs)/lobby');
+        router.push('/lobby');
       } else {
         setShowAuth(true);
       }
@@ -38,41 +36,37 @@ const HomeScreen = () => {
     }
   };
 
-  const titleStyle = useAnimatedStyle(() => ({
-    opacity: titleOpacity.value,
-    transform: [{ scale: titleScale.value }],
-  }));
-
-  const btnStyle = useAnimatedStyle(() => ({
-    opacity: btnOpacity.value,
-  }));
-
   return (
     <NotebookBackground>
       <FloatingDoodles />
       <View style={styles.centre}>
-        {/* Title & Logo */}
-        <Animated.View style={[styles.logoBlock, titleStyle]}>
-          <Image
-            source={require('../../assets/logo.png')}
-            style={styles.logoImage}
-            resizeMode="contain"
+        <Animated.View 
+          entering={ZoomIn.duration(600).springify().damping(12).stiffness(100)} 
+          style={styles.logoBlock}
+        >
+          <Logo
+            width={240}
+            height={240}
           />
+          <Text style={styles.titleText}>Quick Draw!</Text>
+          <Text style={styles.subtitleText}>Thử tài hoạ sĩ tí hon</Text>
         </Animated.View>
 
         {/* Buttons */}
-        <Animated.View style={[styles.buttonStack, btnStyle]}>
+        <Animated.View 
+          entering={FadeInDown.delay(200).duration(500).springify().damping(14)} 
+          style={styles.buttonStack}
+        >
           <AnimatedButton
-            label="Chơi Đơn 🧑"
+            label="Chơi Đơn"
             onPress={() => {
-              startSinglePlayer();
-              router.push('/drawing');
+              router.push('/single-player-config');
             }}
             variant="primary"
             fullWidth
           />
           <AnimatedButton
-            label="Chơi Online 🌐"
+            label="Chơi Online"
             onPress={handleOnlinePress}
             variant="primary"
             fullWidth
@@ -96,11 +90,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.xxxl,
-    gap: Spacing.xxxl * 1.5,
+    gap: Spacing.xxxl,
   },
   logoBlock: {
     alignItems: 'center',
     width: '100%',
+    marginBottom: Spacing.md,
   },
   logoImage: {
     width: 240,
@@ -109,5 +104,17 @@ const styles = StyleSheet.create({
   buttonStack: {
     width: '100%',
     gap: Spacing.md,
+  },
+  titleText: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.hero,
+    color: Colors.warmBlack,
+    marginTop: -Spacing.md, // Xích xuống 1 chút (thay vì -Spacing.lg)
+  },
+  subtitleText: {
+    fontFamily: FontFamily.patrickHand, // Đổi sang PatrickHand vì Caveat bị lỗi tiếng Việt
+    fontSize: FontSize.xl,
+    color: Colors.border,
+    marginTop: 0,
   },
 });

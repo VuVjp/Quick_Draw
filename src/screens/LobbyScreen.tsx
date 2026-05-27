@@ -1,7 +1,8 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity, Modal, KeyboardAvoidingView, TextInput, Platform } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
@@ -43,15 +44,26 @@ const RoomCard = React.memo(({ room, index, onJoin }: { room: Room; index: numbe
         </View>
 
         <View style={styles.cardBottom}>
-          <Text style={styles.roomName}>{room.name}</Text>
-          <AnimatedButton
-            label={isFull ? 'Đầy' : 'Vào'}
-            onPress={onJoin}
-            disabled={isFull}
-            variant="ghost"
-            style={styles.joinBtn}
-            textStyle={styles.joinBtnText}
-          />
+          <Text style={styles.roomName} numberOfLines={1}>{room.name}</Text>
+          <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
+            {room.isOwner && (
+              <AnimatedButton
+                label="Hủy"
+                onPress={() => onRemove(room.id)}
+                variant="danger"
+                style={styles.joinBtn}
+                textStyle={styles.joinBtnText}
+              />
+            )}
+            <AnimatedButton
+              label={isFull ? 'Đầy' : 'Vào'}
+              onPress={() => onJoin(room)}
+              disabled={isFull}
+              variant="ghost"
+              style={styles.joinBtn}
+              textStyle={styles.joinBtnText}
+            />
+          </View>
         </View>
       </PaperCard>
     </Animated.View>
@@ -61,6 +73,32 @@ RoomCard.displayName = 'RoomCard';
 const LobbyScreen = () => {
   const router = useRouter();
   const joinRoom = useGameStore((s) => s.joinRoom);
+  const availableRooms = useGameStore((s) => s.availableRooms);
+  const removeRoom = useGameStore((s) => s.removeRoom);
+
+  const [username, setUsername] = useState('Khách');
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const token = await AsyncStorage.getItem('user_token');
+      if (token) setUsername(token);
+    };
+    loadUser();
+  }, []);
+
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('user_token');
+    router.replace('/home');
+  };
+
+  const handleJoin = useCallback((room: Room) => {
+    joinRoom(room.id, room.name, room.players, room.maxPlayers);
+    router.push(`/room/${room.id}`);
+  }, [router, joinRoom]);
+
+  const handleRemove = useCallback((id: string) => {
+    removeRoom(id);
+  }, [removeRoom]);
   const { joinRoomByCode, loading: joinLoading, error: joinError } = useJoinRoom();
   const [modalVisible, setModalVisible] = useState(false);
   const [roomCode, setRoomCode] = useState('');
@@ -71,11 +109,6 @@ const LobbyScreen = () => {
     ...room,
     color: CARD_COLORS[index % CARD_COLORS.length],
   }));
-
-  const handleJoin = useCallback((roomId: string) => {
-    // TODO: thêm logic join room vào Firestore
-    router.push(`/room/${roomId}`);
-  }, [router]);
 
   const handleJoinByCode = async () => {
     const result = await joinRoomByCode(
@@ -105,8 +138,13 @@ const LobbyScreen = () => {
           <TouchableOpacity onPress={() => router.replace('/home')} style={styles.backBtn}>
             <Text style={styles.backBtnText}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>Phòng Chờ</Text>
-          <View style={{ width: 44 }} />
+          <View style={{ alignItems: 'center' }}>
+            <Text style={styles.title}>Phòng Chờ</Text>
+            <Text style={styles.greetingText}>Xin chào, {username}</Text>
+          </View>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
+            <Text style={styles.logoutBtnText}>Đăng xuất</Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.headerButtons}>
           <AnimatedButton
@@ -240,6 +278,24 @@ const styles = StyleSheet.create({
     color: Colors.warmBlack,
     marginTop: -2,
   },
+  greetingText: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.md,
+    color: Colors.border,
+  },
+  logoutBtn: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: Colors.pastelRed,
+    backgroundColor: Colors.paperWhite,
+  },
+  logoutBtnText: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.sm,
+    color: Colors.pastelRed,
+  },
   title: {
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.xxl,
@@ -295,8 +351,8 @@ const styles = StyleSheet.create({
   },
   roomName: {
     flex: 1,
-    fontFamily: FontFamily.indieFlower,
-    fontSize: FontSize.xl + 4,
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.xl,
     color: Colors.warmBlack,
     lineHeight: 36,
   },
@@ -344,8 +400,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   modalHint: {
-    fontFamily: FontFamily.caveat,
-    fontSize: FontSize.md,
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.lg,
     color: Colors.warmBlack,
     opacity: 0.6,
     textAlign: 'center',
@@ -361,8 +417,8 @@ const styles = StyleSheet.create({
     color: Colors.warmBlack,
   },
   errorText: {
-    fontFamily: FontFamily.caveat,
-    fontSize: FontSize.md,
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.lg,
     color: Colors.pastelRed,
     textAlign: 'center',
   },

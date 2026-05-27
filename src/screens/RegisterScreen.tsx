@@ -11,6 +11,7 @@ import NotebookBackground from '../components/NotebookBackground';
 const RegisterScreen = () => {
   const router = useRouter();
   const [username, setUsername] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -23,7 +24,7 @@ const RegisterScreen = () => {
         console.error('Failed to save register session', e);
       }
     }
-    router.replace('/(tabs)/lobby');
+    router.replace('/lobby');
   };
 
   return (
@@ -47,6 +48,17 @@ const RegisterScreen = () => {
               placeholder="VD: art_master_123"
               placeholderTextColor={Colors.softGray}
               autoCapitalize="none"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Tên hiển thị (Tên trong game)</Text>
+            <TextInput
+              style={styles.textInput}
+              value={displayName}
+              onChangeText={setDisplayName}
+              placeholder="VD: Cỏ Nhỏ"
+              placeholderTextColor={Colors.softGray}
             />
           </View>
 
@@ -80,6 +92,17 @@ const RegisterScreen = () => {
           onPress={handleRegister}
           variant="primary"
           style={styles.submitBtn}
+        />
+
+        <AnimatedButton
+          label="Chơi với tư cách khách 👤"
+          onPress={async () => {
+            const guestName = `Guest${Math.floor(Math.random() * 10000)}`;
+            await AsyncStorage.setItem('user_token', guestName);
+            router.replace('/lobby');
+          }}
+          variant="ghost"
+          style={styles.guestBtn}
         />
 
         <TouchableOpacity onPress={() => router.replace('/login')} style={styles.switchLink}>
@@ -151,6 +174,10 @@ const styles = StyleSheet.create({
     color: Colors.warmBlack,
   },
   submitBtn: {
+    paddingVertical: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  guestBtn: {
     paddingVertical: Spacing.md,
     marginBottom: Spacing.xl,
   },

@@ -9,11 +9,14 @@ import AnimatedButton from '../components/AnimatedButton';
 import { useGameStore, Difficulty } from '../store/useGameStore';
 import NotebookBackground from '../components/NotebookBackground';
 import { useCreateRoom } from '../hooks/useCreateRoom';
+import { playClick } from '../store/useAudioStore';
+import { useHaptics } from '../hooks/useHaptics';
 
 const CreateRoomScreen = () => {
   const router = useRouter();
   const setRoomConfig = useGameStore((s) => s.setRoomConfig);
   const joinRoom = useGameStore((s) => s.joinRoom);
+  const addRoom = useGameStore((s) => s.addRoom);
 
   const [roomName, setRoomName] = useState('Phòng của tôi');
   const [maxPlayers, setMaxPlayers] = useState(8);
@@ -23,6 +26,7 @@ const CreateRoomScreen = () => {
   const [peerReview, setPeerReview] = useState(false);
   const [roomType, setRoomType] = useState('Công khai');
 
+  const { light } = useHaptics();
   const insets = useSafeAreaInsets();
   const { createRoom, loading } = useCreateRoom();
 
@@ -53,7 +57,6 @@ const CreateRoomScreen = () => {
     if (!result) return; // Lỗi đã được log trong hook
 
     console.log('✅ Room created:', result.roomId, '| Code:', result.code);
-
     // Giữ joinRoom cho local state
     joinRoom(result.roomId, roomName);
 
@@ -77,7 +80,11 @@ const CreateRoomScreen = () => {
               styles.optionBtn,
               currentValue === opt && styles.optionBtnActive,
             ]}
-            onPress={() => onSelect(opt)}
+            onPress={() => {
+              light();
+              playClick();
+              onSelect(opt);
+            }}
           >
             <Text
               style={[
@@ -159,7 +166,7 @@ const CreateRoomScreen = () => {
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, Spacing.xl) }]}>
         <AnimatedButton
-          label={loading ? 'Đang tạo...' : 'Bắt đầu 🚀'}
+          label={loading ? 'Đang tạo...' : 'Bắt đầu '}
           onPress={handleCreate}
           disabled={loading}
           variant="primary"
@@ -225,13 +232,13 @@ const styles = StyleSheet.create({
     color: Colors.warmBlack,
   },
   optionHint: {
-    fontFamily: FontFamily.caveat,
+    fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.sm,
     color: Colors.warmBlack,
     opacity: 0.6,
   },
   textInput: {
-    fontFamily: FontFamily.indieFlower,
+    fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.lg,
     borderBottomWidth: 1.5,
     borderColor: Colors.border,
@@ -256,7 +263,7 @@ const styles = StyleSheet.create({
   },
   optionBtnText: {
     fontFamily: FontFamily.patrickHand,
-    fontSize: FontSize.md,
+    fontSize: FontSize.lg,
     color: Colors.warmBlack,
   },
   optionBtnTextActive: {

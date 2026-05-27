@@ -77,14 +77,21 @@ const WinScreen = () => {
 
         <View style={styles.actions}>
           <AnimatedButton
-            label="Vẽ tiếp ✏️"
-            onPress={() => { leaveRoom(); router.replace('/(tabs)/lobby'); }}
+            label="Vẽ tiếp"
+            onPress={() => { 
+              leaveRoom(); 
+              if (useGameStore.getState().isSinglePlayer) {
+                router.replace('/single-player-config');
+              } else {
+                router.replace('/lobby'); 
+              }
+            }}
             variant="ghost"
             style={styles.actionBtn}
             textStyle={styles.btnText}
           />
           <AnimatedButton
-            label="Sảnh chính 🏠"
+            label="Sảnh chính"
             onPress={() => { leaveRoom(); router.dismissAll(); router.replace('/home'); }}
             variant="ghost"
             style={styles.actionBtn}

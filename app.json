@@ -48,7 +48,8 @@
           "enableCoreMLDelegate": true,
           "enableAndroidGPUDelegate": false
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true,

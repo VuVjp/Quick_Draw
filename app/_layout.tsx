@@ -14,6 +14,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { initBgm, initClickSound, initBrushSound } from '../src/store/useAudioStore';
 
 // Keep splash visible until fonts load
 SplashScreen.preventAutoHideAsync();
@@ -25,6 +26,12 @@ export default function RootLayout() {
     Caveat_700Bold,
     IndieFlower_400Regular,
   });
+
+  useEffect(() => {
+    initBgm();
+    initClickSound();
+    initBrushSound();
+  }, []);
 
   useEffect(() => {
     if (fontsLoaded || fontsError) {

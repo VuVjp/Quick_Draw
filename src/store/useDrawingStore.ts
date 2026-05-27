@@ -46,13 +46,13 @@ export const BRUSH_COLORS: BrushColor[] = [
   '#2196F3', // blue
 ];
 
-export const BRUSH_SIZES: BrushSize[] = [15];
+export const BRUSH_SIZES: BrushSize[] = [20];
 export const ERASER_SIZES: BrushSize[] = [10, 20, 40, 60];
 
 export const useDrawingStore = create<DrawingStore>((set) => ({
-  activeColor: '#1E1E1E',
-  brushSize: 15,
-  eraserSize: 25,
+  activeColor: '#4A443F',
+  brushSize: 20,
+  eraserSize: 40,
   isEraser: false,
   strokeHistory: [],
   redoHistory: [],

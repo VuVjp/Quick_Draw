@@ -17,6 +17,15 @@ export type Player = {
 export type GamePhase = 'waiting' | 'choosing' | 'drawing' | 'roundEnd' | 'gameEnd';
 export type Difficulty = 'Dễ' | 'Trung bình' | 'Khó';
 
+export type RoomInfo = {
+  id: string;
+  name: string;
+  players: number;
+  maxPlayers: number;
+  color: 'default' | 'blue' | 'yellow';
+  isOwner?: boolean;
+};
+
 type GameStore = {
   // Room
   roomId: string | null;
@@ -37,22 +46,28 @@ type GameStore = {
   wordHint: string;
   currentDrawerId: string | null;
   timeLeft: number;
+  roundDrawing: any[]; // We will use StrokeRecord[] but use any[] here to avoid circular dependency if not imported or just import it
+
+  // Lobby
+  availableRooms: RoomInfo[];
 
   // Actions
-  joinRoom: (roomId: string, roomName: string) => void;
+  joinRoom: (roomId: string, roomName: string, initialPlayersCount?: number, maxPlayers?: number) => void;
   leaveRoom: () => void;
   startGame: () => void;
   startRound: () => void;
-  endRound: (scores: Record<string, number>) => void;
+  endRound: (scores: Record<string, number>, drawing: any[]) => void;
   endGame: () => void;
   setPhase: (phase: GamePhase) => void;
   setTimeLeft: (t: number) => void;
   setRoomConfig: (config: Partial<GameStore>) => void;
-  startSinglePlayer: () => void;
+  startSinglePlayer: (nickname: string, rounds: number, drawTime: number, difficulty: Difficulty, botCount: number) => void;
   addPlayer: (player: Player) => void;
   removePlayer: (id: string) => void;
   updateScore: (playerId: string, points: number) => void;
   revealHintLetter: () => void;
+  addRoom: (room: RoomInfo) => void;
+  removeRoom: (id: string) => void;
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -72,9 +87,42 @@ export const useGameStore = create<GameStore>((set, get) => ({
   wordHint: '',
   currentDrawerId: null,
   timeLeft: 80,
+  roundDrawing: [],
+  availableRooms: [
+    { id: '1', name: 'Doodle to Win ', players: 4, maxPlayers: 8, color: 'blue' },
+    { id: '2', name: 'Nét Vẽ Chết Chóc ', players: 2, maxPlayers: 8, color: 'default' },
+    { id: '5', name: 'Chiến Thần Hội Họa ', players: 8, maxPlayers: 8, color: 'yellow' },
+    { id: '34', name: 'Vẽ Hay Hoặc Chết ', players: 1, maxPlayers: 8, color: 'default' },
+  ],
 
-  joinRoom: (roomId, roomName) =>
-    set({ roomId, roomName, phase: 'waiting' }),
+  joinRoom: (roomId, roomName, initialPlayersCount = 1, maxPlayers = 8) => {
+    const realPlayer = MOCK_PLAYERS[0];
+    
+    const avatars = ['🤖', '👾', '👻', '👽', '🤠', '🤡', '🎃', '🐯', '🐼', '🦊'];
+    const colors = ['#F4978E', '#B9D7EA', '#A8D5BA', '#F7D6D0', '#7B5EA7', '#FF7043', '#4CAF50', '#FFEB3B', '#00BCD4', '#E91E63'];
+    
+    const botsCount = Math.max(0, initialPlayersCount - 1);
+    const bots = Array.from({ length: botsCount }).map((_, i) => ({
+      id: `bot-${i}`,
+      name: `Player ${i + 2}`,
+      avatar: avatars[i % avatars.length],
+      xp: 1000 + i * 500,
+      level: 5 + i,
+      score: 0,
+      isDrawing: false,
+      isHost: false,
+      color: colors[i % colors.length]
+    }));
+
+    set({ 
+      roomId, 
+      roomName, 
+      phase: 'waiting', 
+      players: [realPlayer, ...bots],
+      maxPlayers,
+      isSinglePlayer: false,
+    });
+  },
 
   leaveRoom: () =>
     set({ roomId: null, roomName: '', phase: 'waiting', currentRound: 0 }),
@@ -96,13 +144,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ phase: 'drawing', currentWord: word, wordHint: '', timeLeft: drawTime });
   },
 
-  endRound: (scores) =>
+  endRound: (scores, drawing) =>
     set((state) => ({
       phase: 'roundEnd',
+      roundDrawing: drawing,
       players: state.players.map((p) => ({
         ...p,
         score: p.score + (scores[p.id] ?? 0),
-      })),
+      })).sort((a, b) => b.score - a.score),
     })),
 
   endGame: () => set({ phase: 'gameEnd' }),
@@ -113,18 +162,38 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setRoomConfig: (config) => set((state) => ({ ...state, ...config })),
 
-  startSinglePlayer: () => {
+  startSinglePlayer: (nickname, rounds, drawTime, difficulty, botCount) => {
     const word = getRandomWord();
+    const hint = word.replace(/[a-zA-Z]/g, '_');
+    
+    const realPlayer = { ...MOCK_PLAYERS[0], name: nickname, isDrawing: true, score: 0 };
+    
+    const avatars = ['🤖', '👾', '👻', '👽', '🤠', '🤡', '🎃'];
+    const colors = ['#F4978E', '#B9D7EA', '#A8D5BA', '#F7D6D0', '#7B5EA7', '#FF7043', '#4CAF50'];
+    const bots = Array.from({ length: botCount }).map((_, i) => ({
+      id: `bot-${i}`,
+      name: `Bot ${i + 1}`,
+      avatar: avatars[i % avatars.length],
+      xp: 1000 + i * 500,
+      level: 5 + i,
+      score: 0,
+      isDrawing: false,
+      isHost: false,
+      color: colors[i % colors.length]
+    }));
+
     set({
       isSinglePlayer: true,
       phase: 'drawing',
-      players: [{ ...MOCK_PLAYERS[0], isDrawing: true, score: 0 }],
-      currentDrawerId: MOCK_PLAYERS[0].id,
+      players: [realPlayer, ...bots],
+      currentDrawerId: realPlayer.id,
+      rounds,
+      drawTime,
       currentRound: 1,
       currentWord: word,
-      wordHint: '',
-      timeLeft: 80,
-      difficulty: 'Trung bình', // Default for single player
+      wordHint: hint,
+      timeLeft: drawTime,
+      difficulty,
       peerReviewEnabled: false,
     });
   },
@@ -156,4 +225,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       newHint[revealIdx] = word[revealIdx];
       return { wordHint: newHint.join('') };
     }),
+
+  addRoom: (room) => set((state) => ({ availableRooms: [room, ...state.availableRooms] })),
+  removeRoom: (id) => set((state) => ({ availableRooms: state.availableRooms.filter(r => r.id !== id) })),
 }));

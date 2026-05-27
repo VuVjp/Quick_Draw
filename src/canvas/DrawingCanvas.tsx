@@ -10,6 +10,7 @@ import React, {
 import { StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useDrawingStore } from '../store/useDrawingStore';
+import { startBrushSound, stopBrushSound } from '../store/useAudioStore';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type StrokePath = {
@@ -91,6 +92,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(({ width, height, disa
       path.moveTo(e.x, e.y);
       currentPath.current = path;
       forceRepaint();
+      startBrushSound();
     })
     .onUpdate((e) => {
       if (!currentPath.current) return;
@@ -107,6 +109,10 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(({ width, height, disa
       pushStroke({ pathData: finishedPath.toSVGString(), color, width: widthValue });
       currentPath.current = null;
       updatePicture(); // Bake the new stroke into the picture
+      stopBrushSound();
+    })
+    .onFinalize(() => {
+      stopBrushSound();
     });
 
   useImperativeHandle(ref, () => ({
