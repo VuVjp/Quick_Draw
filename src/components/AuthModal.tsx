@@ -58,9 +58,12 @@ const AuthModal = ({ visible, onClose }: Props) => {
             />
             <AnimatedButton
               label="Chơi với tư cách khách 👤"
-              onPress={() => {
+              onPress={async () => {
                 onClose();
-                router.push('/(tabs)/lobby');
+                const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+                const guestName = `Guest${Math.floor(Math.random() * 10000)}`;
+                await AsyncStorage.setItem('user_token', guestName);
+                router.push('/lobby');
               }}
               variant="ghost"
               fullWidth
@@ -114,7 +117,7 @@ const styles = StyleSheet.create({
     marginTop: -2,
   },
   subtitle: {
-    fontFamily: FontFamily.caveat,
+    fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.md,
     color: Colors.warmBlack,
     marginBottom: Spacing.xl,

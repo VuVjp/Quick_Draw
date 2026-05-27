@@ -1,7 +1,8 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
@@ -11,16 +12,9 @@ import AnimatedButton from '../components/AnimatedButton';
 
 const { height } = Dimensions.get('window');
 
-// Match reference exactly
-const MOCK_ROOMS_REF = [
-  { id: '1', name: 'Doodle to Win ', players: 4, maxPlayers: 8, color: 'blue' as const },
-  { id: '2', name: 'Nét Vẽ Chết Chóc ', players: 2, maxPlayers: 8, color: 'default' as const },
-  { id: '5', name: 'Chiến Thần Hội Họa ', players: 8, maxPlayers: 8, color: 'yellow' as const },
-  { id: '34', name: 'Vẽ Hay Hoặc Chết ', players: 1, maxPlayers: 8, color: 'default' as const },
-];
+type Room = { id: string; name: string; players: number; maxPlayers: number; color: 'default' | 'blue' | 'yellow'; isOwner?: boolean };
 
-type Room = typeof MOCK_ROOMS_REF[0];
-const RoomCard = React.memo(({ room, index, onJoin }: { room: Room; index: number; onJoin: () => void }) => {
+const RoomCard = React.memo(({ room, index, onJoin, onRemove }: { room: Room; index: number; onJoin: (room: Room) => void; onRemove: (id: string) => void }) => {
   const isFull = room.players >= room.maxPlayers;
   const rotate = index % 2 === 0 ? '-1deg' : '1deg';
 
@@ -37,15 +31,26 @@ const RoomCard = React.memo(({ room, index, onJoin }: { room: Room; index: numbe
         </View>
 
         <View style={styles.cardBottom}>
-          <Text style={styles.roomName}>{room.name}</Text>
-          <AnimatedButton
-            label={isFull ? 'Đầy' : 'Vào'}
-            onPress={onJoin}
-            disabled={isFull}
-            variant="ghost"
-            style={styles.joinBtn}
-            textStyle={styles.joinBtnText}
-          />
+          <Text style={styles.roomName} numberOfLines={1}>{room.name}</Text>
+          <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
+            {room.isOwner && (
+              <AnimatedButton
+                label="Hủy"
+                onPress={() => onRemove(room.id)}
+                variant="danger"
+                style={styles.joinBtn}
+                textStyle={styles.joinBtnText}
+              />
+            )}
+            <AnimatedButton
+              label={isFull ? 'Đầy' : 'Vào'}
+              onPress={() => onJoin(room)}
+              disabled={isFull}
+              variant="ghost"
+              style={styles.joinBtn}
+              textStyle={styles.joinBtnText}
+            />
+          </View>
         </View>
       </PaperCard>
     </Animated.View>
@@ -55,11 +60,32 @@ RoomCard.displayName = 'RoomCard';
 const LobbyScreen = () => {
   const router = useRouter();
   const joinRoom = useGameStore((s) => s.joinRoom);
+  const availableRooms = useGameStore((s) => s.availableRooms);
+  const removeRoom = useGameStore((s) => s.removeRoom);
 
-  const handleJoin = useCallback(() => {
-    // Navigate directly to Drawing screen
+  const [username, setUsername] = useState('Khách');
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const token = await AsyncStorage.getItem('user_token');
+      if (token) setUsername(token);
+    };
+    loadUser();
+  }, []);
+
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('user_token');
+    router.replace('/home');
+  };
+
+  const handleJoin = useCallback((room: Room) => {
+    joinRoom(room.id, room.name, room.players, room.maxPlayers);
     router.push('/drawing');
-  }, [router]);
+  }, [router, joinRoom]);
+
+  const handleRemove = useCallback((id: string) => {
+    removeRoom(id);
+  }, [removeRoom]);
 
   return (
     <View style={styles.container}>
@@ -76,8 +102,13 @@ const LobbyScreen = () => {
           <TouchableOpacity onPress={() => router.replace('/home')} style={styles.backBtn}>
             <Text style={styles.backBtnText}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>Phòng Chờ</Text>
-          <View style={{ width: 44 }} />
+          <View style={{ alignItems: 'center' }}>
+            <Text style={styles.title}>Phòng Chờ</Text>
+            <Text style={styles.greetingText}>Xin chào, {username}</Text>
+          </View>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
+            <Text style={styles.logoutBtnText}>Đăng xuất</Text>
+          </TouchableOpacity>
         </View>
         <AnimatedButton
           label="Tạo Phòng ➕"
@@ -90,8 +121,8 @@ const LobbyScreen = () => {
 
       {/* Room list */}
       <FlatList
-        data={MOCK_ROOMS_REF}
-        renderItem={({ item, index }) => <RoomCard room={item} index={index} onJoin={handleJoin} />}
+        data={availableRooms}
+        renderItem={({ item, index }) => <RoomCard room={item} index={index} onJoin={handleJoin} onRemove={handleRemove} />}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
@@ -140,6 +171,24 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: Colors.warmBlack,
     marginTop: -2,
+  },
+  greetingText: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.md,
+    color: Colors.border,
+  },
+  logoutBtn: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: Colors.pastelRed,
+    backgroundColor: Colors.paperWhite,
+  },
+  logoutBtnText: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.sm,
+    color: Colors.pastelRed,
   },
   title: {
     fontFamily: FontFamily.patrickHand,

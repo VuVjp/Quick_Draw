@@ -22,7 +22,7 @@ const LoginScreen = () => {
         console.error('Failed to save login session', e);
       }
     }
-    router.replace('/(tabs)/lobby');
+    router.replace('/lobby');
   };
 
   return (
@@ -67,6 +67,17 @@ const LoginScreen = () => {
           onPress={handleLogin}
           variant="primary"
           style={styles.submitBtn}
+        />
+
+        <AnimatedButton
+          label="Chơi với tư cách khách 👤"
+          onPress={async () => {
+            const guestName = `Guest${Math.floor(Math.random() * 10000)}`;
+            await AsyncStorage.setItem('user_token', guestName);
+            router.replace('/lobby');
+          }}
+          variant="ghost"
+          style={styles.guestBtn}
         />
 
         <TouchableOpacity onPress={() => router.replace('/register')} style={styles.switchLink}>
@@ -138,6 +149,10 @@ const styles = StyleSheet.create({
     color: Colors.warmBlack,
   },
   submitBtn: {
+    paddingVertical: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  guestBtn: {
     paddingVertical: Spacing.md,
     marginBottom: Spacing.xl,
   },

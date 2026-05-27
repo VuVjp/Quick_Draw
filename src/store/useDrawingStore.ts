@@ -46,13 +46,13 @@ export const BRUSH_COLORS: BrushColor[] = [
   '#2196F3', // blue
 ];
 
-export const BRUSH_SIZES: BrushSize[] = [15];
+export const BRUSH_SIZES: BrushSize[] = [20];
 export const ERASER_SIZES: BrushSize[] = [10, 20, 40, 60];
 
 export const useDrawingStore = create<DrawingStore>((set) => ({
-  activeColor: '#1E1E1E',
-  brushSize: 8,
-  eraserSize: 25,
+  activeColor: '#4A443F',
+  brushSize: 20,
+  eraserSize: 40,
   isEraser: false,
   strokeHistory: [],
   redoHistory: [],
@@ -62,7 +62,7 @@ export const useDrawingStore = create<DrawingStore>((set) => ({
   setEraserSize: (size) => set({ eraserSize: size }),
   toggleEraser: () => set((state) => ({ isEraser: !state.isEraser })),
   pushStroke: (stroke) =>
-    set((state) => ({ 
+    set((state) => ({
       strokeHistory: [...state.strokeHistory, stroke],
       redoHistory: [] // Clear redo history when drawing something new
     })),

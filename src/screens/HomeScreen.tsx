@@ -14,6 +14,7 @@ import { useEntranceAnimation } from '../animations/useAnimations';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useGameStore } from '../store/useGameStore';
+import Logo from '../../assets/logo/Group 7.svg';
 
 const { width, height } = Dimensions.get('window');
 
@@ -29,7 +30,7 @@ const HomeScreen = () => {
       const token = await AsyncStorage.getItem('user_token');
       if (token) {
         // Tự động đăng nhập nếu đã có token
-        router.push('/(tabs)/lobby');
+        router.push('/lobby');
       } else {
         setShowAuth(true);
       }
@@ -54,26 +55,21 @@ const HomeScreen = () => {
       <View style={styles.centre}>
         {/* Title & Logo */}
         <Animated.View style={[styles.logoBlock, titleStyle]}>
-          <Image 
-            source={require('../../assets/logo.png')} 
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
+          <Logo width={240} height={240} style={styles.logoImage} />
         </Animated.View>
 
         {/* Buttons */}
         <Animated.View style={[styles.buttonStack, btnStyle]}>
           <AnimatedButton
-            label="Chơi Đơn 🧑"
+            label="Chơi Đơn"
             onPress={() => {
-              startSinglePlayer();
-              router.push('/drawing');
+              router.push('/single-player-config');
             }}
             variant="primary"
             fullWidth
           />
           <AnimatedButton
-            label="Chơi Online 🌐"
+            label="Chơi Online"
             onPress={handleOnlinePress}
             variant="primary"
             fullWidth

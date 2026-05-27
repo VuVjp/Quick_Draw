@@ -55,8 +55,15 @@ const LoseScreen = () => {
 
         <View style={styles.actions}>
           <AnimatedButton
-            label="Xem đáp án"
-            onPress={() => {}}
+            label="Vẽ tiếp"
+            onPress={() => { 
+              leaveRoom(); 
+              if (useGameStore.getState().isSinglePlayer) {
+                router.replace('/single-player-config');
+              } else {
+                router.replace('/lobby'); 
+              }
+            }}
             variant="ghost"
             style={styles.actionBtn}
             textStyle={styles.btnText}

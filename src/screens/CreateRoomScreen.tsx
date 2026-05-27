@@ -13,6 +13,7 @@ const CreateRoomScreen = () => {
   const router = useRouter();
   const setRoomConfig = useGameStore((s) => s.setRoomConfig);
   const joinRoom = useGameStore((s) => s.joinRoom);
+  const addRoom = useGameStore((s) => s.addRoom);
 
   const [roomName, setRoomName] = useState('Phòng của tôi');
   const [maxPlayers, setMaxPlayers] = useState(8);
@@ -34,10 +35,20 @@ const CreateRoomScreen = () => {
       isSinglePlayer: false,
       isPrivate: roomType === 'Riêng tư',
     });
-    // Giả lập tạo phòng và tham gia
+    
+    // Thêm phòng mới ra ngoài sảnh (Lobby)
     const roomId = Math.floor(Math.random() * 1000).toString();
-    joinRoom(roomId, roomName);
-    router.replace('/drawing');
+    addRoom({
+      id: roomId,
+      name: roomName || 'Phòng mới tạo',
+      players: 1, // Bạn là người đầu tiên
+      maxPlayers,
+      color: 'default',
+      isOwner: true,
+    });
+    
+    // Điều hướng ra ngoài Lobby thay vì vào thẳng game
+    router.replace('/lobby');
   };
 
   const renderOptionSelector = (
@@ -203,7 +214,7 @@ const styles = StyleSheet.create({
     color: Colors.warmBlack,
   },
   optionHint: {
-    fontFamily: FontFamily.caveat,
+    fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.sm,
     color: Colors.warmBlack,
     opacity: 0.6,

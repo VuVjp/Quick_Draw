@@ -19,6 +19,7 @@ import Animated, {
 import { useRouter } from 'expo-router';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Spacing, Radius, Shadow } from '../theme/spacing';
 import DrawingCanvas, { DrawingCanvasRef } from '../canvas/DrawingCanvas';
 import BrushToolbar from '../canvas/BrushToolbar';
@@ -29,6 +30,8 @@ import { useGameStore } from '../store/useGameStore';
 import { useDrawingStore } from '../store/useDrawingStore';
 import { useTimer } from '../hooks/useTimer';
 import NotebookBackground from '../components/NotebookBackground';
+import AnimatedButton from '../components/AnimatedButton';
+
 
 const { width, height } = Dimensions.get('window');
 const CANVAS_HEIGHT = height * 0.52;
@@ -71,6 +74,7 @@ TimerDisplay.displayName = 'TimerDisplay';
 // ── Drawing Screen ────────────────────────────────────────────────────────────
 const DrawingScreen = () => {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const canvasRef = useRef<DrawingCanvasRef>(null);
   const [canvasSize, setCanvasSize] = useState({ width: width - Spacing.xl * 2, height: CANVAS_HEIGHT });
 
@@ -83,13 +87,11 @@ const DrawingScreen = () => {
   const phase = useGameStore((s) => s.phase);
   const startRound = useGameStore((s) => s.startRound);
   const endGame = useGameStore((s) => s.endGame);
+  const maxPlayers = useGameStore((s) => s.maxPlayers);
+  const addPlayer = useGameStore((s) => s.addPlayer);
+  const startGame = useGameStore((s) => s.startGame);
 
-  // Start game immediately on mount if in 'waiting'
-  useEffect(() => {
-    if (phase === 'waiting' || phase === 'choosing') {
-      startRound();
-    }
-  }, []);
+
 
   const { progress } = useTimer(undefined, () => {
     endGame();
@@ -106,7 +108,7 @@ const DrawingScreen = () => {
     <NotebookBackground>
       <View style={styles.container}>
         {/* ── Header ── */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top + Spacing.sm, 40) }]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn}>
             <Text style={styles.closeBtnText}>X</Text>
           </TouchableOpacity>
@@ -139,11 +141,37 @@ const DrawingScreen = () => {
               height={canvasSize.height}
               disabled={!isDrawer}
             />
+
+            {/* Waiting Overlay */}
+            {phase === 'waiting' && (
+              <View style={styles.waitingOverlay}>
+                <Text style={styles.waitingTitle}>Đang chờ người chơi...</Text>
+                <Text style={styles.waitingCount}>{players.length} / {maxPlayers}</Text>
+                
+                <View style={styles.waitingPlayers}>
+                  {players.map(p => (
+                    <View key={p.id} style={[styles.waitingAvatar, { borderColor: p.color }]}>
+                      <Text style={{fontSize: 24}}>{p.avatar}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <AnimatedButton 
+                  label="Bắt đầu ngay 🚀"
+                  onPress={() => {
+                    startGame();
+                    setTimeout(() => startRound(), 100);
+                  }}
+                  variant="primary"
+                  style={{marginTop: Spacing.xl}}
+                />
+              </View>
+            )}
           </View>
         </View>
 
         {/* ── Toolbar ── */}
-        <View style={styles.toolbarWrapper}>
+        <View style={[styles.toolbarWrapper, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}>
           <BrushToolbar 
             onUndo={handleUndo} 
             onRedo={handleRedo}
@@ -166,7 +194,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.xl,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingBottom: Spacing.md,
   },
   closeBtn: {
@@ -233,5 +260,40 @@ const styles = StyleSheet.create({
   },
   toolbarWrapper: {
     width: '100%',
+  },
+  waitingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+  },
+  waitingTitle: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.xxl,
+    color: Colors.warmBlack,
+    marginBottom: Spacing.sm,
+  },
+  waitingCount: {
+    fontFamily: FontFamily.caveatBold,
+    fontSize: FontSize.xl,
+    color: Colors.primaryYellow,
+    marginBottom: Spacing.xl,
+  },
+  waitingPlayers: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.xl,
+  },
+  waitingAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    backgroundColor: Colors.paperWhite,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
