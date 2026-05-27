@@ -1,12 +1,13 @@
-import React from 'react';
-import { View, Text, StyleSheet, Platform, TouchableOpacity } from 'react-native';
-import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
+import React from 'react';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { Colors } from '../../src/theme/colors';
-import { FontFamily, FontSize } from '../../src/theme/typography';
-import { Radius, Spacing } from '../../src/theme/spacing';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHaptics } from '../../src/hooks/useHaptics';
+import { Colors } from '../../src/theme/colors';
+import { Radius, Spacing } from '../../src/theme/spacing';
+import { FontFamily, FontSize } from '../../src/theme/typography';
 
 const AnimatedIcon = Animated.createAnimatedComponent(Feather);
 
@@ -43,11 +44,21 @@ const CustomTabBarButton = ({ children, onPress, accessibilityState, label, icon
 };
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const bottomPadding = insets.bottom > 0 ? insets.bottom : Spacing.sm;
+  const barHeight = 70 + bottomPadding;
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            height: barHeight,
+            paddingBottom: bottomPadding,
+          }
+        ],
         tabBarShowLabel: false,
       }}
     >
@@ -78,8 +89,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.paperWhite,
     borderTopWidth: 2,
     borderTopColor: Colors.border,
-    height: Platform.OS === 'ios' ? 80 : 70,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
     paddingHorizontal: Spacing.md,
     elevation: 0,
     shadowOpacity: 0,

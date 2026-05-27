@@ -36,26 +36,7 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
 
   return (
     <View style={styles.container}>
-      {/* Color Palette Pill */}
-      <View style={styles.colorPill}>
-        {EXACT_COLORS.map((color) => {
-          const isSelected = activeColor === color && !isEraser;
-          return (
-            <TouchableOpacity
-              key={color}
-              onPress={() => {
-                setColor(color);
-                if (isEraser) toggleEraser();
-              }}
-              style={[
-                styles.colorSwatch,
-                { backgroundColor: color },
-                isSelected ? styles.swatchSelected : undefined,
-              ]}
-            />
-          );
-        })}
-      </View>
+      {/* Color Palette Pill removed as requested */}
 
       {/* Size Slider (Conditional) */}
       {showSizeSlider && (
@@ -138,6 +119,10 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
 
         <TouchableOpacity onPress={onRedo} style={styles.toolBtn}>
           <Text style={styles.toolIcon}>↪️</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={onClear} style={styles.toolBtn}>
+          <Text style={styles.toolIcon}>🗑️</Text>
         </TouchableOpacity>
       </View>
     </View>

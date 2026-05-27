@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
@@ -8,6 +9,7 @@ import AnimatedButton from '../components/AnimatedButton';
 import PaperCard from '../components/PaperCard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, useFocusEffect } from 'expo-router';
+import auth from '@react-native-firebase/auth';
 
 const { height } = Dimensions.get('window');
 
@@ -45,7 +47,7 @@ const ProfileScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Background */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         {Array.from({ length: Math.floor(height / 40) }).map((_, i) => (
@@ -88,14 +90,25 @@ const ProfileScreen = () => {
             style={styles.editBtn}
             textStyle={styles.editBtnText}
           />
-          <AnimatedButton
-            label="Đăng xuất"
-            icon="🚪"
-            onPress={handleLogout}
-            variant="ghost"
-            style={styles.logoutBtn}
-            textStyle={styles.logoutBtnText}
-          />
+          {auth().currentUser?.isAnonymous ? (
+            <AnimatedButton
+              label="Đăng nhập Google"
+              icon="🌐"
+              onPress={() => console.log('Google Login placeholder')}
+              variant="primary"
+              style={[styles.logoutBtn, { borderColor: Colors.primaryYellow }]}
+              textStyle={[styles.logoutBtnText, { color: Colors.warmBlack }]}
+            />
+          ) : (
+            <AnimatedButton
+              label="Đăng xuất"
+              icon="🚪"
+              onPress={handleLogout}
+              variant="ghost"
+              style={styles.logoutBtn}
+              textStyle={styles.logoutBtnText}
+            />
+          )}
         </View>
 
         {/* Stats Grid */}
@@ -120,7 +133,7 @@ const ProfileScreen = () => {
         </View>
 
       </Animated.View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -140,7 +153,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     alignItems: 'center',
-    paddingTop: 80,
+    paddingTop: Spacing.md,
   },
   avatarContainer: {
     position: 'relative',

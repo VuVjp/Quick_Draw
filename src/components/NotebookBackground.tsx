@@ -10,6 +10,8 @@ const NOISE_BASE64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAQA
 // More realistic noise
 const BETTER_NOISE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAAQMAAACQp+OdAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQOb+/0F7bZQAAABPSURBVCjPpcoxCgAxCATAf5vP+Vl7jW9RCEGE7G6m4MAQ1u4QG2YwQG2YwQC1YQYD1IYZDFAbZjBAbZjBALVhBgPUhhkMUBtmMEBtmMEAtWGGA2P+sN5GAAAAAElFTkSuQmCC';
 
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 type Props = {
   children?: React.ReactNode;
 };
@@ -41,10 +43,10 @@ const NotebookBackground = ({ children }: Props) => {
         ))}
       </View>
 
-      {/* Main Content */}
-      <View style={styles.content}>
+      {/* Main Content inside Safe Area */}
+      <SafeAreaView style={styles.content}>
         {children}
-      </View>
+      </SafeAreaView>
     </View>
   );
 };

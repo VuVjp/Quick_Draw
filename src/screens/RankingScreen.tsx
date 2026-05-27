@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
@@ -59,7 +60,7 @@ const RankingScreen = () => {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Background */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         {Array.from({ length: Math.floor(height / 40) }).map((_, i) => (
@@ -88,7 +89,7 @@ const RankingScreen = () => {
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={{ height: Spacing.xl }} />}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: Colors.softGray, borderStyle: 'dashed', opacity: 0.5,
   },
   header: {
-    paddingTop: 60,
+    paddingTop: Spacing.md,
     paddingBottom: Spacing.lg,
     alignItems: 'center',
     position: 'relative',
@@ -117,7 +118,7 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     position: 'absolute',
-    top: 60,
+    top: Spacing.md,
     left: Spacing.lg,
     backgroundColor: Colors.primaryYellow,
     borderWidth: 2,

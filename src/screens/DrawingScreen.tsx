@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.xl,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
   },
   closeBtn: {

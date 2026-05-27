@@ -11,12 +11,23 @@ export interface RoomState {
   peerReviewEnabled: boolean;
   roundStartedAt: Date | null;
   roundDurationSecs: number;
+  roomName: string;
+  code: string;
+  hostId: string;
+  maxPlayers: number;
 }
 
 export function useRoom(roomId?: string | null) {
   const [room, setRoom] = useState<RoomState | null>(null);
   const [players, setPlayers] = useState<Record<string, any>>({});
-  const uid = auth().currentUser?.uid;
+  const [uid, setUid] = useState<string | null>(auth().currentUser?.uid || null);
+
+  useEffect(() => {
+    const unsubAuth = auth().onAuthStateChanged((user) => {
+      setUid(user?.uid || null);
+    });
+    return unsubAuth;
+  }, []);
 
   // ─── Subscribe room document ──────────────────────────────────────
   useEffect(() => {
@@ -32,13 +43,17 @@ export function useRoom(roomId?: string | null) {
         const data = snap.data()!;
         setRoom({
           status: data.status,
-          currentDrawerId: data.currentDrawerId,
-          currentTopic: data.currentTopic,
-          currentRound: data.currentRound,
-          totalRounds: data.totalRounds,
+          currentDrawerId: data.currentDrawerId ?? '',
+          currentTopic: data.currentTopic ?? '',
+          currentRound: data.currentRound ?? 0,
+          totalRounds: data.totalRounds ?? 5,
           peerReviewEnabled: data.peerReviewEnabled ?? false,
           roundStartedAt: data.roundStartedAt?.toDate() ?? null,
           roundDurationSecs: data.roundDurationSecs ?? 80,
+          roomName: data.roomName ?? 'Phòng chơi',
+          code: data.code ?? '',
+          hostId: data.hostId ?? '',
+          maxPlayers: data.maxPlayers ?? 8,
         });
       });
     return unsub;
@@ -56,7 +71,7 @@ export function useRoom(roomId?: string | null) {
       .collection('players')
       .onSnapshot((snap) => {
         const map: Record<string, any> = {};
-        snap.docs.forEach((d) => { map[d.id] = d.data(); });
+        snap.docs.forEach((d) => { map[d.id] = { id: d.id, ...d.data() }; });
         setPlayers(map);
       });
     return unsub;
