@@ -8,6 +8,7 @@ import Animated, {
   withSequence,
   useDerivedValue,
   runOnJS,
+  SharedValue,
 } from 'react-native-reanimated';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
@@ -20,6 +21,35 @@ import { useRouter } from 'expo-router';
 
 const TITLE = "Quick Draw!";
 const CHARS = TITLE.split("");
+
+interface AnimatedCharProps {
+  char: string;
+  index: number;
+  totalChars: number;
+  progress: SharedValue<number>;
+}
+
+const AnimatedChar: React.FC<AnimatedCharProps> = ({ char, index, totalChars, progress }) => {
+  const charOpacity = useDerivedValue(() => {
+    const threshold = index / totalChars;
+    return progress.value > threshold ? 1 : 0;
+  });
+  const charScale = useDerivedValue(() => {
+    const threshold = index / totalChars;
+    return progress.value > threshold ? withSpring(1) : 0.4;
+  });
+
+  const charStyle = useAnimatedStyle(() => ({
+    opacity: charOpacity.value,
+    transform: [{ scale: charScale.value }],
+  }));
+
+  return (
+    <Animated.Text style={[styles.logoTitle, charStyle]}>
+      {char === " " ? "\u00A0" : char}
+    </Animated.Text>
+  );
+};
 
 const SplashScreen = () => {
   const router = useRouter();
@@ -91,6 +121,10 @@ const SplashScreen = () => {
     ],
   }));
 
+  const taglineStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+  }));
+
   return (
     <Animated.View style={[styles.container, containerStyle]}>
       {/* Static Background elements to prevent flashing */}
@@ -112,27 +146,15 @@ const SplashScreen = () => {
       {/* Title with sequential appearance */}
       <Animated.View style={[styles.logoWrapper, logoStyle]}>
         <View style={styles.charContainer}>
-          {CHARS.map((char, index) => {
-            const charOpacity = useDerivedValue(() => {
-              const threshold = index / CHARS.length;
-              return progress.value > threshold ? 1 : 0;
-            });
-            const charScale = useDerivedValue(() => {
-              const threshold = index / CHARS.length;
-              return progress.value > threshold ? withSpring(1) : 0.4;
-            });
-
-            const charStyle = useAnimatedStyle(() => ({
-              opacity: charOpacity.value,
-              transform: [{ scale: charScale.value }],
-            }));
-
-            return (
-              <Animated.Text key={index} style={[styles.logoTitle, charStyle]}>
-                {char === " " ? "\u00A0" : char}
-              </Animated.Text>
-            );
-          })}
+          {CHARS.map((char, index) => (
+            <AnimatedChar
+              key={index}
+              char={char}
+              index={index}
+              totalChars={CHARS.length}
+              progress={progress}
+            />
+          ))}
         </View>
 
         {/* Animated Pencil */}
@@ -141,7 +163,7 @@ const SplashScreen = () => {
         </Animated.View>
       </Animated.View>
 
-      <Animated.Text style={[styles.tagline, { opacity: progress }]}>
+      <Animated.Text style={[styles.tagline, taglineStyle]}>
         From Doodles to Victory
       </Animated.Text>
 

@@ -9,11 +9,15 @@ module.exports = (() => {
     ...transformer,
     babelTransformerPath: require.resolve("react-native-svg-transformer/expo")
   };
+  
   config.resolver = {
     ...resolver,
     assetExts: resolver.assetExts.filter((ext) => ext !== "svg"),
     sourceExts: [...resolver.sourceExts, "svg"]
   };
+
+  // Add tflite support
+  config.resolver.assetExts.push('tflite');
 
   return config;
 })();

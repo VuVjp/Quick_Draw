@@ -1,19 +1,20 @@
-import 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import {
-  useFonts,
-  PatrickHand_400Regular,
-} from '@expo-google-fonts/patrick-hand';
+
 import {
   Caveat_400Regular,
   Caveat_700Bold,
 } from '@expo-google-fonts/caveat';
 import { IndieFlower_400Regular } from '@expo-google-fonts/indie-flower';
-import { useEffect } from 'react';
+import {
+  PatrickHand_400Regular,
+  useFonts,
+} from '@expo-google-fonts/patrick-hand';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { Stack } from 'expo-router';
+import { useEffect } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { initBgm, initClickSound, initBrushSound } from '../src/store/useAudioStore';
 
 // Keep splash visible until fonts load
 SplashScreen.preventAutoHideAsync();
@@ -25,6 +26,12 @@ export default function RootLayout() {
     Caveat_700Bold,
     IndieFlower_400Regular,
   });
+
+  useEffect(() => {
+    initBgm();
+    initClickSound();
+    initBrushSound();
+  }, []);
 
   useEffect(() => {
     if (fontsLoaded || fontsError) {

@@ -6,8 +6,10 @@ import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
 import AnimatedButton from '../components/AnimatedButton';
-import { useGameStore, Difficulty } from '../store/useGameStore';
+import { useGameStore } from '../store/useGameStore';
 import NotebookBackground from '../components/NotebookBackground';
+import { playClick } from '../store/useAudioStore';
+import { useHaptics } from '../hooks/useHaptics';
 
 const SinglePlayerConfigScreen = () => {
   const router = useRouter();
@@ -16,14 +18,15 @@ const SinglePlayerConfigScreen = () => {
   const [nickname, setNickname] = useState('');
   const [rounds, setRounds] = useState(5);
   const [drawTime, setDrawTime] = useState(80);
-  const [difficulty, setDifficulty] = useState<Difficulty>('Trung bình');
   const [botCount, setBotCount] = useState(3);
 
+  const { light } = useHaptics();
   const insets = useSafeAreaInsets();
 
   const handleStart = () => {
-    const finalName = nickname.trim() || 'Người chơi đơn';
-    startSinglePlayer(finalName, rounds, drawTime, difficulty, botCount);
+    const finalName = nickname.trim();
+    if (!finalName) return;
+    startSinglePlayer(finalName, rounds, drawTime, 'Trung bình', botCount);
     router.replace('/drawing');
   };
 
@@ -43,7 +46,11 @@ const SinglePlayerConfigScreen = () => {
               styles.optionBtn,
               currentValue === opt && styles.optionBtnActive,
             ]}
-            onPress={() => onSelect(opt)}
+            onPress={() => {
+              light();
+              playClick();
+              onSelect(opt);
+            }}
           >
             <Text
               style={[
@@ -104,7 +111,6 @@ const SinglePlayerConfigScreen = () => {
             {renderOptionSelector('Số lượng bot', [0, 3, 5, 7], botCount, setBotCount)}
             {renderOptionSelector('Số vòng', [3, 5, 10], rounds, setRounds)}
             {renderOptionSelector('Thời gian (giây)', [40, 60, 80, 120], drawTime, setDrawTime)}
-            {renderOptionSelector('Độ khó', ['Dễ', 'Trung bình', 'Khó'], difficulty, setDifficulty)}
 
           </ScrollView>
         </View>
@@ -112,10 +118,11 @@ const SinglePlayerConfigScreen = () => {
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, Spacing.xl) }]}>
         <AnimatedButton
-          label="Bắt đầu 🚀"
+          label="Bắt đầu"
           onPress={handleStart}
           variant="primary"
           style={styles.createBtn}
+          disabled={nickname.trim().length === 0}
         />
       </View>
     </NotebookBackground>
@@ -177,7 +184,7 @@ const styles = StyleSheet.create({
     color: Colors.warmBlack,
   },
   textInput: {
-    fontFamily: FontFamily.indieFlower,
+    fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.lg,
     borderBottomWidth: 1.5,
     borderColor: Colors.border,
@@ -202,7 +209,7 @@ const styles = StyleSheet.create({
   },
   optionBtnText: {
     fontFamily: FontFamily.patrickHand,
-    fontSize: FontSize.md,
+    fontSize: FontSize.lg,
     color: Colors.warmBlack,
   },
   optionBtnTextActive: {

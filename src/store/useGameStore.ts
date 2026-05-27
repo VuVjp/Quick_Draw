@@ -140,9 +140,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   startRound: () => {
     const word = getRandomWord();
-    const hint = word.replace(/[a-zA-Z]/g, '_');
     const { drawTime } = get();
-    set({ phase: 'drawing', currentWord: word, wordHint: hint, timeLeft: drawTime });
+    set({ phase: 'drawing', currentWord: word, wordHint: '', timeLeft: drawTime });
   },
 
   endRound: (scores, drawing) =>

@@ -1,22 +1,20 @@
-import React, { useRef, useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
+  Button,
   Dimensions,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
   Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
-  withTiming,
+  useSharedValue,
   withSequence,
-  withSpring,
+  withSpring
 } from 'react-native-reanimated';
-import { useRouter } from 'expo-router';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -31,11 +29,11 @@ import { useDrawingStore } from '../store/useDrawingStore';
 import { useTimer } from '../hooks/useTimer';
 import NotebookBackground from '../components/NotebookBackground';
 import AnimatedButton from '../components/AnimatedButton';
+import { useDrawingInference } from '../hooks/useDrawingInference';
 
 
 const { width, height } = Dimensions.get('window');
 const CANVAS_HEIGHT = height * 0.52;
-
 
 // ── Timer Ring ──────────────────────────────────────────────────────────────
 const TimerDisplay = React.memo(() => {
@@ -117,6 +115,7 @@ const DrawingScreen = () => {
   const handleUndo = useCallback(() => canvasRef.current?.undo(), []);
   const handleRedo = useCallback(() => canvasRef.current?.redo(), []);
   const handleClear = useCallback(() => canvasRef.current?.clear(), []);
+  const { runInference, isReady } = useDrawingInference(false);
 
   return (
     <NotebookBackground>
@@ -129,7 +128,7 @@ const DrawingScreen = () => {
 
           <View style={styles.wordLabelContainer}>
             <Text style={styles.youDrawText}>HÃY VẼ:</Text>
-            <Text style={styles.wordText}>Con Mèo</Text>
+            <Text style={styles.wordText}>{currentWord}</Text>
           </View>
 
           <TimerDisplay />
@@ -140,7 +139,7 @@ const DrawingScreen = () => {
 
         {/* ── Canvas ── */}
         <View style={styles.canvasContainer}>
-          <View 
+          <View
             style={styles.canvasInner}
             onLayout={(e) => {
               const { width: w, height: h } = e.nativeEvent.layout;
@@ -185,13 +184,30 @@ const DrawingScreen = () => {
         </View>
 
         {/* ── Toolbar ── */}
-        <View style={[styles.toolbarWrapper, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}>
-          <BrushToolbar 
-            onUndo={handleUndo} 
+        <View style={styles.toolbarWrapper}>
+          <BrushToolbar
+            onUndo={handleUndo}
             onRedo={handleRedo}
-            onClear={handleClear} 
+            onClear={handleClear}
           />
         </View>
+        <Button
+          title={isReady ? 'Test Inference' : 'Model loading...'}
+          disabled={!isReady}
+          onPress={async () => {
+            const base64 = canvasRef.current?.getSnapshot();
+            if (!base64) {
+              console.warn('Canvas trống hoặc chưa sẵn sàng');
+              return;
+            }
+            try {
+              const result = await runInference(base64, "snowflake");
+              console.log('Inference result:', result);
+            } catch (e) {
+              console.error('Inference error:', e);
+            }
+          }}
+        />
       </View>
     </NotebookBackground>
   );

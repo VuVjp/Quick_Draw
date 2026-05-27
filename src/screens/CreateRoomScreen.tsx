@@ -8,6 +8,9 @@ import { Spacing, Radius } from '../theme/spacing';
 import AnimatedButton from '../components/AnimatedButton';
 import { useGameStore, Difficulty } from '../store/useGameStore';
 import NotebookBackground from '../components/NotebookBackground';
+import { useCreateRoom } from '../hooks/useCreateRoom';
+import { playClick } from '../store/useAudioStore';
+import { useHaptics } from '../hooks/useHaptics';
 
 const CreateRoomScreen = () => {
   const router = useRouter();
@@ -23,9 +26,12 @@ const CreateRoomScreen = () => {
   const [peerReview, setPeerReview] = useState(false);
   const [roomType, setRoomType] = useState('Công khai');
 
+  const { light } = useHaptics();
   const insets = useSafeAreaInsets();
+  const { createRoom, loading } = useCreateRoom();
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
+    // Vẫn giữ setRoomConfig cho local store
     setRoomConfig({
       maxPlayers,
       rounds,
@@ -35,20 +41,27 @@ const CreateRoomScreen = () => {
       isSinglePlayer: false,
       isPrivate: roomType === 'Riêng tư',
     });
-    
-    // Thêm phòng mới ra ngoài sảnh (Lobby)
-    const roomId = Math.floor(Math.random() * 1000).toString();
-    addRoom({
-      id: roomId,
-      name: roomName || 'Phòng mới tạo',
-      players: 1, // Bạn là người đầu tiên
+
+    const result = await createRoom({
+      hostId: 'user_001',           // TODO: thay bằng auth uid sau
+      hostName: 'Player 1',         // TODO: thay bằng tên thật sau
+      roomName,
       maxPlayers,
-      color: 'default',
-      isOwner: true,
+      totalRounds: rounds,
+      roundDurationSecs: drawTime,
+      difficulty,
+      peerReviewEnabled: peerReview,
+      isPrivate: roomType === 'Riêng tư',
     });
-    
-    // Điều hướng ra ngoài Lobby thay vì vào thẳng game
-    router.replace('/lobby');
+
+    if (!result) return; // Lỗi đã được log trong hook
+
+    console.log('✅ Room created:', result.roomId, '| Code:', result.code);
+    // Giữ joinRoom cho local state
+    joinRoom(result.roomId, roomName);
+
+    // Navigate sang waiting room — truyền roomId
+    router.replace(`/room/${result.roomId}`);
   };
 
   const renderOptionSelector = (
@@ -67,7 +80,11 @@ const CreateRoomScreen = () => {
               styles.optionBtn,
               currentValue === opt && styles.optionBtnActive,
             ]}
-            onPress={() => onSelect(opt)}
+            onPress={() => {
+              light();
+              playClick();
+              onSelect(opt);
+            }}
           >
             <Text
               style={[
@@ -94,63 +111,64 @@ const CreateRoomScreen = () => {
       </View>
 
       <View style={[styles.content, { flex: 1 }]}>
-        <View style={[styles.formCard, { 
-          flex: 1, 
-          paddingTop: Spacing.md, 
-          paddingBottom: Spacing.md, 
-          paddingLeft: Spacing.sm, 
-          paddingRight: Spacing.md, 
-          gap: 0 
+        <View style={[styles.formCard, {
+          flex: 1,
+          paddingTop: Spacing.md,
+          paddingBottom: Spacing.md,
+          paddingLeft: Spacing.sm,
+          paddingRight: Spacing.md,
+          gap: 0
         }]}>
-          <ScrollView 
+          <ScrollView
             showsVerticalScrollIndicator={true}
             persistentScrollbar={true}
             indicatorStyle="default"
-            contentContainerStyle={{ 
-              paddingTop: Spacing.md, 
-              paddingBottom: Spacing.md, 
-              paddingLeft: Spacing.lg, 
-              paddingRight: Spacing.md, 
-              gap: Spacing.xl 
+            contentContainerStyle={{
+              paddingTop: Spacing.md,
+              paddingBottom: Spacing.md,
+              paddingLeft: Spacing.lg,
+              paddingRight: Spacing.md,
+              gap: Spacing.xl
             }}
           >
             <View style={styles.inputGroup}>
-            <Text style={styles.optionLabel}>Tên phòng</Text>
-            <TextInput
-              style={styles.textInput}
-              value={roomName}
-              onChangeText={setRoomName}
-              placeholder="Nhập tên phòng..."
-              placeholderTextColor={Colors.softGray}
-            />
-          </View>
-
-          {renderOptionSelector('Loại phòng', ['Công khai', 'Riêng tư'], roomType, setRoomType)}
-          {renderOptionSelector('Số người tối đa', [2, 4, 8, 12], maxPlayers, setMaxPlayers)}
-          {renderOptionSelector('Số vòng', [3, 5, 10], rounds, setRounds)}
-          {renderOptionSelector('Thời gian (giây)', [40, 60, 80, 120], drawTime, setDrawTime)}
-          {renderOptionSelector('Độ khó', ['Dễ', 'Trung bình', 'Khó'], difficulty, setDifficulty)}
-
-          <View style={styles.switchGroup}>
-            <View>
-              <Text style={styles.optionLabel}>Đánh giá chéo (Peer Review)</Text>
-              <Text style={styles.optionHint}>Cho phép người chơi chấm điểm bài vẽ của nhau</Text>
+              <Text style={styles.optionLabel}>Tên phòng</Text>
+              <TextInput
+                style={styles.textInput}
+                value={roomName}
+                onChangeText={setRoomName}
+                placeholder="Nhập tên phòng..."
+                placeholderTextColor={Colors.softGray}
+              />
             </View>
-            <Switch
-              value={peerReview}
-              onValueChange={setPeerReview}
-              trackColor={{ false: Colors.softGray, true: Colors.goldAccent }}
-              thumbColor={peerReview ? Colors.paperWhite : Colors.paperWhite}
-            />
-          </View>
-        </ScrollView>
+
+            {renderOptionSelector('Loại phòng', ['Công khai', 'Riêng tư'], roomType, setRoomType)}
+            {renderOptionSelector('Số người tối đa', [2, 4, 8, 12], maxPlayers, setMaxPlayers)}
+            {renderOptionSelector('Số vòng', [3, 5, 10], rounds, setRounds)}
+            {renderOptionSelector('Thời gian (giây)', [40, 60, 80, 120], drawTime, setDrawTime)}
+            {/* {renderOptionSelector('Độ khó', ['Dễ', 'Trung bình', 'Khó'], difficulty, setDifficulty)} */}
+
+            <View style={styles.switchGroup}>
+              <View>
+                <Text style={styles.optionLabel}>Đánh giá chéo (Peer Review)</Text>
+                <Text style={styles.optionHint}>Cho phép người chơi chấm điểm bài vẽ của nhau</Text>
+              </View>
+              <Switch
+                value={peerReview}
+                onValueChange={setPeerReview}
+                trackColor={{ false: Colors.softGray, true: Colors.goldAccent }}
+                thumbColor={peerReview ? Colors.paperWhite : Colors.paperWhite}
+              />
+            </View>
+          </ScrollView>
         </View>
       </View>
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, Spacing.xl) }]}>
         <AnimatedButton
-          label="Bắt đầu 🚀"
+          label={loading ? 'Đang tạo...' : 'Bắt đầu '}
           onPress={handleCreate}
+          disabled={loading}
           variant="primary"
           style={styles.createBtn}
         />
@@ -220,7 +238,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   textInput: {
-    fontFamily: FontFamily.indieFlower,
+    fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.lg,
     borderBottomWidth: 1.5,
     borderColor: Colors.border,
@@ -245,7 +263,7 @@ const styles = StyleSheet.create({
   },
   optionBtnText: {
     fontFamily: FontFamily.patrickHand,
-    fontSize: FontSize.md,
+    fontSize: FontSize.lg,
     color: Colors.warmBlack,
   },
   optionBtnTextActive: {

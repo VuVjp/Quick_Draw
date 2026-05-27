@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: FontFamily.patrickHand,
-    fontSize: FontSize.md,
+    fontSize: FontSize.lg,
     color: Colors.warmBlack,
     marginBottom: Spacing.xl,
     opacity: 0.8,

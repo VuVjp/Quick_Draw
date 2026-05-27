@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity } from 'react-native';
+import React, { useCallback, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity, Modal, KeyboardAvoidingView, TextInput, Platform } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,15 +9,28 @@ import { Spacing, Radius } from '../theme/spacing';
 import PaperCard from '../components/PaperCard';
 import { useGameStore } from '../store/useGameStore';
 import AnimatedButton from '../components/AnimatedButton';
+import { usePublicRooms, RoomItem } from '../hooks/usePublicRooms';
+import { ActivityIndicator } from 'react-native';
+import { useJoinRoom } from '../hooks/useJoinRoom';
 
 const { height } = Dimensions.get('window');
 
-type Room = { id: string; name: string; players: number; maxPlayers: number; color: 'default' | 'blue' | 'yellow'; isOwner?: boolean };
+// Đổi type Room
+type Room = RoomItem & { color: 'blue' | 'yellow' | 'default' };
+// Màu card theo index
+const CARD_COLORS: Array<'blue' | 'yellow' | 'default'> = ['blue', 'default', 'yellow', 'default'];
 
-const RoomCard = React.memo(({ room, index, onJoin, onRemove }: { room: Room; index: number; onJoin: (room: Room) => void; onRemove: (id: string) => void }) => {
+// Match reference exactly
+const MOCK_ROOMS_REF = [
+  { id: '1', name: 'Doodle to Win ', players: 4, maxPlayers: 8, color: 'blue' as const },
+  { id: '2', name: 'Nét Vẽ Chết Chóc ', players: 2, maxPlayers: 8, color: 'default' as const },
+  { id: '5', name: 'Chiến Thần Hội Họa ', players: 8, maxPlayers: 8, color: 'yellow' as const },
+  { id: '34', name: 'Vẽ Hay Hoặc Chết ', players: 1, maxPlayers: 8, color: 'default' as const },
+];
+
+const RoomCard = React.memo(({ room, index, onJoin }: { room: Room; index: number; onJoin: () => void }) => {
   const isFull = room.players >= room.maxPlayers;
   const rotate = index % 2 === 0 ? '-1deg' : '1deg';
-
   return (
     <Animated.View entering={FadeInDown.delay(index * 100).springify().damping(14)}>
       <PaperCard style={styles.roomCardWrapper} variant={room.color} rotate={rotate}>
@@ -80,12 +93,35 @@ const LobbyScreen = () => {
 
   const handleJoin = useCallback((room: Room) => {
     joinRoom(room.id, room.name, room.players, room.maxPlayers);
-    router.push('/drawing');
+    router.push(`/room/${room.id}`);
   }, [router, joinRoom]);
 
   const handleRemove = useCallback((id: string) => {
     removeRoom(id);
   }, [removeRoom]);
+  const { joinRoomByCode, loading: joinLoading, error: joinError } = useJoinRoom();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [roomCode, setRoomCode] = useState('');
+
+  const { rooms, loading } = usePublicRooms();
+
+  const roomsWithColor: Room[] = rooms.map((room, index) => ({
+    ...room,
+    color: CARD_COLORS[index % CARD_COLORS.length],
+  }));
+
+  const handleJoinByCode = async () => {
+    const result = await joinRoomByCode(
+      roomCode,
+      'user_001',    // TODO: thay bằng auth uid
+      'Player 1',    // TODO: thay bằng tên thật
+    );
+    if (result) {
+      setModalVisible(false);
+      setRoomCode('');
+      router.push(`/room/${result.roomId}`);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -110,24 +146,94 @@ const LobbyScreen = () => {
             <Text style={styles.logoutBtnText}>Đăng xuất</Text>
           </TouchableOpacity>
         </View>
-        <AnimatedButton
-          label="Tạo Phòng ➕"
-          onPress={() => router.push('/create-room')}
-          variant="primary"
-          style={styles.createRoomBtn}
-          textStyle={styles.createRoomBtnText}
-        />
+        <View style={styles.headerButtons}>
+          <AnimatedButton
+            label="Tạo Phòng ➕"
+            onPress={() => router.push('/create-room')}
+            variant="primary"
+            style={styles.createRoomBtn}
+            textStyle={styles.createRoomBtnText}
+          />
+          <AnimatedButton
+            label="Nhập mã 🔑"
+            onPress={() => setModalVisible(true)}
+            variant="ghost"
+            style={styles.joinCodeBtn}
+            textStyle={styles.createRoomBtnText}
+          />
+        </View>
       </View>
 
+      {loading && (
+        <ActivityIndicator
+          size="large"
+          color={Colors.primaryYellow}
+          style={{ marginTop: 40 }}
+        />
+      )}
       {/* Room list */}
       <FlatList
-        data={availableRooms}
-        renderItem={({ item, index }) => <RoomCard room={item} index={index} onJoin={handleJoin} onRemove={handleRemove} />}
+        data={roomsWithColor}
+        renderItem={({ item, index }) => <RoomCard room={item} index={index} onJoin={handleJoin} />}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={{ height: Spacing.xl }} />}
       />
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.modalCard}>
+            {/* Title */}
+            <Text style={styles.modalTitle}>Nhập mã phòng</Text>
+            <Text style={styles.modalHint}>Hỏi chủ phòng để lấy mã 6 ký tự</Text>
+
+            {/* Input */}
+            <TextInput
+              style={styles.codeInput}
+              value={roomCode}
+              onChangeText={(t) => setRoomCode(t.toUpperCase())}
+              placeholder="ABC123"
+              placeholderTextColor={Colors.softGray}
+              maxLength={6}
+              autoCapitalize="characters"
+              autoFocus
+            />
+
+            {/* Error */}
+            {joinError && (
+              <Text style={styles.errorText}>{joinError}</Text>
+            )}
+
+            {/* Buttons */}
+            <View style={styles.modalButtons}>
+              <AnimatedButton
+                label="Huỷ"
+                onPress={() => {
+                  setModalVisible(false);
+                  setRoomCode('');
+                }}
+                variant="ghost"
+                style={styles.modalBtn}
+              />
+              <AnimatedButton
+                label={joinLoading ? 'Đang vào...' : 'Vào phòng →'}
+                onPress={handleJoinByCode}
+                disabled={roomCode.length < 6 || joinLoading}
+                variant="primary"
+                style={styles.modalBtn}
+              />
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 };
@@ -135,9 +241,9 @@ const LobbyScreen = () => {
 export default LobbyScreen;
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: Colors.notebookWhite 
+  container: {
+    flex: 1,
+    backgroundColor: Colors.notebookWhite
   },
   paperLine: {
     position: 'absolute', left: 0, right: 0, height: 1,
@@ -245,8 +351,8 @@ const styles = StyleSheet.create({
   },
   roomName: {
     flex: 1,
-    fontFamily: FontFamily.indieFlower,
-    fontSize: FontSize.xl + 4,
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.xl,
     color: Colors.warmBlack,
     lineHeight: 36,
   },
@@ -260,5 +366,69 @@ const styles = StyleSheet.create({
   joinBtnText: {
     fontSize: FontSize.md,
     fontFamily: FontFamily.patrickHand,
-  }
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  joinCodeBtn: {
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Radius.full,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: Colors.paperWhite,
+    borderRadius: Radius.lg,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    padding: Spacing.xl,
+    gap: Spacing.md,
+  },
+  modalTitle: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.xxl,
+    color: Colors.warmBlack,
+    textAlign: 'center',
+  },
+  modalHint: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.lg,
+    color: Colors.warmBlack,
+    opacity: 0.6,
+    textAlign: 'center',
+  },
+  codeInput: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.hero,
+    textAlign: 'center',
+    letterSpacing: 12,
+    borderBottomWidth: 2,
+    borderColor: Colors.primaryYellow,
+    paddingVertical: Spacing.md,
+    color: Colors.warmBlack,
+  },
+  errorText: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.lg,
+    color: Colors.pastelRed,
+    textAlign: 'center',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  modalBtn: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+  },
 });

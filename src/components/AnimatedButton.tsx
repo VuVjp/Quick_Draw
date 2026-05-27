@@ -15,6 +15,7 @@ import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Radius, Shadow, Spacing } from '../theme/spacing';
 import { useHaptics } from '../hooks/useHaptics';
+import { playClick } from '../store/useAudioStore';
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'gold';
 
@@ -66,6 +67,7 @@ const AnimatedButton = ({
 
   const handlePress = useCallback(() => {
     light();
+    playClick();
     onPress();
   }, [onPress, light]);
 
