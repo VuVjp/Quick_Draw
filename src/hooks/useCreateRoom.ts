@@ -1,11 +1,10 @@
 // src/hooks/useCreateRoom.ts
 import { useState } from 'react';
-import {
-    FireStore,
+import
+firestore, {
     collection,
     doc,
     writeBatch,
-    serverTimestamp,
 } from '@react-native-firebase/firestore';
 import { db } from '../services/firebase';
 
@@ -55,7 +54,7 @@ export function useCreateRoom() {
                 currentDrawerId: null,
                 currentTopic: null,
                 playerCount: 1,
-                createdAt: FireStore.FieldValue.serverTimestamp(),
+                createdAt: firestore.FieldValue.serverTimestamp(),
             });
 
             // Host vào players sub-collection
@@ -64,7 +63,7 @@ export function useCreateRoom() {
                 displayName: options.hostName,
                 score: 0,
                 isOnline: true,
-                joinedAt: serverTimestamp(),
+                joinedAt: firestore.FieldValue.serverTimestamp(),
             });
 
             await batch.commit();

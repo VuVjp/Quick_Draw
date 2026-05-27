@@ -1,16 +1,6 @@
 // src/hooks/useJoinRoom.ts
 import { useState } from 'react';
-import {
-  collection,
-  query,
-  where,
-  limit,
-  getDocs,
-  doc,
-  setDoc,
-  serverTimestamp,
-  firestore,
-} from '@react-native-firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import { db } from '../services/firebase';
 
 export function useJoinRoom() {
