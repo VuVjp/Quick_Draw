@@ -85,7 +85,7 @@ const HomeScreen = () => {
         {/* Title & Floating Logo */}
         <Animated.View style={[styles.logoBlock, logoStyle]}>
           <Image
-            source={require('../../assets/logo.png')}
+            source={require('../../assets/images/logo.png')}
             style={styles.logoImage}
             resizeMode="contain"
           />

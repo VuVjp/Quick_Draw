@@ -15,7 +15,6 @@ import { ActivityIndicator } from 'react-native';
 import { useJoinRoom } from '../hooks/useJoinRoom';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { height } = Dimensions.get('window');
 

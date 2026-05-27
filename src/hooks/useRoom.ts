@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
-import firestore, {
-  collection,
-  doc,
-  onSnapshot,
-} from '@react-native-firebase/firestore';
-import { db, auth } from '../services/firebase';
+import firestore from '@react-native-firebase/firestore';
+import { auth } from '../services/firebase';
 
 export interface RoomState {
   status: string;
@@ -60,16 +56,15 @@ export function useRoom(roomId?: string | null) {
           maxPlayers: data.maxPlayers ?? 8,
         });
       });
-  });
-  return unsub;
-}, [roomId]);
+    return unsub;
+  }, [roomId]);
 
-// ─── Subscribe players sub-collection ────────────────────────────
-useEffect(() => {
-  if (!roomId) {
-    setPlayers({});
-    return;
-  }
+  // ─── Subscribe players sub-collection ────────────────────────────
+  useEffect(() => {
+    if (!roomId) {
+      setPlayers({});
+      return;
+    }
     const unsub = firestore()
       .collection('rooms')
       .doc(roomId)
@@ -79,10 +74,10 @@ useEffect(() => {
         snap.docs.forEach((d) => { map[d.id] = { id: d.id, ...d.data() }; });
         setPlayers(map);
       });
-  return unsub;
-}, [roomId]);
+    return unsub;
+  }, [roomId]);
 
-const isDrawer = uid === room?.currentDrawerId;
+  const isDrawer = uid === room?.currentDrawerId;
 
-return { room, players, isDrawer, uid };
+  return { room, players, isDrawer, uid };
 }
