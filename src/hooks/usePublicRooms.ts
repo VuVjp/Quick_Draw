@@ -1,6 +1,15 @@
 // src/hooks/usePublicRooms.ts
 import { useEffect, useState } from 'react';
-import firestore from '@react-native-firebase/firestore';
+import {
+    collection,
+    query,
+    where,
+    orderBy,
+    limit,
+    onSnapshot,
+    getDocs,
+    firestore,
+} from '@react-native-firebase/firestore';
 import { db } from '../services/firebase';
 
 export interface RoomItem {
