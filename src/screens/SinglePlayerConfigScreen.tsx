@@ -15,7 +15,7 @@ const SinglePlayerConfigScreen = () => {
   const router = useRouter();
   const startSinglePlayer = useGameStore((s) => s.startSinglePlayer);
 
-  const [nickname, setNickname] = useState('');
+  const [nickname, setNickname] = useState('Player');
   const [rounds, setRounds] = useState(5);
   const [drawTime, setDrawTime] = useState(80);
   const [botCount, setBotCount] = useState(3);
@@ -77,27 +77,27 @@ const SinglePlayerConfigScreen = () => {
       </View>
 
       <View style={[styles.content, { flex: 1 }]}>
-        <View style={[styles.formCard, { 
-          flex: 1, 
-          paddingTop: Spacing.md, 
-          paddingBottom: Spacing.md, 
-          paddingLeft: Spacing.sm, 
-          paddingRight: Spacing.md, 
-          gap: 0 
+        <View style={[styles.formCard, {
+          flex: 1,
+          paddingTop: Spacing.md,
+          paddingBottom: Spacing.md,
+          paddingLeft: Spacing.sm,
+          paddingRight: Spacing.md,
+          gap: 0
         }]}>
-          <ScrollView 
+          <ScrollView
             showsVerticalScrollIndicator={true}
             persistentScrollbar={true}
             indicatorStyle="default"
-            contentContainerStyle={{ 
-              paddingTop: Spacing.md, 
-              paddingBottom: Spacing.md, 
-              paddingLeft: Spacing.lg, 
-              paddingRight: Spacing.md, 
-              gap: Spacing.xl 
+            contentContainerStyle={{
+              paddingTop: Spacing.md,
+              paddingBottom: Spacing.md,
+              paddingLeft: Spacing.lg,
+              paddingRight: Spacing.md,
+              gap: Spacing.xl
             }}
           >
-            <View style={styles.inputGroup}>
+            {/* <View style={styles.inputGroup}>
               <Text style={styles.optionLabel}>Biệt danh (Nickname)</Text>
               <TextInput
                 style={styles.textInput}
@@ -106,9 +106,9 @@ const SinglePlayerConfigScreen = () => {
                 placeholder="VD: Cỏ Nhỏ..."
                 placeholderTextColor={Colors.softGray}
               />
-            </View>
+            </View> */}
 
-            {renderOptionSelector('Số lượng bot', [0, 3, 5, 7], botCount, setBotCount)}
+            {/* {renderOptionSelector('Số lượng bot', [0, 3, 5, 7], botCount, setBotCount)} */}
             {renderOptionSelector('Số vòng', [3, 5, 10], rounds, setRounds)}
             {renderOptionSelector('Thời gian (giây)', [40, 60, 80, 120], drawTime, setDrawTime)}
 
@@ -122,7 +122,6 @@ const SinglePlayerConfigScreen = () => {
           onPress={handleStart}
           variant="primary"
           style={styles.createBtn}
-          disabled={nickname.trim().length === 0}
         />
       </View>
     </NotebookBackground>
