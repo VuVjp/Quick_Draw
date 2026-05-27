@@ -22,28 +22,20 @@ export function usePublicRooms() {
             .where('status', '==', 'waiting')
             .orderBy('createdAt', 'desc')
             .limit(20)
-            .onSnapshot(async (snap) => {
-                // Với mỗi room, lấy số lượng players từ sub-collection
-                const roomsWithPlayers = await Promise.all(
-                    snap.docs.map(async (doc) => {
-                        const data = doc.data();
-                        const playersSnap = await firestore()
-                            .collection('rooms')
-                            .doc(doc.id)
-                            .collection('players')
-                            .get();
-
-                        return {
-                            id: doc.id,
-                            name: data.roomName ?? 'Phòng chơi',
-                            players: playersSnap.size,
-                            maxPlayers: data.maxPlayers ?? 8,
-                            status: data.status,
-                            code: data.code,
-                        };
-                    })
-                );
-                setRooms(roomsWithPlayers);
+            .onSnapshot((snap) => {
+                // Không cần Promise.all, không cần sub-collection query
+                const rooms = snap.docs.map((doc) => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        name: data.roomName ?? 'Phòng chơi',
+                        players: data.playerCount ?? 0, // ← đọc trực tiếp
+                        maxPlayers: data.maxPlayers,
+                        status: data.status,
+                        code: data.code,
+                    };
+                });
+                setRooms(rooms);
                 setLoading(false);
             }, (error) => {
                 console.error('[usePublicRooms]', error);

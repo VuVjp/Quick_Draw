@@ -47,6 +47,7 @@ export function useCreateRoom() {
                 currentRound: 0,
                 currentDrawerId: null,
                 currentTopic: null,
+                playerCount: 1,
                 createdAt: firestore.FieldValue.serverTimestamp(),
             });
 
