@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../theme/colors';
@@ -77,42 +77,19 @@ const SinglePlayerConfigScreen = () => {
       </View>
 
       <View style={[styles.content, { flex: 1 }]}>
-        <View style={[styles.formCard, {
-          flex: 1,
-          paddingTop: Spacing.md,
-          paddingBottom: Spacing.md,
-          paddingLeft: Spacing.sm,
-          paddingRight: Spacing.md,
-          gap: 0
-        }]}>
-          <ScrollView
-            showsVerticalScrollIndicator={true}
-            persistentScrollbar={true}
-            indicatorStyle="default"
-            contentContainerStyle={{
-              paddingTop: Spacing.md,
-              paddingBottom: Spacing.md,
-              paddingLeft: Spacing.lg,
-              paddingRight: Spacing.md,
-              gap: Spacing.xl
-            }}
-          >
-            {/* <View style={styles.inputGroup}>
-              <Text style={styles.optionLabel}>Biệt danh (Nickname)</Text>
-              <TextInput
-                style={styles.textInput}
-                value={nickname}
-                onChangeText={setNickname}
-                placeholder="VD: Cỏ Nhỏ..."
-                placeholderTextColor={Colors.softGray}
-              />
-            </View> */}
-
-            {/* {renderOptionSelector('Số lượng bot', [0, 3, 5, 7], botCount, setBotCount)} */}
+        <View style={[styles.formCard, { flex: 1, padding: 0, overflow: 'hidden' }]}>
+          <View style={{ padding: Spacing.xl, gap: Spacing.xl }}>
             {renderOptionSelector('Số vòng', [3, 5, 10], rounds, setRounds)}
             {renderOptionSelector('Thời gian (giây)', [40, 60, 80, 120], drawTime, setDrawTime)}
+          </View>
 
-          </ScrollView>
+          <View style={{ flex: 1, width: '100%', alignItems: 'center', justifyContent: 'flex-end' }}>
+            <Image 
+              source={require('../../assets/images/anime.png')} 
+              style={{ width: '90%', height: '110%' }}
+              resizeMode="contain"
+            />
+          </View>
         </View>
       </View>
 
@@ -220,5 +197,5 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.sm,
-  },
+  }
 });

@@ -108,9 +108,16 @@ const DrawingScreen = () => {
         // wait one frame to ensure latest UI/skia updates have been painted
         await new Promise((res) => requestAnimationFrame(() => res(null)));
 
+        const strokes = useDrawingStore.getState().strokeHistory;
+        if (strokes.length === 0) {
+          isInferencing.current = false;
+          return;
+        }
+
         const base64 = canvasRef.current?.getSnapshot();
         if (!base64) {
           console.warn('Canvas trống hoặc chưa sẵn sàng');
+          isInferencing.current = false;
           return;
         }
 
@@ -120,7 +127,6 @@ const DrawingScreen = () => {
         if (isSinglePlayer) {
           if (!result) return;
           if (result.accepted) {
-            const strokes = useDrawingStore.getState().strokeHistory;
             const scores = drawTime > 0 && timeLeft > 0
               ? {
                 '1': Math.floor(
@@ -128,7 +134,7 @@ const DrawingScreen = () => {
                 )
               }
               : { '1': 0 };
-            saveDrawingToStore(scores, strokes);
+            saveDrawingToStore(scores, strokes, canvasSize);
             router.replace('/round-end' as any);
           } else {
             // multiplayer handling
@@ -144,9 +150,9 @@ const DrawingScreen = () => {
     return () => clearInterval(interval);
   }, [isReady, currentWord, isSinglePlayer, timeLeft, router]);
 
-  const saveDrawingToStore = (scores: Record<string, number>, strokes: any[]) => {
+  const saveDrawingToStore = (scores: Record<string, number>, strokes: any[], size?: { width: number, height: number }) => {
     // End the round in game store
-    useGameStore.getState().endRound(scores, strokes);
+    useGameStore.getState().endRound(scores, strokes, size);
 
     // Clear local drawing data so it doesn't carry to the next round
     useDrawingStore.getState().clearCanvas();
@@ -168,7 +174,7 @@ const DrawingScreen = () => {
     const strokes = useDrawingStore.getState().strokeHistory;
 
     // Save current drawing to store
-    saveDrawingToStore(mockScores, strokes);
+    saveDrawingToStore(mockScores, strokes, canvasSize);
   });
 
   const isDrawer = currentDrawerId === '1'; // mock: local user is always player 1
@@ -187,8 +193,8 @@ const DrawingScreen = () => {
           </TouchableOpacity>
 
           <View style={styles.wordLabelContainer}>
-            <Text style={styles.youDrawText}>HÃY VẼ:</Text>
-            <Text style={styles.wordText}>{currentWord}</Text>
+            <Text style={styles.roundIndicator}>Vòng {currentRound}/{rounds} • HÃY VẼ:</Text>
+            <Text style={styles.wordText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{currentWord}</Text>
           </View>
 
           <TimerDisplay />
@@ -303,20 +309,25 @@ const styles = StyleSheet.create({
     color: Colors.warmBlack,
   },
   wordLabelContainer: {
+    flex: 1,
     alignItems: 'center',
+    paddingHorizontal: Spacing.sm,
   },
-  youDrawText: {
-    fontFamily: FontFamily.caveatBold,
-    fontSize: FontSize.xs,
+  roundIndicator: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.md,
     color: Colors.warmBlack,
-    letterSpacing: 1,
-    opacity: 0.6,
+    letterSpacing: 0.5,
+    marginBottom: 2,
+    opacity: 0.75,
   },
   wordText: {
     fontFamily: FontFamily.patrickHand,
-    fontSize: 28,
+    fontSize: 44,
     color: Colors.warmBlack,
-    marginTop: -4,
+    textAlign: 'center',
+    lineHeight: 48,
+    letterSpacing: -0.5,
   },
   timerBox: {
     width: 44,

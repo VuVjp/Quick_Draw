@@ -9,14 +9,14 @@ export type AuthSession = {
 
 const AUTH_SESSION_KEY = 'user_token';
 
-type UserStore = {
+type UserSessionStore = {
   session: AuthSession | null;
   setSession: (s: AuthSession | null) => void;
   clearSession: () => Promise<void>;
   loadSession: () => Promise<void>;
 };
 
-export const useUserStore = create<UserStore>((set, get) => ({
+export const useUserStore = create<UserSessionStore>((set) => ({
   session: null,
   setSession: (s) => set({ session: s }),
   clearSession: async () => {
@@ -46,4 +46,3 @@ export const useUserStore = create<UserStore>((set, get) => ({
 }));
 
 export default useUserStore;
-

@@ -7,11 +7,11 @@ import { Spacing, Radius, Shadow } from '../theme/spacing';
 
 const InGameRanking = () => {
   const players = useGameStore(s => s.players);
-  const isSinglePlayer = useGameStore(s => s.isSinglePlayer);
+  const lastRoundScores = useGameStore(s => s.lastRoundScores);
   const [expanded, setExpanded] = useState(false);
 
-  // Không hiển thị nếu là chơi đơn hoặc chỉ có 1 người
-  if (isSinglePlayer || players.length <= 1) return null;
+  // Không hiển thị nếu chỉ có 1 người (solo không có bot)
+  if (players.length <= 1) return null;
 
   // Sắp xếp người chơi theo điểm giảm dần
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
@@ -29,14 +29,22 @@ const InGameRanking = () => {
 
       {expanded && (
         <View style={styles.list}>
-          {sortedPlayers.map((p, index) => (
-            <View key={p.id} style={styles.playerRow}>
-              <Text style={styles.rankText}>#{index + 1}</Text>
-              <Text style={styles.avatar}>{p.avatar}</Text>
-              <Text style={styles.name} numberOfLines={1}>{p.name}</Text>
-              <Text style={styles.score}>{p.score}</Text>
-            </View>
-          ))}
+          {sortedPlayers.map((p, index) => {
+            const gained = lastRoundScores[p.id];
+            return (
+              <View key={p.id} style={styles.playerRow}>
+                <Text style={styles.rankText}>#{index + 1}</Text>
+                <Text style={styles.avatar}>{p.avatar}</Text>
+                <Text style={styles.name} numberOfLines={1}>{p.name}</Text>
+                <View style={styles.scoreCol}>
+                  <Text style={styles.score}>{p.score}</Text>
+                  {gained != null && gained > 0 && (
+                    <Text style={styles.gained}>+{gained}</Text>
+                  )}
+                </View>
+              </View>
+            );
+          })}
         </View>
       )}
     </View>
@@ -59,7 +67,7 @@ const styles = StyleSheet.create({
     width: 160,
   },
   collapsed: {
-    width: 120, // Nhỏ hơn khi thu gọn
+    width: 120,
   },
   header: {
     flexDirection: 'row',
@@ -74,7 +82,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   headerCollapsed: {
-    borderRadius: Radius.md - 2, // Bo tròn cả góc dưới khi thu gọn
+    borderRadius: Radius.md - 2,
     borderBottomWidth: 0,
   },
   headerTitle: {
@@ -110,9 +118,19 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.warmBlack,
   },
+  scoreCol: {
+    alignItems: 'flex-end',
+  },
   score: {
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.sm,
     color: Colors.warmBlack,
   },
+  gained: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.xs,
+    color: '#4A9B6F',
+  },
 });
+
+

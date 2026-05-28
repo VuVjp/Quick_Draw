@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
@@ -10,10 +10,9 @@ import NotebookBackground from '../components/NotebookBackground';
 import { useGameStore, Player } from '../store/useGameStore';
 import ReadOnlyCanvas from '../canvas/ReadOnlyCanvas';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-const CANVAS_WIDTH = width - Spacing.xl * 2 - 32; // padding inside card
-const CANVAS_HEIGHT = CANVAS_WIDTH * 0.75;
+
 
 const RoundEndScreen = () => {
   const router = useRouter();
@@ -21,10 +20,15 @@ const RoundEndScreen = () => {
   const rounds = useGameStore((s) => s.rounds);
   const players = useGameStore((s) => s.players);
   const roundDrawing = useGameStore((s) => s.roundDrawing);
+  const originalCanvasSize = useGameStore((s) => s.originalCanvasSize);
   const startRound = useGameStore((s) => s.startRound);
   const endGame = useGameStore((s) => s.endGame);
+  const lastRoundScores = useGameStore((s) => s.lastRoundScores);
 
   const isLastRound = currentRound >= rounds;
+  const isSinglePlayer = players.length <= 1;
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   
   // The first player in the sorted players list is Top 1
   const top1Player = players[0];
@@ -47,6 +51,7 @@ const RoundEndScreen = () => {
 
   const renderPlayer = ({ item, index }: { item: Player; index: number }) => {
     const isTop1 = index === 0;
+    const pointsGained = lastRoundScores[item.id] || 0;
     return (
       <Animated.View 
         entering={FadeInDown.delay(300 + index * 100).springify().damping(12)}
@@ -55,7 +60,7 @@ const RoundEndScreen = () => {
         <Text style={styles.playerRank}>#{index + 1}</Text>
         <Text style={styles.playerAvatar}>{item.avatar}</Text>
         <Text style={styles.playerName} numberOfLines={1}>{item.name}</Text>
-        <Text style={styles.playerScore}>{item.score} đ</Text>
+        <Text style={styles.playerScore}>+{pointsGained} đ</Text>
       </Animated.View>
     );
   };
@@ -65,32 +70,73 @@ const RoundEndScreen = () => {
       <View style={styles.container}>
         <Animated.View entering={FadeIn.duration(600)} style={styles.header}>
           <Text style={styles.title}>KẾT THÚC VÒNG {currentRound}/{rounds}</Text>
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.artworkContainer}>
-          <Text style={styles.artworkTitle}>Tác phẩm xuất sắc nhất</Text>
-          <View style={styles.canvasWrapper}>
-            <ReadOnlyCanvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} strokes={roundDrawing} />
-            <View style={styles.artworkAuthorTag}>
-              <Text style={styles.artworkAuthorText}>{top1Player?.avatar} {top1Player?.name}</Text>
-            </View>
+          <View style={styles.miniLeaderboard}>
+            {players.map((p) => {
+              const pts = lastRoundScores[p.id] || 0;
+              return (
+                <View key={p.id} style={styles.miniPlayerRow}>
+                  <Text style={styles.miniPlayerAvatar}>{p.avatar}</Text>
+                  <Text style={styles.miniPlayerName} numberOfLines={1}>{p.name}</Text>
+                  <Text style={[styles.miniPlayerScore, pts > 0 && styles.miniPlayerScorePositive]}>
+                    {pts > 0 ? `+${pts}đ` : `${pts}đ`}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
         </Animated.View>
 
-        <View style={styles.leaderboardContainer}>
-          <Text style={styles.leaderboardTitle}>Bảng Xếp Hạng</Text>
-          <FlatList
-            data={players}
-            renderItem={renderPlayer}
-            keyExtractor={item => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContent}
-          />
-        </View>
+        <Animated.View entering={FadeInDown.delay(200).springify()} style={[styles.artworkContainer, { flex: 1 }]}>
+          <Text style={styles.artworkTitle}>Tác phẩm xuất sắc nhất</Text>
+          <View 
+            style={[styles.canvasWrapper, { flex: 1, width: '100%', marginBottom: Spacing.md }]}
+            onLayout={(e) => {
+              const { width: w, height: h } = e.nativeEvent.layout;
+              if (w > 0 && h > 0) {
+                setCanvasSize({ width: w, height: h });
+              }
+            }}
+          >
+            {canvasSize.width > 0 && (
+              <ReadOnlyCanvas 
+                width={canvasSize.width} 
+                height={canvasSize.height} 
+                strokes={roundDrawing} 
+                originalCanvasSize={originalCanvasSize}
+              />
+            )}
+            <View style={styles.artworkAuthorTag}>
+              <Text style={styles.artworkAuthorText}>{top1Player?.avatar} {top1Player?.name}</Text>
+            </View>
+
+            {showLeaderboard && !isSinglePlayer && (
+              <View style={styles.leaderboardOverlay}>
+                <Text style={styles.leaderboardTitle}>Bảng Xếp Hạng</Text>
+                <FlatList
+                  data={players}
+                  renderItem={renderPlayer}
+                  keyExtractor={item => item.id}
+                  showsVerticalScrollIndicator={true}
+                  contentContainerStyle={styles.listContent}
+                  style={{ flex: 1 }}
+                />
+              </View>
+            )}
+          </View>
+        </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(800).springify()} style={styles.footer}>
+          {!isSinglePlayer && (
+            <AnimatedButton
+              label={showLeaderboard ? "Ẩn Bảng Xếp Hạng" : "Xem Bảng Xếp Hạng"}
+              onPress={() => setShowLeaderboard(!showLeaderboard)}
+              variant="secondary"
+              style={{ marginBottom: Spacing.md }}
+              fullWidth
+            />
+          )}
           <AnimatedButton
-            label={isLastRound ? "Kết thúc game 🏁" : "Vòng tiếp theo ➡️"}
+            label={isLastRound ? "Kết thúc game" : "Vòng tiếp theo"}
             onPress={handleNext}
             variant="primary"
             fullWidth
@@ -129,12 +175,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   canvasWrapper: {
-    padding: 8,
     backgroundColor: Colors.paperWhite,
     borderWidth: 2,
     borderColor: Colors.border,
     borderRadius: Radius.lg,
     alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 3, height: 4 },
     shadowOpacity: 0.1,
@@ -156,14 +202,13 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.warmBlack,
   },
-  leaderboardContainer: {
-    flex: 1,
-    backgroundColor: Colors.paperWhite,
+  leaderboardOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 253, 248, 0.96)', // matches Colors.paperWhite with transparency
     borderRadius: Radius.lg,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
     padding: Spacing.md,
-    marginBottom: Spacing.xl,
+    zIndex: 10,
+    overflow: 'hidden',
   },
   leaderboardTitle: {
     fontFamily: FontFamily.patrickHand,
@@ -212,5 +257,41 @@ const styles = StyleSheet.create({
   },
   footer: {
     marginBottom: Spacing.md,
+  },
+  miniLeaderboard: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+    marginTop: Spacing.sm,
+  },
+  miniPlayerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.paperWhite,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 3,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: 4,
+    maxWidth: 150,
+  },
+  miniPlayerAvatar: {
+    fontSize: 14,
+  },
+  miniPlayerName: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.xs,
+    color: Colors.warmBlack,
+    flex: 1,
+  },
+  miniPlayerScore: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.xs,
+    color: Colors.warmBlack,
+  },
+  miniPlayerScorePositive: {
+    color: '#4A9B6F',
   },
 });

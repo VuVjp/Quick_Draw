@@ -1,23 +1,31 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { Dimensions, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import AnimatedButton from '../components/AnimatedButton';
 import AuthModal from '../components/AuthModal';
 import FloatingDoodles from '../components/FloatingDoodles';
 import NotebookBackground from '../components/NotebookBackground';
-import { Spacing } from '../theme/spacing';
+import SettingsModal from '../components/SettingsModal';
+import { Spacing, Radius, Shadow } from '../theme/spacing';
 
 import { useRouter } from 'expo-router';
+import { playClick } from '../store/useAudioStore';
 import { useUserStore } from '../store/useUserStore';
 import Logo from '../../assets/logo/Group 7.svg';
+import CogIcon from '../../assets/Icon/cog.svg';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
+import { useGameStore } from '../store/useGameStore';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 const HomeScreen = () => {
   const router = useRouter();
   const [showAuth, setShowAuth] = useState(false);
   const session = useUserStore((s) => s.session);
+  const [showSettings, setShowSettings] = useState(false);
+  
 
   const handleOnlinePress = () => {
     if (session && session.uid) {
@@ -31,6 +39,22 @@ const HomeScreen = () => {
   return (
     <NotebookBackground>
       <FloatingDoodles />
+      
+      {/* Settings Button - wrapped safely */}
+      <SafeAreaView style={styles.settingsWrapper} edges={['top', 'right']}>
+        <TouchableOpacity 
+          style={styles.settingsBtn} 
+          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+          onPress={() => {
+            console.log('Settings button tapped!');
+            playClick();
+            setShowSettings(true);
+          }}
+        >
+          <CogIcon width={28} height={28} fill={Colors.warmBlack} />
+        </TouchableOpacity>
+      </SafeAreaView>
+
       <View style={styles.centre}>
         <Animated.View
           entering={ZoomIn.duration(600).springify().damping(12).stiffness(100)}
@@ -41,7 +65,7 @@ const HomeScreen = () => {
             height={240}
           />
           <Text style={styles.titleText}>Quick Draw!</Text>
-          <Text style={styles.subtitleText}>Thử tài hoạ sĩ tí hon</Text>
+          <Text style={styles.subtitleText}>Thử tài hoạ sĩ</Text>
         </Animated.View>
 
         {/* Buttons */}
@@ -69,6 +93,11 @@ const HomeScreen = () => {
       <AuthModal
         visible={showAuth}
         onClose={() => setShowAuth(false)}
+      />
+
+      <SettingsModal 
+        visible={showSettings}
+        onClose={() => setShowSettings(false)}
       />
     </NotebookBackground>
   );
@@ -101,12 +130,30 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.hero,
     color: Colors.warmBlack,
-    marginTop: -Spacing.md, // Xích xuống 1 chút (thay vì -Spacing.lg)
+    marginTop: -Spacing.md,
   },
   subtitleText: {
-    fontFamily: FontFamily.patrickHand, // Đổi sang PatrickHand vì Caveat bị lỗi tiếng Việt
+    fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.xl,
     color: Colors.border,
     marginTop: 0,
+  },
+  settingsWrapper: {
+    position: 'absolute',
+    top: Spacing.md,
+    right: Spacing.xl,
+    zIndex: 9999,
+    elevation: 9999,
+  },
+  settingsBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.paperWhite,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    ...Shadow.sketch,
   },
 });

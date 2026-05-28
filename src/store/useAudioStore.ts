@@ -1,4 +1,5 @@
 import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
+import { useUserStore } from './useUserStore';
 
 const globalNode = global as any;
 
@@ -34,7 +35,6 @@ export async function initBgm() {
     );
     _bgmPlayer.loop = true;
     _bgmPlayer.volume = 0.25;
-    _bgmPlayer.play();
     globalNode.__bgmPlayer = _bgmPlayer;
   } catch (e) {
     console.log('[BGM] init error:', e);
@@ -77,7 +77,8 @@ export async function initClickSound() {
     _clickPlayer = createAudioPlayer(
       require('../../assets/sounds/UI_click.mp3')
     );
-    _clickPlayer.volume = 2.0;
+    const sfxVol = useUserStore.getState().sfxVolume || 1.0;
+    _clickPlayer.volume = 2.0 * sfxVol;
     globalNode.__clickPlayer = _clickPlayer;
   } catch (e) {
     console.log('[Click] init error:', e);
@@ -88,12 +89,12 @@ export async function initClickSound() {
 
 export function playClick() {
   if (!_clickPlayer) return;
+  if (!useUserStore.getState().soundEnabled) return;
   try {
-    // Seek to start so rapid clicks don't get delayed
     _clickPlayer.seekTo(0);
     _clickPlayer.play();
-  } catch (_) {
-    // ignore if sound not loaded yet
+  } catch (e) {
+    console.log('[Click] play error:', e);
   }
 }
 
@@ -107,7 +108,8 @@ export async function initBrushSound() {
       require('../../assets/sounds/brush_paper.mp3')
     );
     _brushPlayer.loop = true; // Loop while drawing
-    _brushPlayer.volume = 1.0;
+    const sfxVol = useUserStore.getState().sfxVolume || 1.0;
+    _brushPlayer.volume = 1.0 * sfxVol;
     globalNode.__brushPlayer = _brushPlayer;
   } catch (e) {
     console.log('[Brush] init error:', e);
@@ -117,11 +119,15 @@ export async function initBrushSound() {
 }
 
 export function startBrushSound() {
+  if (!useUserStore.getState().soundEnabled) return;
+  
   if (!_brushPlayer) {
     // Lazy init just in case Fast Refresh skipped the layout effect
     initBrushSound().then(() => {
       try {
-        _brushPlayer?.play();
+        if (useUserStore.getState().soundEnabled) {
+          _brushPlayer?.play();
+        }
       } catch (e) {}
     });
     return;
@@ -140,4 +146,11 @@ export function stopBrushSound() {
   } catch (e) {
     console.log('[Brush] stop error:', e);
   }
+}
+
+// ─── SFX Volume Control ────────────────────────────────────────────────────────
+
+export function setSfxVolume(volume: number) {
+  if (_clickPlayer) _clickPlayer.volume = 2.0 * volume;
+  if (_brushPlayer) _brushPlayer.volume = 1.0 * volume;
 }

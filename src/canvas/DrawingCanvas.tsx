@@ -83,6 +83,13 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(({ width, height, disa
     updatePicture();
   }, [updatePicture]);
 
+  // Clean up sound on unmount
+  useEffect(() => {
+    return () => {
+      stopBrushSound();
+    };
+  }, []);
+
   const gesture = Gesture.Pan()
     .minDistance(0)
     .runOnJS(true)

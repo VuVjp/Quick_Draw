@@ -23,6 +23,9 @@ import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius, Shadow } from '../theme/spacing';
 
+import ClockIcon from '../../assets/Icon/clock.svg';
+import PencilRulerIcon from '../../assets/Icon/pencil-ruler.svg';
+
 const { width } = Dimensions.get('window');
 
 const RoomScreen = () => {
@@ -185,9 +188,13 @@ const RoomScreen = () => {
 
         {/* Configurations Banner */}
         <Animated.View entering={FadeInDown.delay(200)} style={styles.configBanner}>
-          <Text style={styles.configText}>
-            ⏱️ {room.roundDurationSecs}s | 🔄 {room.totalRounds} vòng | 🎯 {room.difficulty}
-          </Text>
+          <View style={styles.configRow}>
+            <ClockIcon width={16} height={16} color={Colors.warmBlack} />
+            <Text style={styles.configText}>{room.roundDurationSecs}s</Text>
+            <Text style={styles.configDivider}>|</Text>
+            <PencilRulerIcon width={16} height={16} color={Colors.warmBlack} />
+            <Text style={styles.configText}>{room.totalRounds} vòng</Text>
+          </View>
         </Animated.View>
 
         {/* Player List */}
@@ -222,7 +229,8 @@ const RoomScreen = () => {
                 </Animated.View>
               );
             }}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={true}
+            indicatorStyle="black"
             ItemSeparatorComponent={() => <View style={{ height: Spacing.md }} />}
           />
         </View>
@@ -351,20 +359,31 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   configBanner: {
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: Colors.paperWhite,
     borderWidth: 1.5,
     borderColor: Colors.border,
     borderRadius: Radius.md,
-    paddingVertical: Spacing.xs,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
     marginBottom: Spacing.xl,
     ...Shadow.sketch,
+  },
+  configRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
   },
   configText: {
     fontFamily: FontFamily.regular,
     fontSize: FontSize.sm,
-    color: Colors.text,
+    color: Colors.warmBlack,
+  },
+  configDivider: {
+    fontFamily: FontFamily.regular,
+    fontSize: FontSize.sm,
+    color: Colors.softGray,
+    marginHorizontal: 4,
   },
   listSection: {
     flex: 1,
