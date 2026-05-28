@@ -26,6 +26,7 @@ export type UserProfile = {
   soundEnabled: boolean;
   hapticsEnabled: boolean;
   darkMode: boolean;
+  bgmVolume: number;
 };
 
 type UserStore = UserProfile & {
@@ -36,6 +37,7 @@ type UserStore = UserProfile & {
   toggleSound: () => void;
   toggleHaptics: () => void;
   toggleDarkMode: () => void;
+  setBgmVolume: (vol: number) => void;
   recordMatch: (won: boolean, score: number, word: string) => void;
 };
 
@@ -56,6 +58,7 @@ export const useUserStore = create<UserStore>((set) => ({
   soundEnabled: true,
   hapticsEnabled: true,
   darkMode: false,
+  bgmVolume: 0.25,
 
   setName: (name) => set({ name }),
   setAvatar: (avatar) => set({ avatar }),
@@ -76,6 +79,7 @@ export const useUserStore = create<UserStore>((set) => ({
   toggleSound: () => set((state) => ({ soundEnabled: !state.soundEnabled })),
   toggleHaptics: () => set((state) => ({ hapticsEnabled: !state.hapticsEnabled })),
   toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
+  setBgmVolume: (vol) => set({ bgmVolume: vol }),
 
   recordMatch: (won, score, word) =>
     set((state) => ({

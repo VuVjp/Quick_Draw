@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { Dimensions, StyleSheet, View, Text } from 'react-native';
+import { Dimensions, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import AnimatedButton from '../components/AnimatedButton';
 import AuthModal from '../components/AuthModal';
 import FloatingDoodles from '../components/FloatingDoodles';
 import NotebookBackground from '../components/NotebookBackground';
-import { Spacing } from '../theme/spacing';
+import SettingsModal from '../components/SettingsModal';
+import { Spacing, Radius, Shadow } from '../theme/spacing';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useGameStore } from '../store/useGameStore';
 import Logo from '../../assets/logo/Group 7.svg';
+import CogIcon from '../../assets/Icon/cog.svg';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 
@@ -19,6 +21,7 @@ const { width, height } = Dimensions.get('window');
 const HomeScreen = () => {
   const router = useRouter();
   const [showAuth, setShowAuth] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const startSinglePlayer = useGameStore((s) => s.startSinglePlayer);
 
   const handleOnlinePress = async () => {
@@ -49,7 +52,7 @@ const HomeScreen = () => {
             height={240}
           />
           <Text style={styles.titleText}>Quick Draw!</Text>
-          <Text style={styles.subtitleText}>Thử tài hoạ sĩ tí hon</Text>
+          <Text style={styles.subtitleText}>Thử tài hoạ sĩ</Text>
         </Animated.View>
 
         {/* Buttons */}
@@ -78,6 +81,18 @@ const HomeScreen = () => {
         visible={showAuth}
         onClose={() => setShowAuth(false)}
       />
+
+      <SettingsModal 
+        visible={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
+
+      <TouchableOpacity 
+        style={styles.settingsBtn} 
+        onPress={() => setShowSettings(true)}
+      >
+        <CogIcon width={24} height={24} color={Colors.warmBlack} />
+      </TouchableOpacity>
     </NotebookBackground>
   );
 };
@@ -109,12 +124,26 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.hero,
     color: Colors.warmBlack,
-    marginTop: -Spacing.md, // Xích xuống 1 chút (thay vì -Spacing.lg)
+    marginTop: -Spacing.md,
   },
   subtitleText: {
-    fontFamily: FontFamily.patrickHand, // Đổi sang PatrickHand vì Caveat bị lỗi tiếng Việt
+    fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.xl,
     color: Colors.border,
     marginTop: 0,
+  },
+  settingsBtn: {
+    position: 'absolute',
+    top: 50,
+    right: Spacing.xl,
+    width: 44,
+    height: 44,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.paperWhite,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    ...Shadow.sketch,
   },
 });

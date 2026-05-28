@@ -187,8 +187,8 @@ const DrawingScreen = () => {
           </TouchableOpacity>
 
           <View style={styles.wordLabelContainer}>
-            <Text style={styles.youDrawText}>HÃY VẼ:</Text>
-            <Text style={styles.wordText}>{currentWord}</Text>
+            <Text style={styles.roundIndicator}>Vòng {currentRound}/{rounds} • HÃY VẼ:</Text>
+            <Text style={styles.wordText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{currentWord}</Text>
           </View>
 
           <TimerDisplay />
@@ -303,20 +303,25 @@ const styles = StyleSheet.create({
     color: Colors.warmBlack,
   },
   wordLabelContainer: {
+    flex: 1,
     alignItems: 'center',
+    paddingHorizontal: Spacing.sm,
   },
-  youDrawText: {
-    fontFamily: FontFamily.caveatBold,
-    fontSize: FontSize.xs,
+  roundIndicator: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.md,
     color: Colors.warmBlack,
-    letterSpacing: 1,
-    opacity: 0.6,
+    letterSpacing: 0.5,
+    marginBottom: 2,
+    opacity: 0.75,
   },
   wordText: {
     fontFamily: FontFamily.patrickHand,
-    fontSize: 28,
+    fontSize: 44,
     color: Colors.warmBlack,
-    marginTop: -4,
+    textAlign: 'center',
+    lineHeight: 48,
+    letterSpacing: -0.5,
   },
   timerBox: {
     width: 44,

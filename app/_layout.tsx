@@ -13,8 +13,10 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { initBgm, initClickSound, initBrushSound } from '../src/store/useAudioStore';
+import { initBgm, initClickSound, initBrushSound, playBgm, pauseBgm } from '../src/store/useAudioStore';
+import { useUserStore } from '../src/store/useUserStore';
 
 // Keep splash visible until fonts load
 SplashScreen.preventAutoHideAsync();
@@ -27,11 +29,39 @@ export default function RootLayout() {
     IndieFlower_400Regular,
   });
 
+  const soundEnabled = useUserStore((s) => s.soundEnabled);
+
   useEffect(() => {
-    initBgm();
+    initBgm().then(() => {
+      if (useUserStore.getState().soundEnabled && AppState.currentState === 'active') {
+        playBgm();
+      }
+    });
     initClickSound();
     initBrushSound();
   }, []);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active' && useUserStore.getState().soundEnabled) {
+        playBgm();
+      } else {
+        pauseBgm();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (soundEnabled && AppState.currentState === 'active') {
+      playBgm();
+    } else {
+      pauseBgm();
+    }
+  }, [soundEnabled]);
 
   useEffect(() => {
     if (fontsLoaded || fontsError) {

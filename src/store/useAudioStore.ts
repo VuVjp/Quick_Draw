@@ -34,7 +34,6 @@ export async function initBgm() {
     );
     _bgmPlayer.loop = true;
     _bgmPlayer.volume = 0.25;
-    _bgmPlayer.play();
     globalNode.__bgmPlayer = _bgmPlayer;
   } catch (e) {
     console.log('[BGM] init error:', e);

@@ -12,8 +12,7 @@ import ReadOnlyCanvas from '../canvas/ReadOnlyCanvas';
 
 const { width, height } = Dimensions.get('window');
 
-const CANVAS_WIDTH = width - Spacing.xl * 2 - 32; // padding inside card
-const CANVAS_HEIGHT = height * 0.45; // make canvas taller to match drawing screen better
+
 
 const RoundEndScreen = () => {
   const router = useRouter();
@@ -23,10 +22,12 @@ const RoundEndScreen = () => {
   const roundDrawing = useGameStore((s) => s.roundDrawing);
   const startRound = useGameStore((s) => s.startRound);
   const endGame = useGameStore((s) => s.endGame);
+  const lastRoundScores = useGameStore((s) => s.lastRoundScores);
 
   const isLastRound = currentRound >= rounds;
   const isSinglePlayer = players.length <= 1;
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   
   // The first player in the sorted players list is Top 1
   const top1Player = players[0];
@@ -49,6 +50,7 @@ const RoundEndScreen = () => {
 
   const renderPlayer = ({ item, index }: { item: Player; index: number }) => {
     const isTop1 = index === 0;
+    const pointsGained = lastRoundScores[item.id] || 0;
     return (
       <Animated.View 
         entering={FadeInDown.delay(300 + index * 100).springify().damping(12)}
@@ -57,7 +59,7 @@ const RoundEndScreen = () => {
         <Text style={styles.playerRank}>#{index + 1}</Text>
         <Text style={styles.playerAvatar}>{item.avatar}</Text>
         <Text style={styles.playerName} numberOfLines={1}>{item.name}</Text>
-        <Text style={styles.playerScore}>{item.score} đ</Text>
+        <Text style={styles.playerScore}>+{pointsGained} đ</Text>
       </Animated.View>
     );
   };
@@ -67,12 +69,36 @@ const RoundEndScreen = () => {
       <View style={styles.container}>
         <Animated.View entering={FadeIn.duration(600)} style={styles.header}>
           <Text style={styles.title}>KẾT THÚC VÒNG {currentRound}/{rounds}</Text>
+          <View style={styles.miniLeaderboard}>
+            {players.map((p) => {
+              const pts = lastRoundScores[p.id] || 0;
+              return (
+                <View key={p.id} style={styles.miniPlayerRow}>
+                  <Text style={styles.miniPlayerAvatar}>{p.avatar}</Text>
+                  <Text style={styles.miniPlayerName} numberOfLines={1}>{p.name}</Text>
+                  <Text style={[styles.miniPlayerScore, pts > 0 && styles.miniPlayerScorePositive]}>
+                    {pts > 0 ? `+${pts}đ` : `${pts}đ`}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(200).springify()} style={[styles.artworkContainer, { flex: 1 }]}>
           <Text style={styles.artworkTitle}>Tác phẩm xuất sắc nhất</Text>
-          <View style={styles.canvasWrapper}>
-            <ReadOnlyCanvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} strokes={roundDrawing} />
+          <View 
+            style={[styles.canvasWrapper, { flex: 1, width: '100%', marginBottom: Spacing.md }]}
+            onLayout={(e) => {
+              const { width: w, height: h } = e.nativeEvent.layout;
+              if (w > 0 && h > 0) {
+                setCanvasSize({ width: w, height: h });
+              }
+            }}
+          >
+            {canvasSize.width > 0 && (
+              <ReadOnlyCanvas width={canvasSize.width} height={canvasSize.height} strokes={roundDrawing} />
+            )}
             <View style={styles.artworkAuthorTag}>
               <Text style={styles.artworkAuthorText}>{top1Player?.avatar} {top1Player?.name}</Text>
             </View>
@@ -143,12 +169,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   canvasWrapper: {
-    padding: 8,
     backgroundColor: Colors.paperWhite,
     borderWidth: 2,
     borderColor: Colors.border,
     borderRadius: Radius.lg,
     alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 3, height: 4 },
     shadowOpacity: 0.1,
@@ -225,5 +251,41 @@ const styles = StyleSheet.create({
   },
   footer: {
     marginBottom: Spacing.md,
+  },
+  miniLeaderboard: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+    marginTop: Spacing.sm,
+  },
+  miniPlayerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.paperWhite,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 3,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: 4,
+    maxWidth: 150,
+  },
+  miniPlayerAvatar: {
+    fontSize: 14,
+  },
+  miniPlayerName: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.xs,
+    color: Colors.warmBlack,
+    flex: 1,
+  },
+  miniPlayerScore: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.xs,
+    color: Colors.warmBlack,
+  },
+  miniPlayerScorePositive: {
+    color: '#4A9B6F',
   },
 });

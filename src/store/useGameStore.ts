@@ -47,6 +47,7 @@ type GameStore = {
   currentDrawerId: string | null;
   timeLeft: number;
   roundDrawing: any[]; // We will use StrokeRecord[] but use any[] here to avoid circular dependency if not imported or just import it
+  lastRoundScores: Record<string, number>;
 
   // Lobby
   availableRooms: RoomInfo[];
@@ -88,6 +89,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   currentDrawerId: null,
   timeLeft: 80,
   roundDrawing: [],
+  lastRoundScores: {},
   availableRooms: [
     { id: '1', name: 'Doodle to Win ', players: 4, maxPlayers: 8, color: 'blue' },
     { id: '2', name: 'Nét Vẽ Chết Chóc ', players: 2, maxPlayers: 8, color: 'default' },
@@ -121,11 +123,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
       players: [realPlayer, ...bots],
       maxPlayers,
       isSinglePlayer: false,
+      lastRoundScores: {},
     });
   },
 
   leaveRoom: () =>
-    set({ roomId: null, roomName: '', phase: 'waiting', currentRound: 0 }),
+    set({ roomId: null, roomName: '', phase: 'waiting', currentRound: 0, lastRoundScores: {} }),
 
   startGame: () => {
     const { players } = get();
@@ -135,6 +138,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       currentRound: 1,
       currentDrawerId: drawer.id,
       players: players.map((p) => ({ ...p, score: 0, isDrawing: p.id === drawer.id })),
+      lastRoundScores: {},
     });
   },
 
@@ -148,6 +152,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => ({
       phase: 'roundEnd',
       roundDrawing: drawing,
+      lastRoundScores: scores,
       players: state.players.map((p) => ({
         ...p,
         score: p.score + (scores[p.id] ?? 0),

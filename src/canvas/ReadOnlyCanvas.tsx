@@ -1,6 +1,10 @@
 import React, { useMemo } from 'react';
 import { StyleSheet } from 'react-native';
-import { Canvas, Path, Skia, PaintStyle, StrokeCap, StrokeJoin } from '@shopify/react-native-skia';
+import { Canvas, Path, Group, Skia, PaintStyle, StrokeCap, StrokeJoin } from '@shopify/react-native-skia';
+import { Dimensions } from 'react-native';
+
+const { width: screenWidth } = Dimensions.get('window');
+const ORIGINAL_CANVAS_WIDTH = screenWidth - 48; // width - Spacing.xl * 2
 
 type StrokeRecord = {
   pathData: string;
@@ -28,19 +32,24 @@ const ReadOnlyCanvas = ({ width, height, strokes }: Props) => {
     }).filter(s => s.path !== null);
   }, [strokes]);
 
+  // Calculate uniform scale based on width comparison
+  const scale = width / ORIGINAL_CANVAS_WIDTH;
+
   return (
     <Canvas style={[styles.canvas, { width, height }]} pointerEvents="none">
-      {renderedPaths.map((item) => (
-        <Path
-          key={item.id}
-          path={item.path!}
-          color={item.color}
-          style="stroke"
-          strokeWidth={item.width}
-          strokeCap="round"
-          strokeJoin="round"
-        />
-      ))}
+      <Group transform={[{ scale }]}>
+        {renderedPaths.map((item) => (
+          <Path
+            key={item.id}
+            path={item.path!}
+            color={item.color}
+            style="stroke"
+            strokeWidth={item.width}
+            strokeCap="round"
+            strokeJoin="round"
+          />
+        ))}
+      </Group>
     </Canvas>
   );
 };
