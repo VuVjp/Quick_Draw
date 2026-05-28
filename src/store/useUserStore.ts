@@ -27,6 +27,7 @@ export type UserProfile = {
   hapticsEnabled: boolean;
   darkMode: boolean;
   bgmVolume: number;
+  sfxVolume: number;
 };
 
 type UserStore = UserProfile & {
@@ -38,6 +39,7 @@ type UserStore = UserProfile & {
   toggleHaptics: () => void;
   toggleDarkMode: () => void;
   setBgmVolume: (vol: number) => void;
+  setSfxVolume: (vol: number) => void;
   recordMatch: (won: boolean, score: number, word: string) => void;
 };
 
@@ -59,6 +61,7 @@ export const useUserStore = create<UserStore>((set) => ({
   hapticsEnabled: true,
   darkMode: false,
   bgmVolume: 0.25,
+  sfxVolume: 1.0,
 
   setName: (name) => set({ name }),
   setAvatar: (avatar) => set({ avatar }),
@@ -80,6 +83,7 @@ export const useUserStore = create<UserStore>((set) => ({
   toggleHaptics: () => set((state) => ({ hapticsEnabled: !state.hapticsEnabled })),
   toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
   setBgmVolume: (vol) => set({ bgmVolume: vol }),
+  setSfxVolume: (vol) => set({ sfxVolume: vol }),
 
   recordMatch: (won, score, word) =>
     set((state) => ({

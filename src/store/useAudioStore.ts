@@ -77,7 +77,8 @@ export async function initClickSound() {
     _clickPlayer = createAudioPlayer(
       require('../../assets/sounds/UI_click.mp3')
     );
-    _clickPlayer.volume = 2.0;
+    const sfxVol = useUserStore.getState().sfxVolume || 1.0;
+    _clickPlayer.volume = 2.0 * sfxVol;
     globalNode.__clickPlayer = _clickPlayer;
   } catch (e) {
     console.log('[Click] init error:', e);
@@ -107,7 +108,8 @@ export async function initBrushSound() {
       require('../../assets/sounds/brush_paper.mp3')
     );
     _brushPlayer.loop = true; // Loop while drawing
-    _brushPlayer.volume = 1.0;
+    const sfxVol = useUserStore.getState().sfxVolume || 1.0;
+    _brushPlayer.volume = 1.0 * sfxVol;
     globalNode.__brushPlayer = _brushPlayer;
   } catch (e) {
     console.log('[Brush] init error:', e);
@@ -144,4 +146,11 @@ export function stopBrushSound() {
   } catch (e) {
     console.log('[Brush] stop error:', e);
   }
+}
+
+// ─── SFX Volume Control ────────────────────────────────────────────────────────
+
+export function setSfxVolume(volume: number) {
+  if (_clickPlayer) _clickPlayer.volume = 2.0 * volume;
+  if (_brushPlayer) _brushPlayer.volume = 1.0 * volume;
 }

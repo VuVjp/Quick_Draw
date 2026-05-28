@@ -6,7 +6,7 @@ import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius, Shadow } from '../theme/spacing';
 import { useUserStore } from '../store/useUserStore';
-import { playClick, setBgmVolume as setStoreBgmVolume, pauseBgm, playBgm } from '../store/useAudioStore';
+import { playClick, setBgmVolume as setStoreBgmVolume, pauseBgm, playBgm, setSfxVolume as setStoreSfxVolume } from '../store/useAudioStore';
 import AnimatedButton from './AnimatedButton';
 
 type Props = {
@@ -19,6 +19,8 @@ const SettingsModal = ({ visible, onClose }: Props) => {
   const toggleSound = useUserStore((s) => s.toggleSound);
   const bgmVolume = useUserStore((s) => s.bgmVolume);
   const setBgmVolume = useUserStore((s) => s.setBgmVolume);
+  const sfxVolume = useUserStore((s) => s.sfxVolume);
+  const setSfxVolume = useUserStore((s) => s.setSfxVolume);
 
   const [isMuted, setIsMuted] = React.useState(false);
 
@@ -43,6 +45,12 @@ const SettingsModal = ({ visible, onClose }: Props) => {
       setIsMuted(false);
       playBgm();
     }
+  };
+
+  const handleSfxVolumeChange = (val: number) => {
+    const newVol = val / 100;
+    setSfxVolume(newVol);
+    setStoreSfxVolume(newVol);
   };
 
   const handleClose = () => {
@@ -99,6 +107,26 @@ const SettingsModal = ({ visible, onClose }: Props) => {
               <Text style={styles.toggleText}>{soundEnabled ? 'BẬT' : 'TẮT'}</Text>
             </TouchableOpacity>
           </View>
+
+          {soundEnabled && (
+            <View style={styles.settingRow}>
+              <Text style={styles.label}>Âm lượng SFX</Text>
+              <View style={styles.sliderContainer}>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={1}
+                  maximumValue={100}
+                  step={1}
+                  value={Math.round(sfxVolume * 100)}
+                  onValueChange={handleSfxVolumeChange}
+                  minimumTrackTintColor={Colors.primaryYellow}
+                  maximumTrackTintColor={Colors.softGray}
+                  thumbTintColor={Colors.warmBlack}
+                />
+                <Text style={styles.volText}>{Math.round(sfxVolume * 100)}</Text>
+              </View>
+            </View>
+          )}
 
           <AnimatedButton
             label="Đóng"
