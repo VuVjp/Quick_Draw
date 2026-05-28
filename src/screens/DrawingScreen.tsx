@@ -75,6 +75,8 @@ const DrawingScreen = () => {
   const insets = useSafeAreaInsets();
   const canvasRef = useRef<DrawingCanvasRef>(null);
   const [canvasSize, setCanvasSize] = useState({ width: width - Spacing.xl * 2, height: CANVAS_HEIGHT });
+  const timeLeft = useGameStore((s) => s.timeLeft);
+  const drawTime = useGameStore((s) => s.drawTime);
 
   const players = useGameStore((s) => s.players);
   const currentWord = useGameStore((s) => s.currentWord);
@@ -88,8 +90,69 @@ const DrawingScreen = () => {
   const maxPlayers = useGameStore((s) => s.maxPlayers);
   const addPlayer = useGameStore((s) => s.addPlayer);
   const startGame = useGameStore((s) => s.startGame);
+  const isSinglePlayer = useGameStore((s) => s.isSinglePlayer);
+  const isInferencing = useRef(false);
+  const { runInference, isReady } = useDrawingInference(false);
 
+  useEffect(() => {
+    // Run periodic inference only when model is ready
+    if (!isReady) return;
+    if (!canvasRef.current) return;
 
+    const interval = setInterval(async () => {
+      if (isInferencing.current) return;
+      // mark as running to avoid overlapping snapshot/predict calls
+      isInferencing.current = true;
+
+      try {
+        // wait one frame to ensure latest UI/skia updates have been painted
+        await new Promise((res) => requestAnimationFrame(() => res(null)));
+
+        const base64 = canvasRef.current?.getSnapshot();
+        if (!base64) {
+          console.warn('Canvas trống hoặc chưa sẵn sàng');
+          return;
+        }
+
+        const result = await runInference(base64, currentWord);
+        console.log('Inference result:', result);
+
+        if (isSinglePlayer) {
+          if (!result) return;
+          if (result.accepted) {
+            const strokes = useDrawingStore.getState().strokeHistory;
+            const scores = drawTime > 0 && timeLeft > 0
+              ? {
+                '1': Math.floor(
+                  (timeLeft / drawTime) * 50
+                )
+              }
+              : { '1': 0 };
+            saveDrawingToStore(scores, strokes);
+            router.replace('/round-end' as any);
+          } else {
+            // multiplayer handling
+          }
+        }
+      } catch (e) {
+        console.error('Inference error:', e);
+      } finally {
+        isInferencing.current = false;
+      }
+    }, 300); // moderate polling
+
+    return () => clearInterval(interval);
+  }, [isReady, currentWord, isSinglePlayer, timeLeft, router]);
+
+  const saveDrawingToStore = (scores: Record<string, number>, strokes: any[]) => {
+    // End the round in game store
+    useGameStore.getState().endRound(scores, strokes);
+
+    // Clear local drawing data so it doesn't carry to the next round
+    useDrawingStore.getState().clearCanvas();
+    canvasRef.current?.clear();
+    router.replace('/round-end' as any);
+  };
 
   const { progress } = useTimer(undefined, () => {
     // End round instead of end game
@@ -97,17 +160,15 @@ const DrawingScreen = () => {
     players.forEach(p => {
       mockScores[p.id] = Math.floor(Math.random() * 50); // Mock points
     });
-    
+
     // Give the local drawer a random high score if they are playing single player to simulate drawing good
     if (useGameStore.getState().isSinglePlayer) {
-       mockScores['1'] = 45 + Math.floor(Math.random() * 15);
+      mockScores['1'] = 45 + Math.floor(Math.random() * 15);
     }
-    
-    // Save current drawing to store
     const strokes = useDrawingStore.getState().strokeHistory;
-    
-    useGameStore.getState().endRound(mockScores, strokes);
-    router.replace('/round-end' as any);
+
+    // Save current drawing to store
+    saveDrawingToStore(mockScores, strokes);
   });
 
   const isDrawer = currentDrawerId === '1'; // mock: local user is always player 1
@@ -115,7 +176,6 @@ const DrawingScreen = () => {
   const handleUndo = useCallback(() => canvasRef.current?.undo(), []);
   const handleRedo = useCallback(() => canvasRef.current?.redo(), []);
   const handleClear = useCallback(() => canvasRef.current?.clear(), []);
-  const { runInference, isReady } = useDrawingInference(false);
 
   return (
     <NotebookBackground>
@@ -160,23 +220,23 @@ const DrawingScreen = () => {
               <View style={styles.waitingOverlay}>
                 <Text style={styles.waitingTitle}>Đang chờ người chơi...</Text>
                 <Text style={styles.waitingCount}>{players.length} / {maxPlayers}</Text>
-                
+
                 <View style={styles.waitingPlayers}>
                   {players.map(p => (
                     <View key={p.id} style={[styles.waitingAvatar, { borderColor: p.color }]}>
-                      <Text style={{fontSize: 24}}>{p.avatar}</Text>
+                      <Text style={{ fontSize: 24 }}>{p.avatar}</Text>
                     </View>
                   ))}
                 </View>
 
-                <AnimatedButton 
+                <AnimatedButton
                   label="Bắt đầu ngay 🚀"
                   onPress={() => {
                     startGame();
                     setTimeout(() => startRound(), 100);
                   }}
                   variant="primary"
-                  style={{marginTop: Spacing.xl}}
+                  style={{ marginTop: Spacing.xl }}
                 />
               </View>
             )}
@@ -191,7 +251,7 @@ const DrawingScreen = () => {
             onClear={handleClear}
           />
         </View>
-        <Button
+        {/* <Button
           title={isReady ? 'Test Inference' : 'Model loading...'}
           disabled={!isReady}
           onPress={async () => {
@@ -207,7 +267,7 @@ const DrawingScreen = () => {
               console.error('Inference error:', e);
             }
           }}
-        />
+        /> */}
       </View>
     </NotebookBackground>
   );
