@@ -9,8 +9,6 @@ export type Player = {
   xp: number;
   level: number;
   score: number;
-  bestDrawTime?: number | null;
-  roundsWon?: number;
   isDrawing: boolean;
   isHost: boolean;
   color: string;
@@ -170,7 +168,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setTimeLeft: (t) => set({ timeLeft: t }),
 
-  setRoomConfig: (config) => set((state) => ({ ...state, ...config })),
+  setRoomConfig: (config) => set((state) => {
+    const nextState = { ...state, ...config };
+    if (config.drawTime !== undefined && config.timeLeft === undefined) {
+      nextState.timeLeft = config.drawTime;
+    }
+    return nextState;
+  }),
 
   startSinglePlayer: (nickname, rounds, drawTime, difficulty, botCount) => {
     const word = getRandomWord();

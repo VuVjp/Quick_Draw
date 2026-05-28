@@ -28,7 +28,6 @@ import AnimatedButton from '../components/AnimatedButton';
 import { useDrawingInference } from '../hooks/useDrawingInference';
 import { auth } from '../services/firebase';
 import { useRoom } from '../hooks/useRoom';
-import { useHostGameMaster } from '../hooks/useHostGameMaster';
 
 
 const { width, height } = Dimensions.get('window');
@@ -90,11 +89,11 @@ const DrawingScreen = () => {
   const isInferencing = useRef(false);
   const roomId = useGameStore((s) => s.roomId);
   const { room, players: roomPlayers, uid } = useRoom(roomId);
-  const { runInference, isReady, submitPendingResult } = useDrawingInference(false);
+  const { runInference, isReady } = useDrawingInference(false);
   const submittedRoundRef = useRef<string | null>(null);
   const lastHandledRoomStatusRef = useRef<string | null>(null);
 
-  useHostGameMaster(roomId ?? '', room?.roundDurationSecs ?? drawTime);
+  // useHostGameMaster(roomId ?? '', room?.roundDurationSecs ?? drawTime);
 
   const saveDrawingToStore = useCallback((scores: Record<string, number>, strokes: any[], size?: { width: number, height: number }) => {
     // End the round in game store
@@ -226,14 +225,14 @@ const DrawingScreen = () => {
 
           const elapsedMs = Math.max(0, (drawTime - timeLeft) * 1000);
 
-          await submitPendingResult(
-            roomId,
-            roundId,
-            currentUid,
-            result.label,
-            result.score,
-            elapsedMs,
-          );
+          // await submitPendingResult(
+          //   roomId,
+          //   roundId,
+          //   currentUid,
+          //   result.label,
+          //   result.score,
+          //   elapsedMs,
+          // );
 
           submittedRoundRef.current = roundId;
           console.log('[Client] submitted pending result', { roomId, roundId, score: result.score, label: result.label });
@@ -257,7 +256,6 @@ const DrawingScreen = () => {
     currentDrawerId,
     currentRound,
     drawTime,
-    submitPendingResult,
     runInference,
     canvasSize,
     saveDrawingToStore,
@@ -280,8 +278,8 @@ const DrawingScreen = () => {
     saveDrawingToStore(mockScores, strokes, canvasSize);
   });
 
-  const localUid = uid || auth.currentUser?.uid || '1';
-  const isDrawer = isSinglePlayer ? true : currentDrawerId === localUid;
+  //const localUid = uid || auth.currentUser?.uid || '1';
+  const isDrawer = true;
 
   const handleUndo = useCallback(() => canvasRef.current?.undo(), []);
   const handleRedo = useCallback(() => canvasRef.current?.redo(), []);

@@ -8,24 +8,19 @@ import { Spacing, Radius, Shadow } from '../theme/spacing';
 const InGameRanking = () => {
   const players = useGameStore(s => s.players);
   const lastRoundScores = useGameStore(s => s.lastRoundScores);
+  const isSinglePlayer = useGameStore(s => s.isSinglePlayer);
   const [expanded, setExpanded] = useState(false);
 
-  // Không hiển thị nếu chỉ có 1 người (solo không có bot)
-  if (players.length <= 1) return null;
+  // Chỉ hiển thị ở chế độ online
+  if (isSinglePlayer || players.length <= 1) return null;
 
-  // Sắp xếp BXH: score giảm dần, nếu hòa thì bestDrawTime tăng dần
-  const sortedPlayers = [...players].sort((a, b) => {
-    if (b.score !== a.score) return b.score - a.score;
-
-    const bestA = typeof a.bestDrawTime === 'number' ? a.bestDrawTime : Number.MAX_SAFE_INTEGER;
-    const bestB = typeof b.bestDrawTime === 'number' ? b.bestDrawTime : Number.MAX_SAFE_INTEGER;
-    return bestA - bestB;
-  });
+  // Sắp xếp người chơi theo điểm giảm dần
+  const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
   return (
     <View style={[styles.container, !expanded && styles.collapsed]}>
-      <TouchableOpacity 
-        style={[styles.header, !expanded && styles.headerCollapsed]} 
+      <TouchableOpacity
+        style={[styles.header, !expanded && styles.headerCollapsed]}
         onPress={() => setExpanded(!expanded)}
         activeOpacity={0.7}
       >
@@ -62,14 +57,14 @@ export default InGameRanking;
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 120 : 100,
+    top: Platform.OS === 'ios' ? 160 : 140,
     right: Spacing.xl,
     backgroundColor: Colors.paperWhite,
     borderRadius: Radius.md,
     borderWidth: 1.5,
     borderColor: Colors.border,
     ...Shadow.sketch,
-    zIndex: 100,
+    zIndex: 120,
     width: 160,
   },
   collapsed: {

@@ -38,6 +38,7 @@ const CreateRoomScreen = () => {
       maxPlayers,
       rounds,
       drawTime,
+      timeLeft: drawTime,
       difficulty,
       peerReviewEnabled: peerReview,
       isSinglePlayer: false,
@@ -45,8 +46,8 @@ const CreateRoomScreen = () => {
     });
 
     const result = await createRoom({
-      hostId: session?.uid,           // TODO: thay bằng auth uid sau
-      hostName: session?.displayName,         // TODO: thay bằng tên thật sau
+      hostId: session?.uid || '',           // TODO: thay bằng auth uid sau
+      hostName: session?.displayName || 'Player',         // TODO: thay bằng tên thật sau
       roomName,
       maxPlayers,
       totalRounds: rounds,
@@ -152,10 +153,11 @@ const CreateRoomScreen = () => {
 
             <View style={styles.switchGroup}>
               <View>
-                <Text style={styles.optionLabel}>Đánh giá chéo (Peer Review)</Text>
+                <Text style={styles.optionLabel}>Peer Review (Comming Soon)</Text>
                 <Text style={styles.optionHint}>Cho phép người chơi chấm điểm bài vẽ của nhau</Text>
               </View>
               <Switch
+                disabled={true} // Tạm thời khóa vì chưa hoàn thiện backend
                 value={peerReview}
                 onValueChange={setPeerReview}
                 trackColor={{ false: Colors.softGray, true: Colors.goldAccent }}

@@ -34,7 +34,7 @@ export function useDrawingInference(peerReviewMode: boolean) {
 
         let acceptedLabel = null; // Default to null, will be set if any prediction meets criteria
         predictions.forEach((p) => {
-          if (p.score >= threshold && p.label === targetTopic) {
+          if (p.score >= 0.4 && p.label === targetTopic) {
             acceptedLabel = p.label;
           }
         });
@@ -54,25 +54,5 @@ export function useDrawingInference(peerReviewMode: boolean) {
     [isReady, predict, peerReviewMode]
   );
 
-  async function submitPendingResult(
-    roomId: string,
-    roundId: string,
-    drawerId: string,
-    aiLabel: string,
-    aiScore: number,
-    drawDurationMs: number,
-  ) {
-    await firestore()
-      .collection('rooms').doc(roomId)
-      .collection('pending_results').doc(roundId)
-      .set({
-        drawerId,
-        aiLabel,
-        aiScore,
-        drawDurationMs,
-        submittedAt: firestore.FieldValue.serverTimestamp(),
-        status: 'pending',
-      });
-  }
-  return { submitPendingResult, runInference, isReady };
+  return { runInference, isReady };
 }

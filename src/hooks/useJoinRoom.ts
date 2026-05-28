@@ -1,13 +1,22 @@
 // src/hooks/useJoinRoom.ts
 import { useState } from 'react';
 import firestore from '@react-native-firebase/firestore';
-import { db } from '../services/firebase';
+
+export interface JoinedRoomInfo {
+    roomId: string;
+    code: string;
+    roomName: string;
+    totalRounds: number;
+    roundDurationSecs: number;
+    maxPlayers: number;
+    difficulty: string;
+}
 
 export function useJoinRoom() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    async function joinRoomByCode(code: string, playerId: string, playerName: string) {
+    async function joinRoomByCode(code: string, playerId: string, playerName: string): Promise<JoinedRoomInfo | null> {
         setLoading(true);
         setError(null);
 
@@ -66,7 +75,15 @@ export function useJoinRoom() {
                 });
             });
 
-            return { roomId: snap.id, code: roomDoc.code };
+            return {
+                roomId: snap.id,
+                code: roomDoc.code,
+                roomName: roomDoc.roomName ?? 'Phòng chơi',
+                totalRounds: roomDoc.totalRounds ?? 5,
+                roundDurationSecs: roomDoc.roundDurationSecs ?? 80,
+                maxPlayers: roomDoc.maxPlayers ?? 8,
+                difficulty: roomDoc.difficulty ?? 'Trung bình',
+            };
 
         } catch (e: any) {
             console.error('[joinRoomByCode]', e);

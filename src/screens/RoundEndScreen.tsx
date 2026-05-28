@@ -11,9 +11,6 @@ import NotebookBackground from '../components/NotebookBackground';
 import { useGameStore, Player } from '../store/useGameStore';
 import ReadOnlyCanvas from '../canvas/ReadOnlyCanvas';
 import { useRoom } from '../hooks/useRoom';
-import { useHostGameMaster } from '../hooks/useHostGameMaster';
-
-
 
 const RoundEndScreen = () => {
   const router = useRouter();
@@ -27,7 +24,7 @@ const RoundEndScreen = () => {
   const lastRoundScores = useGameStore((s) => s.lastRoundScores);
   const roomId = useGameStore((s) => s.roomId);
   const { room, players: roomPlayers, uid } = useRoom(roomId);
-  const { advanceRound } = useHostGameMaster(roomId ?? '', 5);
+  //const { advanceRound } = useHostGameMaster(roomId ?? '', 5);
 
   const isLastRound = currentRound >= rounds;
   const isSinglePlayer = !roomId || players.length <= 1;
@@ -97,12 +94,13 @@ const RoundEndScreen = () => {
       return;
     }
 
-    advanceRound(room.currentRound ?? currentRound, rounds, Object.keys(roomPlayers ?? {}))
-      .catch((e) => {
-        countdownCommittedRef.current = false;
-        console.error('[RoundEnd] failed to advance round after countdown', e);
-      });
-  }, [isHost, roomId, room, countdown, advanceRound, isLastRound, roomPlayers, currentRound, rounds]);
+    //   advanceRound(room.currentRound ?? currentRound, rounds, Object.keys(roomPlayers ?? {}))
+    //     .catch((e) => {
+    //       countdownCommittedRef.current = false;
+    //       console.error('[RoundEnd] failed to advance round after countdown', e);
+    //     });
+    //
+  }, [isHost, roomId, room, countdown, isLastRound, roomPlayers, currentRound, rounds]);
 
   // The first player in the sorted players list is Top 1
   const top1Player = players[0];

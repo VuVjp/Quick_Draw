@@ -1,7 +1,6 @@
 // src/hooks/usePublicRooms.ts
 import { useEffect, useState } from 'react';
 import firestore from '@react-native-firebase/firestore';
-import { db } from '../services/firebase';
 
 export interface RoomItem {
     id: string;
@@ -10,6 +9,7 @@ export interface RoomItem {
     maxPlayers: number;
     status: string;
     code: string;
+    roundDurationSecs: number;
 }
 
 export function usePublicRooms() {
@@ -34,6 +34,7 @@ export function usePublicRooms() {
                         maxPlayers: data.maxPlayers,
                         status: data.status,
                         code: data.code,
+                        roundDurationSecs: data.roundDurationSecs ?? 80,
                     };
                 });
                 setRooms(rooms);

@@ -82,7 +82,5 @@ export function useRoom(roomId?: string | null) {
     return unsub;
   }, [roomId]);
 
-  const isDrawer = uid === room?.currentDrawerId;
-
-  return { room, players, isDrawer, uid };
+  return { room, players, uid };
 }

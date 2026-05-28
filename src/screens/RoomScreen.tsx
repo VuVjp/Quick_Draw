@@ -1,17 +1,19 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
+  Dimensions,
   TouchableOpacity,
   ActivityIndicator,
   Share,
   Alert,
   Image,
 } from 'react-native';
+import user from '../../assets/Icon/user.svg';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import firestore, { doc, updateDoc, deleteDoc } from '@react-native-firebase/firestore';
+import firestore, { doc, collection, updateDoc, deleteDoc } from '@react-native-firebase/firestore';
 import { db } from '../services/firebase';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useRoom } from '../hooks/useRoom';
@@ -25,7 +27,9 @@ import { Spacing, Radius, Shadow } from '../theme/spacing';
 
 import ClockIcon from '../../assets/Icon/clock.svg';
 import PencilRulerIcon from '../../assets/Icon/pencil-ruler.svg';
-import { LABLES } from '../constants/words';
+import { getRandomWord } from '../constants/words';
+
+const { width } = Dimensions.get('window');
 
 const RoomScreen = () => {
   const router = useRouter();
@@ -33,19 +37,20 @@ const RoomScreen = () => {
   const roomId = id as string;
 
   const { room, players, uid } = useRoom(roomId);
-  const hasNavigatedToDrawingRef = useRef(false);
+  const joinRoom = useGameStore((s) => s.joinRoom);
 
   // ─── Auto Navigate to Drawing screen when status changes to 'drawing' ───
   useEffect(() => {
-    if (room?.status !== 'drawing') {
-      hasNavigatedToDrawingRef.current = false;
-      return;
-    }
-
-    if (hasNavigatedToDrawingRef.current) return;
-    hasNavigatedToDrawingRef.current = true;
-
     if (room && room.status === 'drawing') {
+      if (isHost) {
+        const word = getRandomWord();
+        joinRoom(roomId, room.roomName || 'Phòng Online', Object.keys(players).length, room.maxPlayers || 8);
+        updateDoc(doc(db, 'rooms', roomId), {
+          currentTopic: word,
+          currentRound: 1,
+        });
+      }
+
       console.log('⚡ Room status is drawing, navigating to /drawing!');
 
       // Update local Zustand state before navigating
@@ -55,32 +60,32 @@ const RoomScreen = () => {
         avatar: pData.avatar || 'user', // Default avatar
         xp: 1000,
         level: 1,
-        score: pData.score ?? 0,
-        bestDrawTime: pData.bestDrawTime,
-        isDrawing: playerId === room.currentDrawerId,
+        score: 0,
+        isDrawing: playerId === room.hostId, // First drawer is host usually
         isHost: playerId === room.hostId,
         color: playerId === room.hostId ? '#7B5EA7' : '#F4978E',
       }));
- 
+
       // Join room in state
       useGameStore.getState().setRoomConfig({
         roomId,
+        currentWord: room.currentTopic,
         roomName: room.roomName || 'Phòng Online',
         players: playerList,
         maxPlayers: room.maxPlayers || 8,
         rounds: room.totalRounds || 5,
         currentRound: room.currentRound || 1,
         drawTime: room.roundDurationSecs || 80,
+        timeLeft: room.roundDurationSecs || 80,
         difficulty: room.difficulty as any || 'Trung bình',
         isSinglePlayer: false,
         phase: 'drawing',
-        currentDrawerId: room.currentDrawerId || room.hostId,
-        currentWord: room.currentTopic || '',
+        currentDrawerId: room.hostId,
       });
 
       router.replace('/drawing');
     }
-  }, [room, roomId, players, router]);
+  }, [room, roomId, players]);
 
   // ─── Kick players if room is deleted ───
   useEffect(() => {
@@ -89,7 +94,7 @@ const RoomScreen = () => {
         { text: 'OK', onPress: () => router.replace('/lobby') }
       ]);
     }
-  }, [room?.status, router]);
+  }, [room?.status]);
 
   if (!room || room.status === 'deleted') {
     return (
@@ -110,34 +115,11 @@ const RoomScreen = () => {
 
   const handleStartGame = async () => {
     try {
-      const randomTopic = LABLES[Math.floor(Math.random() * LABLES.length)];
-      const roomRef = firestore().collection('rooms').doc(roomId);
-      const roundRef = roomRef.collection('rounds').doc('round_1');
-
-      const batch = firestore().batch();
-      batch.update(roomRef, {
+      await updateDoc(doc(db, 'rooms', roomId), {
         status: 'drawing',
         currentDrawerId: room.hostId,
         currentRound: 1,
-        currentTopic: randomTopic,
-        roundStartedAt: firestore.FieldValue.serverTimestamp(),
-        roundCountdownStartedAt: null,
-        roundCountdownSecs: 5,
       });
-
-      batch.set(roundRef, {
-        drawerId: room.hostId,
-        topic: randomTopic,
-        status: 'pending',
-        aiLabel: null,
-        aiScore: null,
-        drawDurationMs: null,
-        score: null,
-        validatedAt: null,
-        validationSource: null,
-      }, { merge: true });
-
-      await batch.commit();
     } catch (err) {
       console.error('Error starting game:', err);
     }
@@ -318,9 +300,9 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   loadingText: {
-    fontFamily: FontFamily.patrickHand,
+    fontFamily: FontFamily.accent,
     fontSize: FontSize.lg,
-    color: Colors.warmBlack,
+    color: Colors.text,
   },
   header: {
     flexDirection: 'row',
@@ -341,20 +323,20 @@ const styles = StyleSheet.create({
     ...Shadow.sketch,
   },
   backBtnText: {
-    fontFamily: FontFamily.caveatBold,
+    fontFamily: FontFamily.bold,
     fontSize: FontSize.xl,
-    color: Colors.warmBlack,
+    color: Colors.text,
   },
   headerTitleBlock: {
     alignItems: 'center',
   },
   roomName: {
-    fontFamily: FontFamily.patrickHand,
+    fontFamily: FontFamily.accent,
     fontSize: FontSize.xl * 1.1,
-    color: Colors.warmBlack,
+    color: Colors.text,
   },
   subtitle: {
-    fontFamily: FontFamily.caveat,
+    fontFamily: FontFamily.regular,
     fontSize: FontSize.sm,
     color: Colors.softGray,
   },
@@ -372,15 +354,15 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   codeLabel: {
-    fontFamily: FontFamily.caveat,
+    fontFamily: FontFamily.regular,
     fontSize: FontSize.xs,
     color: Colors.softGray,
     letterSpacing: 1,
   },
   codeText: {
-    fontFamily: FontFamily.caveatBold,
+    fontFamily: FontFamily.bold,
     fontSize: FontSize.xxl,
-    color: Colors.warmBlack,
+    color: Colors.text,
     letterSpacing: 2,
   },
   shareBtn: {
@@ -393,9 +375,9 @@ const styles = StyleSheet.create({
     ...Shadow.sketch,
   },
   shareBtnText: {
-    fontFamily: FontFamily.caveatBold,
+    fontFamily: FontFamily.bold,
     fontSize: FontSize.sm,
-    color: Colors.warmBlack,
+    color: Colors.text,
   },
   configBanner: {
     backgroundColor: Colors.paperWhite,
@@ -414,12 +396,12 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   configText: {
-    fontFamily: FontFamily.caveat,
+    fontFamily: FontFamily.regular,
     fontSize: FontSize.sm,
     color: Colors.warmBlack,
   },
   configDivider: {
-    fontFamily: FontFamily.caveat,
+    fontFamily: FontFamily.regular,
     fontSize: FontSize.sm,
     color: Colors.softGray,
     marginHorizontal: 4,
@@ -428,9 +410,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listTitle: {
-    fontFamily: FontFamily.patrickHand,
+    fontFamily: FontFamily.accent,
     fontSize: FontSize.md,
-    color: Colors.warmBlack,
+    color: Colors.text,
     marginBottom: Spacing.md,
   },
   listContainer: {
@@ -452,12 +434,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xxl,
   },
   playerName: {
-    fontFamily: FontFamily.caveatBold,
+    fontFamily: FontFamily.bold,
     fontSize: FontSize.md,
-    color: Colors.warmBlack,
+    color: Colors.text,
   },
   playerStatus: {
-    fontFamily: FontFamily.caveat,
+    fontFamily: FontFamily.regular,
     fontSize: FontSize.xs,
     color: Colors.softGray,
   },
@@ -477,7 +459,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50',
   },
   onlineText: {
-    fontFamily: FontFamily.caveat,
+    fontFamily: FontFamily.regular,
     fontSize: FontSize.xs,
     color: '#2E7D32',
   },
@@ -500,9 +482,9 @@ const styles = StyleSheet.create({
     ...Shadow.sketch,
   },
   guestWaitText: {
-    fontFamily: FontFamily.caveat,
+    fontFamily: FontFamily.regular,
     fontSize: FontSize.md,
-    color: Colors.warmBlack,
+    color: Colors.text,
   },
   hostFooter: {
     flexDirection: 'row',

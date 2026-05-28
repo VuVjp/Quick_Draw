@@ -65,6 +65,7 @@ RoomCard.displayName = 'RoomCard';
 const LobbyScreen = () => {
   const router = useRouter();
   const joinRoom = useGameStore((s) => s.joinRoom);
+  const setRoomConfig = useGameStore((s) => s.setRoomConfig);
   const removeRoom = useGameStore((s) => s.removeRoom);
 
   const session = useUserStore((s) => s.session);
@@ -99,11 +100,18 @@ const LobbyScreen = () => {
   const handleJoin = async (room: Room) => {
     try {
       await joinRoomByCode(room.code, session?.uid || '', session?.displayName || 'Player')
-    } catch (e) {
+    } catch {
       throw new Error('Failed to join room'); // Let the error propagate to be caught in the calling function
     } finally {
       router.push(`/room/${room.id}`);
       joinRoom(room.id, room.name, room.players, room.maxPlayers);
+      setRoomConfig({
+        roomId: room.id,
+        roomName: room.name,
+        maxPlayers: room.maxPlayers,
+        drawTime: room.roundDurationSecs,
+        timeLeft: room.roundDurationSecs,
+      });
     }
   };
   const handleJoinByCode = async (code?: string) => {
@@ -115,6 +123,15 @@ const LobbyScreen = () => {
       );
       if (result) {
         setModalVisible(false);
+        setRoomConfig({
+          roomId: result.roomId,
+          roomName: result.roomName,
+          maxPlayers: result.maxPlayers,
+          rounds: result.totalRounds,
+          drawTime: result.roundDurationSecs,
+          timeLeft: result.roundDurationSecs,
+          difficulty: result.difficulty as any,
+        });
         router.push(`/room/${result.roomId}`);
       }
     }
