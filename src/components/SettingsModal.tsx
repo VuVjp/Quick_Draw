@@ -1,12 +1,12 @@
 import React from 'react';
 import { Modal, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import Slider from '@react-native-community/slider';
-import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
+import Animated, { SlideInDown } from 'react-native-reanimated';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius, Shadow } from '../theme/spacing';
 import { useUserStore } from '../store/useUserStore';
-import { setBgmVolume as setStoreBgmVolume, pauseBgm, playBgm, isBgmPlaying } from '../store/useAudioStore';
+import { playClick, setBgmVolume as setStoreBgmVolume, pauseBgm, playBgm } from '../store/useAudioStore';
 import AnimatedButton from './AnimatedButton';
 
 type Props = {
@@ -17,12 +17,15 @@ type Props = {
 const SettingsModal = ({ visible, onClose }: Props) => {
   const soundEnabled = useUserStore((s) => s.soundEnabled);
   const toggleSound = useUserStore((s) => s.toggleSound);
+  const hapticsEnabled = useUserStore((s) => s.hapticsEnabled);
+  const toggleHaptics = useUserStore((s) => s.toggleHaptics);
   const bgmVolume = useUserStore((s) => s.bgmVolume);
   const setBgmVolume = useUserStore((s) => s.setBgmVolume);
 
   if (!visible) return null;
 
   const handleToggleSound = () => {
+    playClick();
     toggleSound();
     if (soundEnabled) {
       pauseBgm();
@@ -36,6 +39,11 @@ const SettingsModal = ({ visible, onClose }: Props) => {
     setStoreBgmVolume(newVol);
   };
 
+  const handleClose = () => {
+    playClick();
+    onClose();
+  };
+
   return (
     <Modal transparent visible={visible} animationType="fade">
       <View style={styles.overlay}>
@@ -43,12 +51,25 @@ const SettingsModal = ({ visible, onClose }: Props) => {
           <Text style={styles.title}>Cài Đặt</Text>
           
           <View style={styles.settingRow}>
-            <Text style={styles.label}>Âm thanh</Text>
+            <Text style={styles.label}>Hiệu ứng âm thanh (SFX)</Text>
             <TouchableOpacity 
               style={[styles.toggleBtn, !soundEnabled && styles.toggleBtnOff]} 
               onPress={handleToggleSound}
             >
               <Text style={styles.toggleText}>{soundEnabled ? 'BẬT' : 'TẮT'}</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.settingRow}>
+            <Text style={styles.label}>Hiệu ứng rung</Text>
+            <TouchableOpacity 
+              style={[styles.toggleBtn, !hapticsEnabled && styles.toggleBtnOff]} 
+              onPress={() => {
+                playClick();
+                toggleHaptics();
+              }}
+            >
+              <Text style={styles.toggleText}>{hapticsEnabled ? 'BẬT' : 'TẮT'}</Text>
             </TouchableOpacity>
           </View>
 
@@ -72,7 +93,7 @@ const SettingsModal = ({ visible, onClose }: Props) => {
 
           <AnimatedButton
             label="Đóng"
-            onPress={onClose}
+            onPress={handleClose}
             variant="secondary"
             style={{ marginTop: Spacing.xl }}
             fullWidth

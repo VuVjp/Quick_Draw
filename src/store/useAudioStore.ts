@@ -1,4 +1,5 @@
 import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
+import { useUserStore } from './useUserStore';
 
 const globalNode = global as any;
 
@@ -87,12 +88,12 @@ export async function initClickSound() {
 
 export function playClick() {
   if (!_clickPlayer) return;
+  if (!useUserStore.getState().soundEnabled) return;
   try {
-    // Seek to start so rapid clicks don't get delayed
     _clickPlayer.seekTo(0);
     _clickPlayer.play();
-  } catch (_) {
-    // ignore if sound not loaded yet
+  } catch (e) {
+    console.log('[Click] play error:', e);
   }
 }
 
@@ -116,11 +117,15 @@ export async function initBrushSound() {
 }
 
 export function startBrushSound() {
+  if (!useUserStore.getState().soundEnabled) return;
+  
   if (!_brushPlayer) {
     // Lazy init just in case Fast Refresh skipped the layout effect
     initBrushSound().then(() => {
       try {
-        _brushPlayer?.play();
+        if (useUserStore.getState().soundEnabled) {
+          _brushPlayer?.play();
+        }
       } catch (e) {}
     });
     return;

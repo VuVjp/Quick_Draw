@@ -11,6 +11,7 @@ import { Spacing, Radius, Shadow } from '../theme/spacing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useGameStore } from '../store/useGameStore';
+import { playClick } from '../store/useAudioStore';
 import Logo from '../../assets/logo/Group 7.svg';
 import CogIcon from '../../assets/Icon/cog.svg';
 import { Colors } from '../theme/colors';
@@ -87,11 +88,15 @@ const HomeScreen = () => {
         onClose={() => setShowSettings(false)}
       />
 
+      {/* Settings Button */}
       <TouchableOpacity 
         style={styles.settingsBtn} 
-        onPress={() => setShowSettings(true)}
+        onPress={() => {
+          playClick();
+          setShowSettings(true);
+        }}
       >
-        <CogIcon width={24} height={24} color={Colors.warmBlack} />
+        <CogIcon width={28} height={28} fill={Colors.warmBlack} />
       </TouchableOpacity>
     </NotebookBackground>
   );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../theme/colors';
@@ -79,40 +79,34 @@ const SinglePlayerConfigScreen = () => {
       <View style={[styles.content, { flex: 1 }]}>
         <View style={[styles.formCard, {
           flex: 1,
-          paddingTop: Spacing.md,
-          paddingBottom: Spacing.md,
-          paddingLeft: Spacing.sm,
-          paddingRight: Spacing.md,
+          paddingTop: 0,
+          paddingBottom: 0,
+          paddingLeft: 0,
+          paddingRight: 0,
+          overflow: 'hidden',
+          backgroundColor: '#FFFFFF',
           gap: 0
         }]}>
-          <ScrollView
-            showsVerticalScrollIndicator={true}
-            persistentScrollbar={true}
-            indicatorStyle="default"
-            contentContainerStyle={{
-              paddingTop: Spacing.md,
+          <View
+            style={{
+              paddingTop: Spacing.xl,
               paddingBottom: Spacing.md,
-              paddingLeft: Spacing.lg,
-              paddingRight: Spacing.md,
+              paddingLeft: Spacing.xl,
+              paddingRight: Spacing.xl,
               gap: Spacing.xl
             }}
           >
-            {/* <View style={styles.inputGroup}>
-              <Text style={styles.optionLabel}>Biệt danh (Nickname)</Text>
-              <TextInput
-                style={styles.textInput}
-                value={nickname}
-                onChangeText={setNickname}
-                placeholder="VD: Cỏ Nhỏ..."
-                placeholderTextColor={Colors.softGray}
-              />
-            </View> */}
-
-            {/* {renderOptionSelector('Số lượng bot', [0, 3, 5, 7], botCount, setBotCount)} */}
             {renderOptionSelector('Số vòng', [3, 5, 10], rounds, setRounds)}
             {renderOptionSelector('Thời gian (giây)', [40, 60, 80, 120], drawTime, setDrawTime)}
+          </View>
 
-          </ScrollView>
+          <View style={{ flex: 1, width: '100%' }}>
+            <Image 
+              source={require('../../assets/images/MADE BY DSN.png')} 
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="contain"
+            />
+          </View>
         </View>
       </View>
 
@@ -220,5 +214,5 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.sm,
-  },
+  }
 });

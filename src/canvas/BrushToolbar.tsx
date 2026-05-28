@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity, ScrollView, Text, Dimensions } from
 
 const { width } = Dimensions.get('window');
 import { BRUSH_COLORS, BRUSH_SIZES, ERASER_SIZES, useDrawingStore } from '../store/useDrawingStore';
+import { playClick } from '../store/useAudioStore';
 import { Colors } from '../theme/colors';
 import { Spacing, Radius, Shadow } from '../theme/spacing';
 import BrushIcon from '../../assets/brush-icon.svg';
@@ -51,6 +52,7 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
               <TouchableOpacity
                 key={size}
                 onPress={() => {
+                  playClick();
                   setEraserSize(size);
                   setShowSizeSlider(false);
                 }}
@@ -80,6 +82,7 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
       <View style={styles.bottomBar}>
         <TouchableOpacity
           onPress={() => {
+            playClick();
             if (isEraser) toggleEraser();
             setShowSizeSlider(false);
           }}
@@ -90,6 +93,7 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
 
         <TouchableOpacity
           onPress={() => {
+            playClick();
             if (!isEraser) toggleEraser();
             setShowSizeSlider(false);
           }}
@@ -101,6 +105,7 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
         <TouchableOpacity 
           style={[styles.toolBtn, showSizeSlider ? styles.toolBtnActive : undefined]}
           onPress={() => {
+            playClick();
             if (isEraser) {
               setShowSizeSlider(!showSizeSlider);
             }
@@ -118,11 +123,11 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
             }
           ]} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={onUndo} style={styles.toolBtn}>
+        <TouchableOpacity onPress={() => { playClick(); onUndo(); }} style={styles.toolBtn}>
           <UndoIcon width={24} height={24} color={Colors.warmBlack} />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={onRedo} style={styles.toolBtn}>
+        <TouchableOpacity onPress={() => { playClick(); onRedo(); }} style={styles.toolBtn}>
           <RedoIcon width={24} height={24} color={Colors.warmBlack} />
         </TouchableOpacity>
       </View>
