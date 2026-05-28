@@ -51,6 +51,7 @@ export function useCreateRoom() {
             const code = await generateRoomCode();
             const roomRef = firestore().collection('rooms').doc(code);
             const batch = writeBatch(db);
+            const user = await firestore().collection('users').doc(options.hostId).get();
 
             // Room document
             batch.set(roomRef, {
@@ -78,6 +79,7 @@ export function useCreateRoom() {
                 displayName: options.hostName,
                 score: 0,
                 isHost: true,
+                avatar: user.data()?.photoURL || 'user',
                 isOnline: true,
                 joinedAt: firestore.FieldValue.serverTimestamp(),
             });

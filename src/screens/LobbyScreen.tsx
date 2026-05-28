@@ -80,10 +80,7 @@ const LobbyScreen = () => {
     }
   };
 
-  const handleJoin = useCallback((room: Room) => {
-    joinRoom(room.id, room.name, room.players, room.maxPlayers);
-    router.push(`/room/${room.id}`);
-  }, [router, joinRoom]);
+
 
   const handleRemove = useCallback((id: string) => {
     removeRoom(id);
@@ -99,6 +96,16 @@ const LobbyScreen = () => {
     color: CARD_COLORS[index % CARD_COLORS.length],
   }));
 
+  const handleJoin = async (room: Room) => {
+    try {
+      await joinRoomByCode(room.code, session?.uid || '', session?.displayName || 'Player')
+    } catch (e) {
+      throw new Error('Failed to join room'); // Let the error propagate to be caught in the calling function
+    } finally {
+      router.push(`/room/${room.id}`);
+      joinRoom(room.id, room.name, room.players, room.maxPlayers);
+    }
+  };
   const handleJoinByCode = async (code?: string) => {
     try {
       const result = await joinRoomByCode(

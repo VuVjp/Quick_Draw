@@ -17,6 +17,7 @@ export function useJoinRoom() {
                 .collection('rooms')
                 .doc(code.toUpperCase().trim())
                 .get();
+            const user = await firestore().collection('users').doc(playerId).get();
 
             if (!snap.exists()) {
                 setError('Không tìm thấy phòng hoặc phòng đã bắt đầu');
@@ -54,6 +55,7 @@ export function useJoinRoom() {
                     displayName: playerName,
                     score: 0,
                     isHost: false,
+                    avatar: user.data()?.avatar || 'user',
                     isOnline: true,
                     joinedAt: firestore.FieldValue.serverTimestamp(),
                 });
@@ -64,7 +66,7 @@ export function useJoinRoom() {
                 });
             });
 
-            return { roomId: snap.id, code: roomDoc.data()!.code };
+            return { roomId: snap.id, code: roomDoc.code };
 
         } catch (e: any) {
             console.error('[joinRoomByCode]', e);

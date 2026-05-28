@@ -9,9 +9,11 @@ import {
   ActivityIndicator,
   Share,
   Alert,
+  Image,
 } from 'react-native';
+import user from '../../assets/Icon/user.svg';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { doc, collection, updateDoc, deleteDoc } from '@react-native-firebase/firestore';
+import firestore, { doc, collection, updateDoc, deleteDoc } from '@react-native-firebase/firestore';
 import { db } from '../services/firebase';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useRoom } from '../hooks/useRoom';
@@ -40,12 +42,12 @@ const RoomScreen = () => {
   useEffect(() => {
     if (room && room.status === 'drawing') {
       console.log('⚡ Room status is drawing, navigating to /drawing!');
-      
+
       // Update local Zustand state before navigating
       const playerList = Object.entries(players).map(([playerId, pData]) => ({
         id: playerId,
-        name: pData.displayName || 'Người chơi',
-        avatar: playerId === room.hostId ? '👑' : '👾',
+        name: (pData.displayName || 'Người chơi') + (playerId === room.hostId ? ' (HOST 👑)' : ''),
+        avatar: pData.avatar || 'user', // Default avatar
         xp: 1000,
         level: 1,
         score: 0,
@@ -140,6 +142,9 @@ const RoomScreen = () => {
     try {
       if (uid) {
         await deleteDoc(doc(db, 'rooms', roomId, 'players', uid));
+        await updateDoc(doc(db, 'rooms', roomId), {
+          playerCount: firestore.FieldValue.increment(-1),
+        });
       }
       router.replace('/lobby');
     } catch (err) {
@@ -200,7 +205,7 @@ const RoomScreen = () => {
         {/* Player List */}
         <View style={styles.listSection}>
           <Text style={styles.listTitle}>Người chơi ({playerArray.length}/{room.maxPlayers})</Text>
-          
+
           <FlatList
             data={playerArray}
             keyExtractor={(item) => item.id}
@@ -208,12 +213,16 @@ const RoomScreen = () => {
             renderItem={({ item, index }) => {
               const rotate = index % 2 === 0 ? '-0.5deg' : '0.5deg';
               const isPlayerHost = item.id === room.hostId;
-              
+
               return (
                 <Animated.View entering={FadeInDown.delay(300 + index * 100).springify().damping(12)}>
                   <PaperCard variant={isPlayerHost ? "blue" : "default"} rotate={rotate} style={styles.playerCard}>
                     <View style={styles.playerInfo}>
-                      <Text style={styles.avatarText}>{isPlayerHost ? '👑' : '👾'}</Text>
+                      {/* <Text style={styles.avatarText}>{isPlayerHost ? '👑' : '👾'}</Text> */}
+                      <Image
+                        source={item.avatar === 'user' ? require('../../assets/Icon/user.svg') : { uri: item.avatar }}
+                        style={{ width: 55, height: 55, borderRadius: 10 }}
+                      />
                       <View>
                         <Text style={styles.playerName}>{item.displayName}</Text>
                         <Text style={styles.playerStatus}>
