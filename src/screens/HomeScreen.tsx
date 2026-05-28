@@ -25,7 +25,7 @@ const HomeScreen = () => {
   const [showAuth, setShowAuth] = useState(false);
   const session = useUserStore((s) => s.session);
   const [showSettings, setShowSettings] = useState(false);
-  
+
 
   const handleOnlinePress = () => {
     if (session && session.uid) {
@@ -39,11 +39,11 @@ const HomeScreen = () => {
   return (
     <NotebookBackground>
       <FloatingDoodles />
-      
+
       {/* Settings Button - wrapped safely */}
       <SafeAreaView style={styles.settingsWrapper} edges={['top', 'right']}>
-        <TouchableOpacity 
-          style={styles.settingsBtn} 
+        <TouchableOpacity
+          style={styles.settingsBtn}
           hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
           onPress={() => {
             console.log('Settings button tapped!');
@@ -95,7 +95,7 @@ const HomeScreen = () => {
         onClose={() => setShowAuth(false)}
       />
 
-      <SettingsModal 
+      <SettingsModal
         visible={showSettings}
         onClose={() => setShowSettings(false)}
       />

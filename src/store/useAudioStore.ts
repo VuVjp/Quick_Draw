@@ -118,7 +118,7 @@ export async function initBrushSound() {
 
 export function startBrushSound() {
   if (!useSettingsStore.getState().soundEnabled) return;
-  
+
   if (!_brushPlayer) {
     // Lazy init just in case Fast Refresh skipped the layout effect
     initBrushSound().then(() => {
@@ -126,7 +126,7 @@ export function startBrushSound() {
         if (useSettingsStore.getState().soundEnabled) {
           _brushPlayer?.play();
         }
-      } catch {}
+      } catch { }
     });
     return;
   }
