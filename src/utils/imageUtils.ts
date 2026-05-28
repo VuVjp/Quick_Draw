@@ -119,7 +119,7 @@ export async function base64ToTensor(
   // =====================================================
 
   if (!hasStroke) {
-    console.warn('Canvas trống');
+    //console.warn('Canvas trống');
 
     return new Float32Array(64 * 64);
   }
@@ -149,13 +149,13 @@ export async function base64ToTensor(
     strokeH + pad * 2
   );
 
-  console.log(
-    `[Tensor] bbox: (${minX},${minY}) -> (${maxX},${maxY})`
-  );
+  // console.log(
+  //   `[Tensor] bbox: (${minX},${minY}) -> (${maxX},${maxY})`
+  // );
 
-  console.log(
-    `[Tensor] crop: (${cropX},${cropY}) ${cropW}x${cropH}`
-  );
+  // console.log(
+  //   `[Tensor] crop: (${cropX},${cropY}) ${cropW}x${cropH}`
+  // );
 
   // =====================================================
   // 6. Create square canvas

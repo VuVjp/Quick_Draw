@@ -77,6 +77,7 @@ export function useCreateRoom() {
             batch.set(playerRef, {
                 displayName: options.hostName,
                 score: 0,
+                isHost: true,
                 isOnline: true,
                 joinedAt: firestore.FieldValue.serverTimestamp(),
             });

@@ -43,7 +43,7 @@ const CreateRoomScreen = () => {
     });
 
     const result = await createRoom({
-      hostId: 'user_001',           // TODO: thay bằng auth uid sau
+      hostId: session?.uid,           // TODO: thay bằng auth uid sau
       hostName: 'Player 1',         // TODO: thay bằng tên thật sau
       roomName,
       maxPlayers,

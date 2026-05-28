@@ -1,8 +1,8 @@
-import React, { useCallback, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity, Modal, KeyboardAvoidingView, TextInput, Platform } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity, Modal, KeyboardAvoidingView, TextInput, Platform, ActivityIndicator } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../hooks/useAuth';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
@@ -10,25 +10,17 @@ import PaperCard from '../components/PaperCard';
 import { useGameStore } from '../store/useGameStore';
 import AnimatedButton from '../components/AnimatedButton';
 import { usePublicRooms, RoomItem } from '../hooks/usePublicRooms';
-import { ActivityIndicator } from 'react-native';
 import { useJoinRoom } from '../hooks/useJoinRoom';
+import { useUserStore } from '../store/useUserStore';
 
 const { height } = Dimensions.get('window');
 
 // Đổi type Room
-type Room = RoomItem & { color: 'blue' | 'yellow' | 'default' };
+type Room = RoomItem & { color: 'blue' | 'yellow' | 'default'; isOwner?: boolean; code: string };
 // Màu card theo index
-const CARD_COLORS: Array<'blue' | 'yellow' | 'default'> = ['blue', 'default', 'yellow', 'default'];
+const CARD_COLORS: ('blue' | 'yellow' | 'default')[] = ['blue', 'default', 'yellow', 'default'];
 
-// Match reference exactly
-const MOCK_ROOMS_REF = [
-  { id: '1', name: 'Doodle to Win ', players: 4, maxPlayers: 8, color: 'blue' as const },
-  { id: '2', name: 'Nét Vẽ Chết Chóc ', players: 2, maxPlayers: 8, color: 'default' as const },
-  { id: '5', name: 'Chiến Thần Hội Họa ', players: 8, maxPlayers: 8, color: 'yellow' as const },
-  { id: '34', name: 'Vẽ Hay Hoặc Chết ', players: 1, maxPlayers: 8, color: 'default' as const },
-];
-
-const RoomCard = React.memo(({ room, index, onJoin }: { room: Room; index: number; onJoin: () => void }) => {
+const RoomCard = React.memo(({ room, index, onJoin, onRemove }: { room: Room; index: number; onJoin: (r: Room) => void; onRemove?: (id: string) => void }) => {
   const isFull = room.players >= room.maxPlayers;
   const rotate = index % 2 === 0 ? '-1deg' : '1deg';
   return (
@@ -49,7 +41,7 @@ const RoomCard = React.memo(({ room, index, onJoin }: { room: Room; index: numbe
             {room.isOwner && (
               <AnimatedButton
                 label="Hủy"
-                onPress={() => onRemove(room.id)}
+                onPress={() => onRemove?.(room.id)}
                 variant="danger"
                 style={styles.joinBtn}
                 textStyle={styles.joinBtnText}
@@ -73,22 +65,19 @@ RoomCard.displayName = 'RoomCard';
 const LobbyScreen = () => {
   const router = useRouter();
   const joinRoom = useGameStore((s) => s.joinRoom);
-  const availableRooms = useGameStore((s) => s.availableRooms);
   const removeRoom = useGameStore((s) => s.removeRoom);
 
-  const [username, setUsername] = useState('Khách');
-
-  useEffect(() => {
-    const loadUser = async () => {
-      const token = await AsyncStorage.getItem('user_token');
-      if (token) setUsername(token);
-    };
-    loadUser();
-  }, []);
+  const session = useUserStore((s) => s.session);
+  const { signOut } = useAuth();
 
   const handleLogout = async () => {
-    await AsyncStorage.removeItem('user_token');
-    router.replace('/home');
+    try {
+      await signOut();
+    } catch (e) {
+      console.warn('Logout failed', e);
+    } finally {
+      router.replace('/home');
+    }
   };
 
   const handleJoin = useCallback((room: Room) => {
@@ -110,16 +99,23 @@ const LobbyScreen = () => {
     color: CARD_COLORS[index % CARD_COLORS.length],
   }));
 
-  const handleJoinByCode = async () => {
-    const result = await joinRoomByCode(
-      roomCode,
-      'user_001',    // TODO: thay bằng auth uid
-      'Player 1',    // TODO: thay bằng tên thật
-    );
-    if (result) {
-      setModalVisible(false);
+  const handleJoinByCode = async (code?: string) => {
+    try {
+      const result = await joinRoomByCode(
+        code ?? roomCode,
+        session?.uid || '',
+        session?.displayName || 'Player',
+      );
+      if (result) {
+        setModalVisible(false);
+        router.push(`/room/${result.roomId}`);
+      }
+    }
+    catch (e) {
+      console.error('Failed to join room by code:', e);
+    }
+    finally {
       setRoomCode('');
-      router.push(`/room/${result.roomId}`);
     }
   };
 
@@ -135,12 +131,12 @@ const LobbyScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => router.replace('/home')} style={styles.backBtn}>
+          <TouchableOpacity onPress={() => router.replace('/home?bypassAuthRedirect=1')} style={styles.backBtn}>
             <Text style={styles.backBtnText}>←</Text>
           </TouchableOpacity>
           <View style={{ alignItems: 'center' }}>
             <Text style={styles.title}>Phòng Chờ</Text>
-            <Text style={styles.greetingText}>Xin chào, {username}</Text>
+            <Text style={styles.greetingText}>Xin chào, {session?.displayName || 'Player'}</Text>
           </View>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
             <Text style={styles.logoutBtnText}>Đăng xuất</Text>
@@ -174,7 +170,7 @@ const LobbyScreen = () => {
       {/* Room list */}
       <FlatList
         data={roomsWithColor}
-        renderItem={({ item, index }) => <RoomCard room={item} index={index} onJoin={handleJoin} />}
+        renderItem={({ item, index }) => <RoomCard room={item} index={index} onJoin={handleJoin} onRemove={handleRemove} />}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
@@ -225,7 +221,7 @@ const LobbyScreen = () => {
               />
               <AnimatedButton
                 label={joinLoading ? 'Đang vào...' : 'Vào phòng →'}
-                onPress={handleJoinByCode}
+                onPress={() => handleJoinByCode()}
                 disabled={roomCode.length < 6 || joinLoading}
                 variant="primary"
                 style={styles.modalBtn}

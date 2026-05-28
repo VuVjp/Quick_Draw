@@ -6,8 +6,12 @@ const LABELS = require('../../assets/labels.json');
 export function useTFLite() {
     const modelRef = useRef<InstanceType<typeof TensorflowModel> | null>(null);
     const [isReady, setIsReady] = useState(false);
+    const inputBufferRef = useRef(
+        new Float32Array(1 * 64 * 64 * 1)
+    );
 
     useEffect(() => {
+        let mounted = true;
         async function load() {
             try {
 
@@ -15,14 +19,26 @@ export function useTFLite() {
                     require('../../assets/model.tflite'),
                     []
                 );
+                if (!mounted) {
+                    model.dispose?.();
+                    return;
+                }
                 modelRef.current = model;
                 setIsReady(true);
-                console.log('TFLite model loaded');
+                // console.log('TFLite model loaded');
             } catch (e) {
-                console.error('Failed to load TFLite model:', e);
+                // console.error('Failed to load TFLite model:', e);
             }
         }
         load();
+
+        return () => {
+            mounted = false;
+
+            modelRef.current?.close?.();
+            modelRef.current = null;
+        };
+
     }, [])
 
     async function predict(
@@ -37,24 +53,24 @@ export function useTFLite() {
         }
 
         // Debug model info
-        console.log('INPUTS:', model.inputs);
-        console.log('OUTPUTS:', model.outputs);
+        // console.log('INPUTS:', model.inputs);
+        // console.log('OUTPUTS:', model.outputs);
 
         // Ensure exact input size
-        const input = new Float32Array(1 * 64 * 64 * 1);
+        const input = inputBufferRef.current;
 
         // tensor length phải = 4096
         input.set(tensor);
 
-        console.log('INPUT LENGTH:', input.length);
-        console.log('INPUT BYTES:', input.byteLength);
+        // console.log('INPUT LENGTH:', input.length);
+        // console.log('INPUT BYTES:', input.byteLength);
 
         try {
 
             // Use runSync for stable output
             const output = model.runSync([input.buffer]);
 
-            console.log('RAW OUTPUT:', output);
+            // console.log('RAW OUTPUT:', output);
 
             // Validate output
             if (
@@ -76,7 +92,7 @@ export function useTFLite() {
             // Convert output → JS array
             const scores = Array.from(rawScores as number[]);
 
-            console.log('SCORES:', scores.map((s, i) => `${LABELS?.[i] ?? `class_${i}`}: ${s.toFixed(4)}`).join(', '));
+            // console.log('SCORES:', scores.map((s, i) => `${LABELS?.[i] ?? `class_${i}`}: ${s.toFixed(4)}`).join(', '));
 
             if (scores.length === 0) {
                 throw new Error('Scores array is empty');
@@ -93,13 +109,13 @@ export function useTFLite() {
 
             const topPredictions = labeled.slice(0, topK);
 
-            console.log('TOP PREDICTIONS:', topPredictions);
+            // console.log('TOP PREDICTIONS:', topPredictions);
 
             return topPredictions;
 
         } catch (e) {
 
-            console.error('Inference error:', e);
+            // console.error('Inference error:', e);
 
             return [];
         }

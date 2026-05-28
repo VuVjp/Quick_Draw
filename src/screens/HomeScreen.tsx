@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dimensions, StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import AnimatedButton from '../components/AnimatedButton';
 import AuthModal from '../components/AuthModal';
@@ -7,41 +7,33 @@ import FloatingDoodles from '../components/FloatingDoodles';
 import NotebookBackground from '../components/NotebookBackground';
 import { Spacing } from '../theme/spacing';
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import { useGameStore } from '../store/useGameStore';
+import { useUserStore } from '../store/useUserStore';
 import Logo from '../../assets/logo/Group 7.svg';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 
-const { width, height } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const router = useRouter();
   const [showAuth, setShowAuth] = useState(false);
-  const startSinglePlayer = useGameStore((s) => s.startSinglePlayer);
+  const session = useUserStore((s) => s.session);
 
-  const handleOnlinePress = async () => {
-    try {
-      const token = await AsyncStorage.getItem('user_token');
-      if (token) {
-        // Tự động đăng nhập nếu đã có token
-        router.push('/lobby');
-      } else {
-        setShowAuth(true);
-      }
-    } catch (e) {
-      console.error('Lỗi khi đọc token từ AsyncStorage', e);
-      setShowAuth(true);
+  const handleOnlinePress = () => {
+    if (session && session.uid) {
+      router.replace('/lobby');
+      return;
     }
+
+    setShowAuth(true);
   };
 
   return (
     <NotebookBackground>
       <FloatingDoodles />
       <View style={styles.centre}>
-        <Animated.View 
-          entering={ZoomIn.duration(600).springify().damping(12).stiffness(100)} 
+        <Animated.View
+          entering={ZoomIn.duration(600).springify().damping(12).stiffness(100)}
           style={styles.logoBlock}
         >
           <Logo
@@ -53,8 +45,8 @@ const HomeScreen = () => {
         </Animated.View>
 
         {/* Buttons */}
-        <Animated.View 
-          entering={FadeInDown.delay(200).duration(500).springify().damping(14)} 
+        <Animated.View
+          entering={FadeInDown.delay(200).duration(500).springify().damping(14)}
           style={styles.buttonStack}
         >
           <AnimatedButton

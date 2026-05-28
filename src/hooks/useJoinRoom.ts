@@ -24,7 +24,7 @@ export function useJoinRoom() {
             }
 
             const roomDoc = snap.data()!;
-            const roomRef = firestore().collection('rooms').doc(roomDoc.id);
+            const roomRef = firestore().collection('rooms').doc(snap.id);
             const playerRef = roomRef.collection('players').doc(playerId);
 
             // Transaction — tránh race condition khi nhiều người join cùng lúc
@@ -39,12 +39,13 @@ export function useJoinRoom() {
 
                 // Dùng playerCount thay vì query sub-collection
                 if ((roomData.playerCount ?? 0) >= roomData.maxPlayers) {
+                    console.log('Player count:', roomData.playerCount, 'Max players:', roomData.maxPlayers);
                     throw new Error('Phòng đã đầy');
                 }
 
                 // Kiểm tra đã ở trong phòng chưa
                 const existing = await t.get(playerRef);
-                if (existing.exists) {
+                if (existing.exists()) {
                     throw new Error('Bạn đã ở trong phòng này');
                 }
 
@@ -52,6 +53,7 @@ export function useJoinRoom() {
                 t.set(playerRef, {
                     displayName: playerName,
                     score: 0,
+                    isHost: false,
                     isOnline: true,
                     joinedAt: firestore.FieldValue.serverTimestamp(),
                 });
@@ -62,7 +64,7 @@ export function useJoinRoom() {
                 });
             });
 
-            return { roomId: roomDoc.id, code: roomDoc.data()!.code };
+            return { roomId: snap.id, code: roomDoc.data()!.code };
 
         } catch (e: any) {
             console.error('[joinRoomByCode]', e);

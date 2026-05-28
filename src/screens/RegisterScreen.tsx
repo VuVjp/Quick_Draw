@@ -8,6 +8,8 @@ import { Spacing, Radius } from '../theme/spacing';
 import AnimatedButton from '../components/AnimatedButton';
 import NotebookBackground from '../components/NotebookBackground';
 
+const AUTH_SESSION_KEY = 'user_token';
+
 const RegisterScreen = () => {
   const router = useRouter();
   const [username, setUsername] = useState('');
@@ -19,7 +21,11 @@ const RegisterScreen = () => {
     // Tạm thời bỏ qua logic đăng ký
     if (username.trim()) {
       try {
-        await AsyncStorage.setItem('user_token', username);
+        await AsyncStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({
+          displayName: displayName.trim() || username.trim(),
+          email: '',
+          uid: username.trim(),
+        }));
       } catch (e) {
         console.error('Failed to save register session', e);
       }
@@ -98,7 +104,11 @@ const RegisterScreen = () => {
           label="Chơi với tư cách khách 👤"
           onPress={async () => {
             const guestName = `Guest${Math.floor(Math.random() * 10000)}`;
-            await AsyncStorage.setItem('user_token', guestName);
+            await AsyncStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({
+              displayName: guestName,
+              email: '',
+              uid: guestName,
+            }));
             router.replace('/lobby');
           }}
           variant="ghost"

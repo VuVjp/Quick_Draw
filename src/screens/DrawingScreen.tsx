@@ -115,7 +115,7 @@ const DrawingScreen = () => {
         }
 
         const result = await runInference(base64, currentWord);
-        console.log('Inference result:', result);
+        //console.log('Inference result:', result);
 
         if (isSinglePlayer) {
           if (!result) return;

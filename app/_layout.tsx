@@ -15,6 +15,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initBgm, initClickSound, initBrushSound } from '../src/store/useAudioStore';
+import auth from '@react-native-firebase/auth';
 
 // Keep splash visible until fonts load
 SplashScreen.preventAutoHideAsync();
@@ -33,11 +34,28 @@ export default function RootLayout() {
     initBrushSound();
   }, []);
 
+  // Load persisted user session into in-memory store once on app start
+  useEffect(() => {
+    try {
+      // lazy-load without awaiting app render
+      import('../src/store/useUserStore').then((m) => m.default.getState().loadSession());
+    } catch {
+      // ignore
+    }
+  }, []);
+
   useEffect(() => {
     if (fontsLoaded || fontsError) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontsError]);
+
+  // useEffect(() => {
+  //   const unsub = auth().onAuthStateChanged((user) => {
+  //     if (user) router.replace('/lobby');
+  //   });
+  //   return unsub;
+  // }, []);
 
   if (!fontsLoaded && !fontsError) return null;
 
