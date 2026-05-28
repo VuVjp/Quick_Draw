@@ -31,11 +31,18 @@ export function useDrawingInference(peerReviewMode: boolean) {
           ? CONFIDENCE_THRESHOLD_PEER_REVIEW
           : CONFIDENCE_THRESHOLD_STANDARD;
 
-        const accepted =
+        let acceptedLabel = null; // Default to null, will be set if any prediction meets criteria
+        predictions.forEach((p) => {
+          if (p.score > 0.4 && p.label === targetTopic) {
+            acceptedLabel = p.label;
+          }
+        });
+
+        const accepted = acceptedLabel ? acceptedLabel :
           top1.label === targetTopic;
 
         return {
-          label: top1.label,
+          label: acceptedLabel ?? top1.label,
           score: top1.score,
           accepted,
         };

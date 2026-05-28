@@ -2,14 +2,29 @@
 import { useState } from 'react';
 import
 firestore, {
-    collection,
     doc,
     writeBatch,
 } from '@react-native-firebase/firestore';
 import { db } from '../services/firebase';
 
-function generateRoomCode(): string {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
+async function generateRoomCode(): Promise<string> {
+    for (let i = 0; i < 10; i++) {
+
+        const code = Math.random()
+            .toString(36)
+            .substring(2, 8)
+            .toUpperCase();
+
+        const snap = await firestore()
+            .collection('rooms')
+            .doc(code)
+            .get();
+        if (!snap.exists()) {
+            return code;
+        }
+    }
+
+    throw new Error('Không thể tạo room code');
 }
 
 interface CreateRoomOptions {
@@ -33,8 +48,8 @@ export function useCreateRoom() {
         setError(null);
 
         try {
-            const code = generateRoomCode();
-            const roomRef = doc(collection(db, 'rooms'));
+            const code = await generateRoomCode();
+            const roomRef = firestore().collection('rooms').doc(code);
             const batch = writeBatch(db);
 
             // Room document
