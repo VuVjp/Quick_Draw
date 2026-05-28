@@ -6,6 +6,7 @@ import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius, Shadow } from '../theme/spacing';
 import { useUserStore } from '../store/useUserStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { playClick, setBgmVolume as setStoreBgmVolume, pauseBgm, playBgm, setSfxVolume as setStoreSfxVolume } from '../store/useAudioStore';
 import AnimatedButton from './AnimatedButton';
 
@@ -15,12 +16,12 @@ type Props = {
 };
 
 const SettingsModal = ({ visible, onClose }: Props) => {
-  const soundEnabled = useUserStore((s) => s.soundEnabled);
-  const toggleSound = useUserStore((s) => s.toggleSound);
-  const bgmVolume = useUserStore((s) => s.bgmVolume);
-  const setBgmVolume = useUserStore((s) => s.setBgmVolume);
-  const sfxVolume = useUserStore((s) => s.sfxVolume);
-  const setSfxVolume = useUserStore((s) => s.setSfxVolume);
+  const soundEnabled = useSettingsStore((s) => s.soundEnabled);
+  const toggleSound = useSettingsStore((s) => s.toggleSound);
+  const bgmVolume = useSettingsStore((s) => s.bgmVolume);
+  const setBgmVolume = useSettingsStore((s) => s.setBgmVolume);
+  const sfxVolume = useSettingsStore((s) => s.sfxVolume);
+  const setSfxVolume = useSettingsStore((s) => s.setSfxVolume);
 
   const [isMuted, setIsMuted] = React.useState(false);
 
@@ -63,14 +64,14 @@ const SettingsModal = ({ visible, onClose }: Props) => {
       <View style={styles.overlay}>
         <Animated.View style={styles.modalContent}>
           <Text style={styles.title}>Cài Đặt</Text>
-          
+
           <View style={styles.settingRow}>
             <Text style={styles.label}>Tắt tiếng</Text>
-            <TouchableOpacity 
-              style={[styles.toggleBtn, isMuted && styles.toggleBtnOff]} 
+            <TouchableOpacity
+              style={[styles.toggleBtn, isMuted && styles.toggleBtnOff]}
               onPress={handleToggleMute}
             >
-              <Text style={styles.toggleText}>{isMuted ? 'BẬT (Đã Tắt)' : 'TẮT (Đang Mở)'}</Text>
+              <Text style={styles.toggleText}>{isMuted ? 'TẮT' : 'BẬT'}</Text>
             </TouchableOpacity>
           </View>
 
@@ -92,13 +93,13 @@ const SettingsModal = ({ visible, onClose }: Props) => {
             </View>
           </View>
 
-          <View style={styles.divider} />
-          <Text style={styles.sectionTitle}>Cài đặt thêm</Text>
+          {/* <View style={styles.divider} />
+          <Text style={styles.sectionTitle}>Cài đặt thêm</Text> */}
 
           <View style={styles.settingRow}>
             <Text style={styles.label}>SFX (Âm thanh vẽ)</Text>
-            <TouchableOpacity 
-              style={[styles.toggleBtn, !soundEnabled && styles.toggleBtnOff]} 
+            <TouchableOpacity
+              style={[styles.toggleBtn, !soundEnabled && styles.toggleBtnOff]}
               onPress={() => {
                 playClick();
                 toggleSound();
@@ -108,25 +109,24 @@ const SettingsModal = ({ visible, onClose }: Props) => {
             </TouchableOpacity>
           </View>
 
-          {soundEnabled && (
-            <View style={styles.settingRow}>
-              <Text style={styles.label}>Âm lượng SFX</Text>
-              <View style={styles.sliderContainer}>
-                <Slider
-                  style={styles.slider}
-                  minimumValue={1}
-                  maximumValue={100}
-                  step={1}
-                  value={Math.round(sfxVolume * 100)}
-                  onValueChange={handleSfxVolumeChange}
-                  minimumTrackTintColor={Colors.primaryYellow}
-                  maximumTrackTintColor={Colors.softGray}
-                  thumbTintColor={Colors.warmBlack}
-                />
-                <Text style={styles.volText}>{Math.round(sfxVolume * 100)}</Text>
-              </View>
+          <View style={styles.settingRow}>
+            <Text style={styles.label}>Âm lượng SFX</Text>
+            <View style={styles.sliderContainer}>
+              <Slider
+                style={styles.slider}
+                minimumValue={1}
+                maximumValue={100}
+                step={1}
+                value={Math.round(sfxVolume * 100)}
+                onValueChange={handleSfxVolumeChange}
+                minimumTrackTintColor={Colors.primaryYellow}
+                maximumTrackTintColor={Colors.softGray}
+                thumbTintColor={Colors.warmBlack}
+              />
+              <Text style={styles.volText}>{Math.round(sfxVolume * 100)}</Text>
             </View>
-          )}
+          </View>
+
 
           <AnimatedButton
             label="Đóng"

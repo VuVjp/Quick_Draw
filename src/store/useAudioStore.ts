@@ -1,5 +1,5 @@
 import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
-import { useUserStore } from './useUserStore';
+import { useSettingsStore } from './useSettingsStore';
 
 const globalNode = global as any;
 
@@ -15,8 +15,7 @@ async function ensureAudioMode() {
   globalNode.__audioModeInitialized = true;
   try {
     await setAudioModeAsync({
-      playsInSilentModeIOS: true,
-      shouldDuckAndroid: true,
+      playsInSilentMode: true,
     });
   } catch (e) {
     console.log('[Audio] setAudioMode error:', e);
@@ -34,7 +33,8 @@ export async function initBgm() {
       require('../../assets/sounds/Background.mp3')
     );
     _bgmPlayer.loop = true;
-    _bgmPlayer.volume = 0.25;
+    const bgmVol = useSettingsStore.getState().bgmVolume ?? 0.25;
+    _bgmPlayer.volume = bgmVol;
     globalNode.__bgmPlayer = _bgmPlayer;
   } catch (e) {
     console.log('[BGM] init error:', e);
@@ -60,9 +60,7 @@ export function toggleBgm() {
   }
 }
 
-export function setBgmVolume(volume: number) {
-  if (_bgmPlayer) _bgmPlayer.volume = volume;
-}
+// (setBgmVolume is provided at bottom and updates settings too)
 
 export function isBgmPlaying(): boolean {
   return _bgmPlayer?.playing ?? false;
@@ -77,7 +75,7 @@ export async function initClickSound() {
     _clickPlayer = createAudioPlayer(
       require('../../assets/sounds/UI_click.mp3')
     );
-    const sfxVol = useUserStore.getState().sfxVolume || 1.0;
+    const sfxVol = useSettingsStore.getState().sfxVolume || 1.0;
     _clickPlayer.volume = 2.0 * sfxVol;
     globalNode.__clickPlayer = _clickPlayer;
   } catch (e) {
@@ -89,7 +87,7 @@ export async function initClickSound() {
 
 export function playClick() {
   if (!_clickPlayer) return;
-  if (!useUserStore.getState().soundEnabled) return;
+  if (!useSettingsStore.getState().soundEnabled) return;
   try {
     _clickPlayer.seekTo(0);
     _clickPlayer.play();
@@ -108,7 +106,7 @@ export async function initBrushSound() {
       require('../../assets/sounds/brush_paper.mp3')
     );
     _brushPlayer.loop = true; // Loop while drawing
-    const sfxVol = useUserStore.getState().sfxVolume || 1.0;
+    const sfxVol = useSettingsStore.getState().sfxVolume || 1.0;
     _brushPlayer.volume = 1.0 * sfxVol;
     globalNode.__brushPlayer = _brushPlayer;
   } catch (e) {
@@ -119,16 +117,16 @@ export async function initBrushSound() {
 }
 
 export function startBrushSound() {
-  if (!useUserStore.getState().soundEnabled) return;
+  if (!useSettingsStore.getState().soundEnabled) return;
   
   if (!_brushPlayer) {
     // Lazy init just in case Fast Refresh skipped the layout effect
     initBrushSound().then(() => {
       try {
-        if (useUserStore.getState().soundEnabled) {
+        if (useSettingsStore.getState().soundEnabled) {
           _brushPlayer?.play();
         }
-      } catch (e) {}
+      } catch {}
     });
     return;
   }
@@ -151,6 +149,12 @@ export function stopBrushSound() {
 // ─── SFX Volume Control ────────────────────────────────────────────────────────
 
 export function setSfxVolume(volume: number) {
+  useSettingsStore.getState().setSfxVolume(volume);
   if (_clickPlayer) _clickPlayer.volume = 2.0 * volume;
   if (_brushPlayer) _brushPlayer.volume = 1.0 * volume;
+}
+
+export function setBgmVolume(volume: number) {
+  useSettingsStore.getState().setBgmVolume(volume);
+  if (_bgmPlayer) _bgmPlayer.volume = volume;
 }

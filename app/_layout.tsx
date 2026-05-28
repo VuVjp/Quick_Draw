@@ -17,6 +17,7 @@ import { AppState, AppStateStatus } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initBgm, initClickSound, initBrushSound, playBgm, pauseBgm } from '../src/store/useAudioStore';
 import { useUserStore } from '../src/store/useUserStore';
+import { useSettingsStore } from '../src/store/useSettingsStore';
 
 // Keep splash visible until fonts load
 SplashScreen.preventAutoHideAsync();
@@ -29,11 +30,11 @@ export default function RootLayout() {
     IndieFlower_400Regular,
   });
 
-  const soundEnabled = useUserStore((s) => s.soundEnabled);
+  const soundEnabled = useSettingsStore((s) => s.soundEnabled);
 
   useEffect(() => {
     initBgm().then(() => {
-      if (useUserStore.getState().soundEnabled && AppState.currentState === 'active') {
+      if (useSettingsStore.getState().soundEnabled && AppState.currentState === 'active') {
         playBgm();
       }
     });
@@ -41,19 +42,24 @@ export default function RootLayout() {
     initBrushSound();
   }, []);
 
-  // Load persisted user session into in-memory store once on app start
+  // Load persisted user session and settings into in-memory stores once on app start
   useEffect(() => {
     try {
-      // lazy-load without awaiting app render
-      import('../src/store/useUserStore').then((m) => m.default.getState().loadSession());
-    } catch {
-      // ignore
+      useUserStore.getState().loadSession();
+    } catch (e) {
+      console.warn('Failed to load session on startup', e);
+    }
+
+    try {
+      useSettingsStore.getState().loadSettings();
+    } catch (e) {
+      console.warn('Failed to load settings on startup', e);
     }
   }, []);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
-      if (nextAppState === 'active' && useUserStore.getState().soundEnabled) {
+      if (nextAppState === 'active' && useSettingsStore.getState().soundEnabled) {
         playBgm();
       } else {
         pauseBgm();
