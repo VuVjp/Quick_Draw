@@ -103,7 +103,6 @@ const DrawingScreen = () => {
       if (isInferencing.current) return;
       // mark as running to avoid overlapping snapshot/predict calls
       isInferencing.current = true;
-      console.log('Running inference...');
       try {
         // wait one frame to ensure latest UI/skia updates have been painted
         await new Promise((res) => requestAnimationFrame(() => res(null)));
