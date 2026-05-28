@@ -111,7 +111,7 @@ const RoundEndScreen = () => {
 
             {showLeaderboard && !isSinglePlayer && (
               <View style={styles.leaderboardOverlay}>
-                <Text style={styles.leaderboardTitle}>Bảng Xếp Hạng</Text>
+                <Text style={styles.leaderboardTitle}>Leaderboard</Text>
                 <FlatList
                   data={players}
                   renderItem={renderPlayer}
@@ -128,7 +128,7 @@ const RoundEndScreen = () => {
         <Animated.View entering={FadeInDown.delay(800).springify()} style={styles.footer}>
           {!isSinglePlayer && (
             <AnimatedButton
-              label={showLeaderboard ? "Ẩn Bảng Xếp Hạng" : "Xem Bảng Xếp Hạng"}
+              label={showLeaderboard ? "Hide Leaderboard" : "Show Leaderboard"}
               onPress={() => setShowLeaderboard(!showLeaderboard)}
               variant="secondary"
               style={{ marginBottom: Spacing.md }}
@@ -136,7 +136,7 @@ const RoundEndScreen = () => {
             />
           )}
           <AnimatedButton
-            label={isLastRound ? "Kết thúc game" : "Vòng tiếp theo"}
+            label={isLastRound ? "End Game" : "Next Round"}
             onPress={handleNext}
             variant="primary"
             fullWidth

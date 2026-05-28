@@ -52,14 +52,14 @@ const AuthModal = ({ visible, onClose }: Props) => {
           <PaperCard style={styles.modalCard} variant="default">
             {/* Header */}
             <View style={styles.header}>
-              <Text style={styles.title}>Chế độ Online</Text>
+              <Text style={styles.title}>Online Mode</Text>
               <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
                 <Text style={styles.closeBtnText}>X</Text>
               </TouchableOpacity>
             </View>
 
             <Text style={styles.subtitle}>
-              Chọn phương thức đăng nhập để tiếp tục:
+              Choose a login method to continue:
             </Text>
 
             {/* Error */}
@@ -80,19 +80,19 @@ const AuthModal = ({ visible, onClose }: Props) => {
                   activeOpacity={0.85}
                 >
                   <Text style={styles.googleIcon}>G</Text>
-                  <Text style={styles.googleBtnText}>Đăng nhập với Google</Text>
+                  <Text style={styles.googleBtnText}>Sign in with Google</Text>
                 </TouchableOpacity>
 
                 {/* Divider */}
                 <View style={styles.divider}>
                   <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>hoặc</Text>
+                  <Text style={styles.dividerText}>or</Text>
                   <View style={styles.dividerLine} />
                 </View>
 
                 {/* Guest */}
                 <AnimatedButton
-                  label="Chơi với tư cách khách 👤"
+                  label="Play as Guest 👤"
                   onPress={handleGuestPress}
                   variant="ghost"
                   fullWidth
@@ -114,8 +114,9 @@ const AuthModal = ({ visible, onClose }: Props) => {
           style={styles.overlay}
         >
           <View style={styles.nameCard}>
-            <Text style={styles.title}>Tên của bạn là gì?</Text>
-            <Text style={styles.subtitle}>Tên hiển thị trong game</Text>
+            <Text style={styles.title}>What is your name?</Text>
+            <Text style={styles.subtitle}>Ingame name
+            </Text>
 
             <TextInput
               style={styles.nameInput}
@@ -130,13 +131,13 @@ const AuthModal = ({ visible, onClose }: Props) => {
 
             <View style={styles.nameButtons}>
               <AnimatedButton
-                label="Huỷ"
+                label="Cancel"
                 onPress={() => setGuestModalVisible(false)}
                 variant="ghost"
                 style={styles.nameBtn}
               />
               <AnimatedButton
-                label="Vào game →"
+                label="Submit"
                 onPress={handleGuestConfirm}
                 disabled={!guestName.trim() || loading}
                 variant="primary"
@@ -177,10 +178,13 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.lg, color: Colors.warmBlack, marginTop: -2,
   },
-  subtitle: {
-    fontFamily: FontFamily.patrickHand, fontSize: FontSize.lg,
-    color: Colors.warmBlack, marginBottom: Spacing.xl, opacity: 0.8,
-  },
+ subtitle: {
+  fontFamily: FontFamily.patrickHand,
+  fontSize: FontSize.lg,
+  color: Colors.warmBlack,
+  marginBottom: Spacing.md, // giảm từ xl xuống md
+  opacity: 0.8,
+},
   errorBox: {
     backgroundColor: '#FFE5E5', borderRadius: Radius.md,
     padding: Spacing.md, marginBottom: Spacing.md,
@@ -215,16 +219,31 @@ const styles = StyleSheet.create({
     color: Colors.warmBlack, opacity: 0.5,
   },
   nameCard: {
-    width: '100%', backgroundColor: Colors.paperWhite,
-    borderRadius: Radius.lg, borderWidth: 1.5,
-    borderColor: Colors.border, padding: Spacing.xl, gap: Spacing.md,
-  },
+  width: '100%',
+  minHeight: 300,
+  backgroundColor: Colors.paperWhite,
+  borderRadius: Radius.lg,
+  borderWidth: 1.5,
+  borderColor: Colors.border,
+  padding: Spacing.xl,
+  justifyContent: 'flex-start',
+},
   nameInput: {
     fontFamily: FontFamily.patrickHand, fontSize: FontSize.xxl,
     textAlign: 'center', borderBottomWidth: 2,
     borderColor: Colors.primaryYellow,
     paddingVertical: Spacing.md, color: Colors.warmBlack,
   },
-  nameButtons: { flexDirection: 'row', gap: Spacing.md, marginTop: Spacing.sm },
-  nameBtn: { flex: 1, paddingVertical: Spacing.sm },
+  nameButtons: {
+  flexDirection: 'row',
+  gap: Spacing.md,
+  marginTop: Spacing.lg,
+  alignSelf: 'center',
+},
+
+nameBtn: {
+  flex: 1,
+  minHeight: 58,
+  justifyContent: 'center',
+},
 });

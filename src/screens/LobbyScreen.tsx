@@ -1,17 +1,18 @@
-import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity, Modal, KeyboardAvoidingView, TextInput, Platform, ActivityIndicator } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../hooks/useAuth';
-import { Colors } from '../theme/colors';
-import { FontFamily, FontSize } from '../theme/typography';
-import { Spacing, Radius } from '../theme/spacing';
-import PaperCard from '../components/PaperCard';
-import { useGameStore } from '../store/useGameStore';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, Dimensions, FlatList, KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import AnimatedButton from '../components/AnimatedButton';
-import { usePublicRooms, RoomItem } from '../hooks/usePublicRooms';
+import PaperCard from '../components/PaperCard';
+import { useAuth } from '../hooks/useAuth';
 import { useJoinRoom } from '../hooks/useJoinRoom';
+import { RoomItem, usePublicRooms } from '../hooks/usePublicRooms';
+import { useGameStore } from '../store/useGameStore';
 import { useUserStore } from '../store/useUserStore';
+import { Colors } from '../theme/colors';
+import { Radius, Spacing } from '../theme/spacing';
+import { FontFamily, FontSize } from '../theme/typography';
 
 const { height } = Dimensions.get('window');
 
@@ -48,7 +49,7 @@ const RoomCard = React.memo(({ room, index, onJoin, onRemove }: { room: Room; in
               />
             )}
             <AnimatedButton
-              label={isFull ? 'Đầy' : 'Vào'}
+              label={isFull ? 'Full' : 'Join'}
               onPress={() => onJoin(room)}
               disabled={isFull}
               variant="ghost"
@@ -132,26 +133,26 @@ const LobbyScreen = () => {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <TouchableOpacity onPress={() => router.replace('/home?bypassAuthRedirect=1')} style={styles.backBtn}>
-            <Text style={styles.backBtnText}>←</Text>
+            <Ionicons name="arrow-back" size={22} color={Colors.warmBlack} />
           </TouchableOpacity>
           <View style={{ alignItems: 'center' }}>
-            <Text style={styles.title}>Phòng Chờ</Text>
-            <Text style={styles.greetingText}>Xin chào, {session?.displayName || 'Player'}</Text>
+            <Text style={styles.title}>Lobby</Text>
+            <Text style={styles.greetingText}>Hello, {session?.displayName || 'Player'}</Text>
           </View>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
-            <Text style={styles.logoutBtnText}>Đăng xuất</Text>
+            <Text style={styles.logoutBtnText}>Logout</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.headerButtons}>
           <AnimatedButton
-            label="Tạo Phòng ➕"
+            label="Create Room ➕"
             onPress={() => router.push('/create-room')}
             variant="primary"
             style={styles.createRoomBtn}
             textStyle={styles.createRoomBtnText}
           />
           <AnimatedButton
-            label="Nhập mã 🔑"
+            label="Enter Code 🔑"
             onPress={() => setModalVisible(true)}
             variant="ghost"
             style={styles.joinCodeBtn}
@@ -189,8 +190,8 @@ const LobbyScreen = () => {
         >
           <View style={styles.modalCard}>
             {/* Title */}
-            <Text style={styles.modalTitle}>Nhập mã phòng</Text>
-            <Text style={styles.modalHint}>Hỏi chủ phòng để lấy mã 6 ký tự</Text>
+            <Text style={styles.modalTitle}>Enter Room Code</Text>
+            <Text style={styles.modalHint}>Ask the room host for the 6-character code</Text>
 
             {/* Input */}
             <TextInput
@@ -212,7 +213,7 @@ const LobbyScreen = () => {
             {/* Buttons */}
             <View style={styles.modalButtons}>
               <AnimatedButton
-                label="Huỷ"
+                label="Cancel"
                 onPress={() => {
                   setModalVisible(false);
                   setRoomCode('');
@@ -221,7 +222,7 @@ const LobbyScreen = () => {
                 style={styles.modalBtn}
               />
               <AnimatedButton
-                label={joinLoading ? 'Đang vào...' : 'Vào phòng →'}
+                label={joinLoading ? 'Joining...' : 'Join'}
                 onPress={() => handleJoinByCode()}
                 disabled={roomCode.length < 6 || joinLoading}
                 variant="primary"
@@ -260,21 +261,15 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.paperWhite,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backBtnText: {
-    fontFamily: FontFamily.patrickHand,
-    fontSize: 24,
-    color: Colors.warmBlack,
-    marginTop: -2,
-  },
+  width: 44,
+  height: 44,
+  borderRadius: 22,
+  backgroundColor: Colors.paperWhite,
+  borderWidth: 1.5,
+  borderColor: Colors.border,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
   greetingText: {
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.md,
@@ -381,15 +376,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.xl,
   },
-  modalCard: {
-    width: '100%',
-    backgroundColor: Colors.paperWhite,
-    borderRadius: Radius.lg,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    padding: Spacing.xl,
-    gap: Spacing.md,
-  },
+ modalCard: {
+  width: '100%',
+  minHeight: 340,
+  backgroundColor: Colors.paperWhite,
+  borderRadius: Radius.lg,
+  borderWidth: 1.5,
+  borderColor: Colors.border,
+  padding: Spacing.xl,
+  gap: Spacing.md,
+},
   modalTitle: {
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.xxl,
@@ -404,15 +400,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   codeInput: {
-    fontFamily: FontFamily.patrickHand,
-    fontSize: FontSize.hero,
-    textAlign: 'center',
-    letterSpacing: 12,
-    borderBottomWidth: 2,
-    borderColor: Colors.primaryYellow,
-    paddingVertical: Spacing.md,
-    color: Colors.warmBlack,
-  },
+  fontFamily: FontFamily.patrickHand,
+  fontSize: FontSize.xxl,
+  textAlign: 'center',
+  letterSpacing: 6,
+  borderBottomWidth: 2,
+  borderColor: Colors.primaryYellow,
+  paddingVertical: Spacing.sm,
+  color: Colors.warmBlack,
+},
   errorText: {
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.lg,
@@ -420,12 +416,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   modalButtons: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    marginTop: Spacing.sm,
-  },
-  modalBtn: {
-    flex: 1,
-    paddingVertical: Spacing.sm,
-  },
+  flexDirection: 'row',
+  gap: Spacing.md,
+  marginTop: Spacing.sm,
+  width: '100%',
+},
+
+modalBtn: {
+  flex: 1,
+  minHeight: 60,
+  justifyContent: 'center',
+},
 });

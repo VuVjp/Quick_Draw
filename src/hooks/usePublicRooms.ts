@@ -29,7 +29,7 @@ export function usePublicRooms() {
                     const data = doc.data();
                     return {
                         id: doc.id,
-                        name: data.roomName ?? 'Phòng chơi',
+                        name: data.roomName ?? 'Unnamed Room',
                         players: data.playerCount ?? 0, // ← đọc trực tiếp
                         maxPlayers: data.maxPlayers,
                         status: data.status,

@@ -38,24 +38,24 @@ const LoseScreen = () => {
         
         <Text style={styles.heart}>💔</Text>
         
-        <Text style={styles.title}>THUA RỒI!</Text>
-        <Text style={styles.subtitle}>Ai không thể hiểu được{'\n'}nghệ thuật của bạn.</Text>
+        <Text style={styles.title}>YOU LOST!</Text>
+        <Text style={styles.subtitle}>The AI couldn't understand{'\n'}your art.</Text>
 
         <View style={styles.graphicBox}>
           <Text style={styles.scribble}>〰️〰️〰️</Text>
           <Text style={styles.redX}>❌</Text>
         </View>
 
-        <Text style={styles.answerText}>CON MÈO</Text>
+        <Text style={styles.answerText}>CAT</Text>
 
         <View style={styles.rewardRow}>
           <Text style={styles.rewardIcon}>⭐</Text>
-          <Text style={styles.rewardText}>Thường an ủi: +5 EXP</Text>
+          <Text style={styles.rewardText}>Comfort: +5 EXP</Text>
         </View>
 
         <View style={styles.actions}>
           <AnimatedButton
-            label="Vẽ tiếp"
+            label="Draw Again"
             onPress={() => { 
               leaveRoom(); 
               if (useGameStore.getState().isSinglePlayer) {
@@ -69,7 +69,7 @@ const LoseScreen = () => {
             textStyle={styles.btnText}
           />
           <AnimatedButton
-            label="Sảnh chính"
+            label="Lobby"
             onPress={() => { leaveRoom(); router.dismissAll(); router.replace('/home'); }}
             variant="ghost"
             style={styles.actionBtn}

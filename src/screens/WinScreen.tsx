@@ -57,27 +57,27 @@ const WinScreen = () => {
 
         <Text style={styles.trophy}>🏆</Text>
         
-        <Text style={styles.title}>CHIẾN{'\n'}THẮNG!</Text>
+        <Text style={styles.title}>Victory!</Text>
 
         <View style={styles.answerBox}>
-          <Text style={styles.answerLabel}>Ai đó đoán đúng:</Text>
-          <Text style={styles.answerText}>Con Mèo</Text>
+          <Text style={styles.answerLabel}>Someone guessed correctly:</Text>
+          <Text style={styles.answerText}>The Cat</Text>
         </View>
 
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Text style={styles.statIcon}>⭐</Text>
-            <Text style={styles.statValue}>+50 Điểm</Text>
+            <Text style={styles.statValue}>+50 Points</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statIcon}>⏱️</Text>
-            <Text style={styles.statValue}>12 Giây</Text>
+            <Text style={styles.statValue}>12 Seconds</Text>
           </View>
         </View>
 
         <View style={styles.actions}>
           <AnimatedButton
-            label="Vẽ tiếp"
+            label="Play Again"
             onPress={() => { 
               leaveRoom(); 
               if (useGameStore.getState().isSinglePlayer) {
@@ -91,7 +91,7 @@ const WinScreen = () => {
             textStyle={styles.btnText}
           />
           <AnimatedButton
-            label="Sảnh chính"
+            label="Main Menu"
             onPress={() => { leaveRoom(); router.dismissAll(); router.replace('/home'); }}
             variant="ghost"
             style={styles.actionBtn}

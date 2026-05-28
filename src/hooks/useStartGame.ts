@@ -10,15 +10,15 @@ async function startGame(roomId: string, hostId: string) {
 
         // Kiểm tra quyền host
         if (data.hostId !== hostId) {
-            throw new Error('Chỉ chủ phòng mới được bắt đầu');
+            throw new Error('Only the host can start the game');
         }
 
         if (data.status !== 'waiting') {
-            throw new Error('Phòng đã bắt đầu rồi');
+            throw new Error('Room has already started');
         }
 
         if ((data.playerCount ?? 0) < 2) {
-            throw new Error('Cần ít nhất 2 người chơi');
+            throw new Error('At least 2 players are required to start the game');
         }
 
         // Snapshot playerCount tại thời điểm start

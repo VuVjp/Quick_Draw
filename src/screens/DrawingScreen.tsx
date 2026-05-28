@@ -115,7 +115,7 @@ const DrawingScreen = () => {
 
         const base64 = canvasRef.current?.getSnapshot();
         if (!base64) {
-          console.warn('Canvas trống hoặc chưa sẵn sàng');
+          console.warn('Canvas snapshot failed or is not ready');
           isInferencing.current = false;
           return;
         }
@@ -192,7 +192,7 @@ const DrawingScreen = () => {
           </TouchableOpacity>
 
           <View style={styles.wordLabelContainer}>
-            <Text style={styles.roundIndicator}>Vòng {currentRound}/{rounds} • HÃY VẼ:</Text>
+            <Text style={styles.roundIndicator}>Round {currentRound}/{rounds} • Let's drawing:</Text>
             <Text style={styles.wordText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{currentWord}</Text>
           </View>
 
@@ -223,7 +223,7 @@ const DrawingScreen = () => {
             {/* Waiting Overlay */}
             {phase === 'waiting' && (
               <View style={styles.waitingOverlay}>
-                <Text style={styles.waitingTitle}>Đang chờ người chơi...</Text>
+                <Text style={styles.waitingTitle}>Waiting for players...</Text>
                 <Text style={styles.waitingCount}>{players.length} / {maxPlayers}</Text>
 
                 <View style={styles.waitingPlayers}>
@@ -235,7 +235,7 @@ const DrawingScreen = () => {
                 </View>
 
                 <AnimatedButton
-                  label="Bắt đầu ngay 🚀"
+                  label="Start Game 🚀"
                   onPress={() => {
                     startGame();
                     setTimeout(() => startRound(), 100);

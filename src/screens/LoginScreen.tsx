@@ -1,17 +1,23 @@
 // src/screens/LoginScreen.tsx
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Modal, KeyboardAvoidingView,
-  Platform, TextInput,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Colors } from '../theme/colors';
-import { FontFamily, FontSize } from '../theme/typography';
-import { Spacing, Radius } from '../theme/spacing';
 import AnimatedButton from '../components/AnimatedButton';
 import NotebookBackground from '../components/NotebookBackground';
 import { useAuth } from '../hooks/useAuth';
+import { Colors } from '../theme/colors';
+import { Radius, Spacing } from '../theme/spacing';
+import { FontFamily, FontSize } from '../theme/typography';
 
 const LoginScreen = () => {
   const router = useRouter();
@@ -42,7 +48,7 @@ const LoginScreen = () => {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backBtnText}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Đăng nhập</Text>
+        <Text style={styles.title}>Login</Text>
         <View style={{ width: 44 }} />
       </View>
 
@@ -51,7 +57,7 @@ const LoginScreen = () => {
         <View style={styles.illustrationBox}>
           <Text style={styles.illustrationEmoji}>🎨</Text>
           <Text style={styles.illustrationText}>Quick Draw!</Text>
-          <Text style={styles.illustrationHint}>Vẽ nhanh, đoán giỏi</Text>
+          <Text style={styles.illustrationHint}>Draw fast, guess well</Text>
         </View>
 
         {/* Error */}
@@ -72,19 +78,19 @@ const LoginScreen = () => {
               activeOpacity={0.85}
             >
               <Text style={styles.googleIcon}>G</Text>
-              <Text style={styles.googleBtnText}>Đăng nhập với Google</Text>
+              <Text style={styles.googleBtnText}>Login with Google</Text>
             </TouchableOpacity>
 
             {/* Divider */}
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>hoặc</Text>
+              <Text style={styles.dividerText}>or</Text>
               <View style={styles.dividerLine} />
             </View>
 
             {/* Guest */}
             <AnimatedButton
-              label="Chơi với tư cách khách 👤"
+              label="Play as Guest 👤"
               onPress={handleGuestPress}
               variant="ghost"
               style={styles.guestBtn}
@@ -93,7 +99,7 @@ const LoginScreen = () => {
         )}
 
         <Text style={styles.guestNote}>
-          * Tài khoản khách không lưu điểm sau khi thoát app
+          * Guest accounts do not save scores after exiting the app
         </Text>
       </View>
 
@@ -109,8 +115,8 @@ const LoginScreen = () => {
           style={styles.modalOverlay}
         >
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Tên của bạn là gì?</Text>
-            <Text style={styles.modalHint}>Tên hiển thị trong game</Text>
+            <Text style={styles.modalTitle}>What is your name?</Text>
+            <Text style={styles.modalHint}>Ingame name</Text>
 
             <TextInput
               style={styles.nameInput}
@@ -125,13 +131,13 @@ const LoginScreen = () => {
 
             <View style={styles.modalButtons}>
               <AnimatedButton
-                label="Huỷ"
+                label="Cancel"
                 onPress={() => setGuestModalVisible(false)}
                 variant="ghost"
                 style={styles.modalBtn}
               />
               <AnimatedButton
-                label="Vào game →"
+                label="Join Game →"
                 onPress={handleGuestConfirm}
                 disabled={!guestName.trim() || loading}
                 variant="primary"

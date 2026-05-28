@@ -65,7 +65,7 @@ const HomeScreen = () => {
             height={240}
           />
           <Text style={styles.titleText}>Quick Draw!</Text>
-          <Text style={styles.subtitleText}>Thử tài hoạ sĩ</Text>
+          <Text style={styles.subtitleText}>Test your drawing skills!</Text>
         </Animated.View>
 
         {/* Buttons */}
@@ -74,7 +74,7 @@ const HomeScreen = () => {
           style={styles.buttonStack}
         >
           <AnimatedButton
-            label="Chơi Đơn"
+            label="Single Player"
             onPress={() => {
               router.push('/single-player-config');
             }}
@@ -82,7 +82,7 @@ const HomeScreen = () => {
             fullWidth
           />
           <AnimatedButton
-            label="Chơi Online"
+            label="Online"
             onPress={handleOnlinePress}
             variant="primary"
             fullWidth

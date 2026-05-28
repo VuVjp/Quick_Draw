@@ -15,7 +15,7 @@ export type Player = {
 };
 
 export type GamePhase = 'waiting' | 'choosing' | 'drawing' | 'roundEnd' | 'gameEnd';
-export type Difficulty = 'Dễ' | 'Trung bình' | 'Khó';
+export type Difficulty = 'Easy' | 'Medium' | 'Hard';
 
 export type RoomInfo = {
   id: string;
@@ -80,7 +80,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   rounds: 5,
   currentRound: 0,
   drawTime: 80,
-  difficulty: 'Trung bình',
+  difficulty: 'Medium',
   peerReviewEnabled: false,
   isSinglePlayer: false,
   isPrivate: false,

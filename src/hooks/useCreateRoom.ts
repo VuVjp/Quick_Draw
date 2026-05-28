@@ -87,7 +87,7 @@ export function useCreateRoom() {
 
         } catch (e: any) {
             console.error('[createRoom]', e);
-            setError(e.message ?? 'Không thể tạo phòng');
+            setError(e.message ?? 'Cannot create room');
             return null;
         } finally {
             setLoading(false);

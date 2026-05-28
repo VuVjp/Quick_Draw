@@ -44,7 +44,7 @@ const RoomScreen = () => {
       // Update local Zustand state before navigating
       const playerList = Object.entries(players).map(([playerId, pData]) => ({
         id: playerId,
-        name: pData.displayName || 'Người chơi',
+        name: pData.displayName || 'Player',
         avatar: playerId === room.hostId ? '👑' : '👾',
         xp: 1000,
         level: 1,
@@ -57,13 +57,13 @@ const RoomScreen = () => {
       // Join room in state
       useGameStore.getState().setRoomConfig({
         roomId,
-        roomName: room.roomName || 'Phòng Online',
+        roomName: room.roomName || 'Online Room',
         players: playerList,
         maxPlayers: room.maxPlayers || 8,
         rounds: room.totalRounds || 5,
         currentRound: 1,
         drawTime: room.roundDurationSecs || 80,
-        difficulty: room.difficulty as any || 'Trung bình',
+        difficulty: room.difficulty as any || 'Medium',
         isSinglePlayer: false,
         phase: 'drawing',
         currentDrawerId: room.hostId,
@@ -76,7 +76,7 @@ const RoomScreen = () => {
   // ─── Kick players if room is deleted ───
   useEffect(() => {
     if (room?.status === 'deleted') {
-      Alert.alert('Phòng đã giải tán', 'Chủ phòng đã xoá phòng này.', [
+      Alert.alert('Room Deleted', 'The host has deleted this room.', [
         { text: 'OK', onPress: () => router.replace('/lobby') }
       ]);
     }
@@ -87,7 +87,7 @@ const RoomScreen = () => {
       <NotebookBackground>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primaryYellow} />
-          <Text style={styles.loadingText}>Đang kết nối phòng chờ...</Text>
+          <Text style={styles.loadingText}>Connecting to waiting room...</Text>
         </View>
       </NotebookBackground>
     );
@@ -114,11 +114,11 @@ const RoomScreen = () => {
   const confirmLeaveOrDelete = () => {
     if (isHost) {
       Alert.alert(
-        'Xoá phòng',
-        'Bạn là chủ phòng. Việc thoát sẽ xoá phòng và đẩy tất cả người chơi ra ngoài. Bạn có chắc chắn?',
+        'Delete Room',
+        'You are the host of this room. Leaving will delete the room and kick all players out. Are you sure?',
         [
-          { text: 'Hủy', style: 'cancel' },
-          { text: 'Xoá phòng', style: 'destructive', onPress: performDeleteRoom },
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete Room', style: 'destructive', onPress: performDeleteRoom },
         ]
       );
     } else {
@@ -151,7 +151,7 @@ const RoomScreen = () => {
   const handleShareCode = async () => {
     try {
       await Share.share({
-        message: `Vẽ cùng tôi trên Quick Draw nhé! Nhập mã phòng: ${room.code}`,
+        message: `Draw with me on Quick Draw! Enter room code: ${room.code}`,
       });
     } catch (error) {
       console.error('Error sharing code:', error);
@@ -168,7 +168,7 @@ const RoomScreen = () => {
           </TouchableOpacity>
           <View style={styles.headerTitleBlock}>
             <Text style={styles.roomName}>{room.roomName}</Text>
-            <Text style={styles.subtitle}>Phòng chờ trực tuyến</Text>
+            <Text style={styles.subtitle}>Online Waiting Room</Text>
           </View>
           <View style={{ width: 44 }} />
         </Animated.View>
@@ -177,11 +177,11 @@ const RoomScreen = () => {
         <Animated.View entering={FadeInDown.delay(100)} style={styles.infoCardWrapper}>
           <PaperCard variant="yellow" style={styles.infoCard}>
             <View style={styles.codeSection}>
-              <Text style={styles.codeLabel}>MÃ PHÒNG</Text>
+              <Text style={styles.codeLabel}>ROOM CODE</Text>
               <Text style={styles.codeText}>{room.code}</Text>
             </View>
             <TouchableOpacity onPress={handleShareCode} style={styles.shareBtn}>
-              <Text style={styles.shareBtnText}>Chia sẻ 🔗</Text>
+              <Text style={styles.shareBtnText}>Share 🔗</Text>
             </TouchableOpacity>
           </PaperCard>
         </Animated.View>
@@ -193,13 +193,13 @@ const RoomScreen = () => {
             <Text style={styles.configText}>{room.roundDurationSecs}s</Text>
             <Text style={styles.configDivider}>|</Text>
             <PencilRulerIcon width={16} height={16} color={Colors.warmBlack} />
-            <Text style={styles.configText}>{room.totalRounds} vòng</Text>
+            <Text style={styles.configText}>{room.totalRounds} rounds</Text>
           </View>
         </Animated.View>
 
         {/* Player List */}
         <View style={styles.listSection}>
-          <Text style={styles.listTitle}>Người chơi ({playerArray.length}/{room.maxPlayers})</Text>
+          <Text style={styles.listTitle}>Players ({playerArray.length}/{room.maxPlayers})</Text>
           
           <FlatList
             data={playerArray}
@@ -217,13 +217,13 @@ const RoomScreen = () => {
                       <View>
                         <Text style={styles.playerName}>{item.displayName}</Text>
                         <Text style={styles.playerStatus}>
-                          {isPlayerHost ? 'Chủ phòng' : 'Người chơi'}
+                          {isPlayerHost ? 'Room Host' : 'Player'}
                         </Text>
                       </View>
                     </View>
                     <View style={styles.onlineBadge}>
                       <View style={styles.onlineDot} />
-                      <Text style={styles.onlineText}>Sẵn sàng</Text>
+                      <Text style={styles.onlineText}>Ready</Text>
                     </View>
                   </PaperCard>
                 </Animated.View>
@@ -240,13 +240,13 @@ const RoomScreen = () => {
           {isHost ? (
             <View style={styles.hostFooter}>
               <AnimatedButton
-                label="Huỷ phòng"
+                label="Delete Room"
                 onPress={confirmLeaveOrDelete}
                 variant="danger"
                 style={styles.flex1}
               />
               <AnimatedButton
-                label="Bắt đầu ngay"
+                label="Start Game"
                 onPress={handleStartGame}
                 variant="primary"
                 style={styles.flex2}
@@ -256,7 +256,7 @@ const RoomScreen = () => {
           ) : (
             <View style={styles.guestFooter}>
               <ActivityIndicator size="small" color={Colors.primaryYellow} />
-              <Text style={styles.guestWaitText}>Đang chờ chủ phòng bắt đầu...</Text>
+              <Text style={styles.guestWaitText}>Waiting for the room host to start the game...</Text>
             </View>
           )}
         </Animated.View>

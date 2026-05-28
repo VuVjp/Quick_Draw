@@ -23,7 +23,7 @@ const InGameRanking = () => {
         onPress={() => setExpanded(!expanded)}
         activeOpacity={0.7}
       >
-        <Text style={styles.headerTitle}>🏆 Xếp hạng</Text>
+        <Text style={styles.headerTitle}>🏆 Leaderboard</Text>
         <Text style={styles.expandIcon}>{expanded ? '▼' : '▶'}</Text>
       </TouchableOpacity>
 

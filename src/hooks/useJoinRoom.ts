@@ -19,7 +19,7 @@ export function useJoinRoom() {
                 .get();
 
             if (!snap.exists()) {
-                setError('Không tìm thấy phòng hoặc phòng đã bắt đầu');
+                setError('Room not found or already started');
                 return null;
             }
 
@@ -34,19 +34,19 @@ export function useJoinRoom() {
 
                 // Kiểm tra status
                 if (roomData.status !== 'waiting') {
-                    throw new Error('Phòng đã bắt đầu hoặc kết thúc');
+                    throw new Error('Room has already started or ended');
                 }
 
                 // Dùng playerCount thay vì query sub-collection
                 if ((roomData.playerCount ?? 0) >= roomData.maxPlayers) {
                     console.log('Player count:', roomData.playerCount, 'Max players:', roomData.maxPlayers);
-                    throw new Error('Phòng đã đầy');
+                    throw new Error('Room is full');
                 }
 
                 // Kiểm tra đã ở trong phòng chưa
                 const existing = await t.get(playerRef);
                 if (existing.exists()) {
-                    throw new Error('Bạn đã ở trong phòng này');
+                    throw new Error('You are already in this room');
                 }
 
                 // Thêm player
@@ -68,7 +68,7 @@ export function useJoinRoom() {
 
         } catch (e: any) {
             console.error('[joinRoomByCode]', e);
-            setError(e.message ?? 'Không thể vào phòng');
+            setError(e.message ?? 'Cannot join room');
             return null;
         } finally {
             setLoading(false);
