@@ -17,26 +17,32 @@ type Props = {
 const SettingsModal = ({ visible, onClose }: Props) => {
   const soundEnabled = useUserStore((s) => s.soundEnabled);
   const toggleSound = useUserStore((s) => s.toggleSound);
-  const hapticsEnabled = useUserStore((s) => s.hapticsEnabled);
-  const toggleHaptics = useUserStore((s) => s.toggleHaptics);
   const bgmVolume = useUserStore((s) => s.bgmVolume);
   const setBgmVolume = useUserStore((s) => s.setBgmVolume);
 
+  const [isMuted, setIsMuted] = React.useState(false);
+
   if (!visible) return null;
 
-  const handleToggleSound = () => {
+  const handleToggleMute = () => {
     playClick();
-    toggleSound();
-    if (soundEnabled) {
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    if (newMuted) {
       pauseBgm();
     } else {
-      playBgm();
+      if (bgmVolume > 0) playBgm();
     }
   };
 
-  const handleVolumeChange = (newVol: number) => {
+  const handleVolumeChange = (val: number) => {
+    const newVol = val / 100;
     setBgmVolume(newVol);
     setStoreBgmVolume(newVol);
+    if (isMuted && newVol > 0) {
+      setIsMuted(false);
+      playBgm();
+    }
   };
 
   const handleClose = () => {
@@ -47,41 +53,28 @@ const SettingsModal = ({ visible, onClose }: Props) => {
   return (
     <Modal transparent visible={visible} animationType="fade">
       <View style={styles.overlay}>
-        <Animated.View entering={SlideInDown.duration(400).springify()} style={styles.modalContent}>
+        <Animated.View style={styles.modalContent}>
           <Text style={styles.title}>Cài Đặt</Text>
           
           <View style={styles.settingRow}>
-            <Text style={styles.label}>Hiệu ứng âm thanh (SFX)</Text>
+            <Text style={styles.label}>Tắt tiếng</Text>
             <TouchableOpacity 
-              style={[styles.toggleBtn, !soundEnabled && styles.toggleBtnOff]} 
-              onPress={handleToggleSound}
+              style={[styles.toggleBtn, isMuted && styles.toggleBtnOff]} 
+              onPress={handleToggleMute}
             >
-              <Text style={styles.toggleText}>{soundEnabled ? 'BẬT' : 'TẮT'}</Text>
+              <Text style={styles.toggleText}>{isMuted ? 'BẬT (Đã Tắt)' : 'TẮT (Đang Mở)'}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.settingRow}>
-            <Text style={styles.label}>Hiệu ứng rung</Text>
-            <TouchableOpacity 
-              style={[styles.toggleBtn, !hapticsEnabled && styles.toggleBtnOff]} 
-              onPress={() => {
-                playClick();
-                toggleHaptics();
-              }}
-            >
-              <Text style={styles.toggleText}>{hapticsEnabled ? 'BẬT' : 'TẮT'}</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.settingRow}>
-            <Text style={styles.label}>Nhạc nền</Text>
+            <Text style={styles.label}>Âm lượng</Text>
             <View style={styles.sliderContainer}>
               <Slider
                 style={styles.slider}
-                minimumValue={0}
-                maximumValue={1}
-                step={0.01}
-                value={bgmVolume}
+                minimumValue={1}
+                maximumValue={100}
+                step={1}
+                value={Math.round(bgmVolume * 100)}
                 onValueChange={handleVolumeChange}
                 minimumTrackTintColor={Colors.primaryYellow}
                 maximumTrackTintColor={Colors.softGray}
@@ -89,6 +82,22 @@ const SettingsModal = ({ visible, onClose }: Props) => {
               />
               <Text style={styles.volText}>{Math.round(bgmVolume * 100)}</Text>
             </View>
+          </View>
+
+          <View style={styles.divider} />
+          <Text style={styles.sectionTitle}>Cài đặt thêm</Text>
+
+          <View style={styles.settingRow}>
+            <Text style={styles.label}>SFX (Âm thanh vẽ)</Text>
+            <TouchableOpacity 
+              style={[styles.toggleBtn, !soundEnabled && styles.toggleBtnOff]} 
+              onPress={() => {
+                playClick();
+                toggleSound();
+              }}
+            >
+              <Text style={styles.toggleText}>{soundEnabled ? 'BẬT' : 'TẮT'}</Text>
+            </TouchableOpacity>
           </View>
 
           <AnimatedButton
@@ -140,6 +149,19 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.lg,
     color: Colors.warmBlack,
+  },
+  divider: {
+    height: 2,
+    backgroundColor: Colors.softGray,
+    marginVertical: Spacing.md,
+    opacity: 0.5,
+  },
+  sectionTitle: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.lg,
+    color: Colors.warmBlack,
+    opacity: 0.7,
+    marginBottom: Spacing.sm,
   },
   toggleBtn: {
     backgroundColor: Colors.primaryYellow,

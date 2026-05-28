@@ -229,7 +229,8 @@ const RoomScreen = () => {
                 </Animated.View>
               );
             }}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={true}
+            indicatorStyle="black"
             ItemSeparatorComponent={() => <View style={{ height: Spacing.md }} />}
           />
         </View>

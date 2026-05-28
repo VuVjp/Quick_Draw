@@ -47,6 +47,7 @@ type GameStore = {
   currentDrawerId: string | null;
   timeLeft: number;
   roundDrawing: any[]; // We will use StrokeRecord[] but use any[] here to avoid circular dependency if not imported or just import it
+  originalCanvasSize: { width: number, height: number } | null;
   lastRoundScores: Record<string, number>;
 
   // Lobby
@@ -57,7 +58,7 @@ type GameStore = {
   leaveRoom: () => void;
   startGame: () => void;
   startRound: () => void;
-  endRound: (scores: Record<string, number>, drawing: any[]) => void;
+  endRound: (scores: Record<string, number>, drawing: any[], canvasSize?: { width: number, height: number }) => void;
   endGame: () => void;
   setPhase: (phase: GamePhase) => void;
   setTimeLeft: (t: number) => void;
@@ -87,8 +88,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   currentWord: '',
   wordHint: '',
   currentDrawerId: null,
-  timeLeft: 80,
+  timeLeft: 0,
   roundDrawing: [],
+  originalCanvasSize: null,
   lastRoundScores: {},
   availableRooms: [
     { id: '1', name: 'Doodle to Win ', players: 4, maxPlayers: 8, color: 'blue' },
@@ -148,10 +150,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ phase: 'drawing', currentWord: word, wordHint: '', timeLeft: drawTime });
   },
 
-  endRound: (scores, drawing) =>
+  endRound: (scores, drawing, canvasSize) =>
     set((state) => ({
       phase: 'roundEnd',
       roundDrawing: drawing,
+      originalCanvasSize: canvasSize || null,
       lastRoundScores: scores,
       players: state.players.map((p) => ({
         ...p,

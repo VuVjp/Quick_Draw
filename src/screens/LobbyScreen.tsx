@@ -177,7 +177,8 @@ const LobbyScreen = () => {
         renderItem={({ item, index }) => <RoomCard room={item} index={index} onJoin={handleJoin} />}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
+        indicatorStyle="black"
         ItemSeparatorComponent={() => <View style={{ height: Spacing.xl }} />}
       />
       <Modal

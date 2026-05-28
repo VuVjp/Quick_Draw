@@ -4,7 +4,7 @@ import { Canvas, Path, Group, Skia, PaintStyle, StrokeCap, StrokeJoin } from '@s
 import { Dimensions } from 'react-native';
 
 const { width: screenWidth } = Dimensions.get('window');
-const ORIGINAL_CANVAS_WIDTH = screenWidth - 48; // width - Spacing.xl * 2
+const FALLBACK_CANVAS_WIDTH = screenWidth - 48; // width - Spacing.xl * 2
 
 type StrokeRecord = {
   pathData: string;
@@ -16,9 +16,10 @@ type Props = {
   width: number;
   height: number;
   strokes: StrokeRecord[];
+  originalCanvasSize?: { width: number, height: number } | null;
 };
 
-const ReadOnlyCanvas = ({ width, height, strokes }: Props) => {
+const ReadOnlyCanvas = ({ width, height, strokes, originalCanvasSize }: Props) => {
   // Convert StrokeRecords into ready-to-render objects
   const renderedPaths = useMemo(() => {
     return strokes.map((stroke, index) => {
@@ -32,12 +33,16 @@ const ReadOnlyCanvas = ({ width, height, strokes }: Props) => {
     }).filter(s => s.path !== null);
   }, [strokes]);
 
-  // Calculate uniform scale based on width comparison
-  const scale = width / ORIGINAL_CANVAS_WIDTH;
+  // Calculate uniform scale based on both width and height to ensure the drawing fits
+  const origW = originalCanvasSize?.width || FALLBACK_CANVAS_WIDTH;
+  const origH = originalCanvasSize?.height || (FALLBACK_CANVAS_WIDTH * 1.5); // Fallback ratio
+
+  const scaleX = width / origW;
+  const scaleY = height / origH;
 
   return (
     <Canvas style={[styles.canvas, { width, height }]} pointerEvents="none">
-      <Group transform={[{ scale }]}>
+      <Group transform={[{ scaleX }, { scaleY }]}>
         {renderedPaths.map((item) => (
           <Path
             key={item.id}

@@ -33,13 +33,13 @@ export function useDrawingInference(peerReviewMode: boolean) {
 
         let acceptedLabel = null; // Default to null, will be set if any prediction meets criteria
         predictions.forEach((p) => {
-          if (p.score > 0.4 && p.label === targetTopic) {
+          if (p.score >= 0.4 && p.label === targetTopic) {
             acceptedLabel = p.label;
           }
         });
 
-        const accepted = acceptedLabel ? acceptedLabel :
-          top1.label === targetTopic;
+        // Also accept if it is top 1 and has at least a small confidence (e.g. 0.2)
+        const accepted = acceptedLabel !== null || (top1.label === targetTopic && top1.score >= 0.2);
 
         return {
           label: acceptedLabel ?? top1.label,

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Dimensions, StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import AnimatedButton from '../components/AnimatedButton';
 import AuthModal from '../components/AuthModal';
@@ -21,6 +22,7 @@ const { width, height } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [showAuth, setShowAuth] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const startSinglePlayer = useGameStore((s) => s.startSinglePlayer);
@@ -43,6 +45,22 @@ const HomeScreen = () => {
   return (
     <NotebookBackground>
       <FloatingDoodles />
+      
+      {/* Settings Button - wrapped safely */}
+      <SafeAreaView style={styles.settingsWrapper} edges={['top', 'right']}>
+        <TouchableOpacity 
+          style={styles.settingsBtn} 
+          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+          onPress={() => {
+            console.log('Settings button tapped!');
+            playClick();
+            setShowSettings(true);
+          }}
+        >
+          <CogIcon width={28} height={28} fill={Colors.warmBlack} />
+        </TouchableOpacity>
+      </SafeAreaView>
+
       <View style={styles.centre}>
         <Animated.View 
           entering={ZoomIn.duration(600).springify().damping(12).stiffness(100)} 
@@ -87,17 +105,6 @@ const HomeScreen = () => {
         visible={showSettings}
         onClose={() => setShowSettings(false)}
       />
-
-      {/* Settings Button */}
-      <TouchableOpacity 
-        style={styles.settingsBtn} 
-        onPress={() => {
-          playClick();
-          setShowSettings(true);
-        }}
-      >
-        <CogIcon width={28} height={28} fill={Colors.warmBlack} />
-      </TouchableOpacity>
     </NotebookBackground>
   );
 };
@@ -137,10 +144,14 @@ const styles = StyleSheet.create({
     color: Colors.border,
     marginTop: 0,
   },
-  settingsBtn: {
+  settingsWrapper: {
     position: 'absolute',
-    top: 50,
+    top: Spacing.md,
     right: Spacing.xl,
+    zIndex: 9999,
+    elevation: 9999,
+  },
+  settingsBtn: {
     width: 44,
     height: 44,
     borderRadius: Radius.full,

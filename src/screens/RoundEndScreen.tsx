@@ -20,6 +20,7 @@ const RoundEndScreen = () => {
   const rounds = useGameStore((s) => s.rounds);
   const players = useGameStore((s) => s.players);
   const roundDrawing = useGameStore((s) => s.roundDrawing);
+  const originalCanvasSize = useGameStore((s) => s.originalCanvasSize);
   const startRound = useGameStore((s) => s.startRound);
   const endGame = useGameStore((s) => s.endGame);
   const lastRoundScores = useGameStore((s) => s.lastRoundScores);
@@ -97,7 +98,12 @@ const RoundEndScreen = () => {
             }}
           >
             {canvasSize.width > 0 && (
-              <ReadOnlyCanvas width={canvasSize.width} height={canvasSize.height} strokes={roundDrawing} />
+              <ReadOnlyCanvas 
+                width={canvasSize.width} 
+                height={canvasSize.height} 
+                strokes={roundDrawing} 
+                originalCanvasSize={originalCanvasSize}
+              />
             )}
             <View style={styles.artworkAuthorTag}>
               <Text style={styles.artworkAuthorText}>{top1Player?.avatar} {top1Player?.name}</Text>
