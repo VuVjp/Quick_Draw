@@ -11,6 +11,7 @@ import NotebookBackground from '../components/NotebookBackground';
 import { useCreateRoom } from '../hooks/useCreateRoom';
 import { playClick } from '../store/useAudioStore';
 import { useHaptics } from '../hooks/useHaptics';
+import { useUserStore } from '../store/useUserStore';
 
 const CreateRoomScreen = () => {
   const router = useRouter();
@@ -29,6 +30,7 @@ const CreateRoomScreen = () => {
   const { light } = useHaptics();
   const insets = useSafeAreaInsets();
   const { createRoom, loading } = useCreateRoom();
+  const session = useUserStore((s) => s.session);
 
   const handleCreate = async () => {
     // Vẫn giữ setRoomConfig cho local store
@@ -44,7 +46,7 @@ const CreateRoomScreen = () => {
 
     const result = await createRoom({
       hostId: session?.uid,           // TODO: thay bằng auth uid sau
-      hostName: 'Player 1',         // TODO: thay bằng tên thật sau
+      hostName: session?.displayName,         // TODO: thay bằng tên thật sau
       roomName,
       maxPlayers,
       totalRounds: rounds,
