@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useSharedValue, withTiming, runOnJS } from 'react-native-reanimated';
+import { useSharedValue, withTiming } from 'react-native-reanimated';
 import { useGameStore } from '../store/useGameStore';
 
 export const useTimer = (onTick?: (t: number) => void, onExpire?: () => void) => {
@@ -13,29 +13,38 @@ export const useTimer = (onTick?: (t: number) => void, onExpire?: () => void) =>
 
   useEffect(() => {
     timeRef.current = timeLeft;
-    progress.value = withTiming(timeLeft / 80, { duration: 500 });
+    progress.value = withTiming(Math.max(0, timeLeft) / 80, { duration: 500 });
   }, [timeLeft]);
 
   useEffect(() => {
     if (phase !== 'drawing') {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      return;
+    }
+
+    if (timeRef.current <= 0) {
+      setTimeLeft(0);
+      onExpire?.();
       return;
     }
 
     intervalRef.current = setInterval(() => {
-      const next = timeRef.current - 1;
+      const next = Math.max(0, timeRef.current - 1);
       timeRef.current = next;
       setTimeLeft(next);
       onTick?.(next);
 
       if (next <= 0) {
         if (intervalRef.current) clearInterval(intervalRef.current);
+        intervalRef.current = null;
         onExpire?.();
       }
     }, 1000);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = null;
     };
   }, [phase]);
 

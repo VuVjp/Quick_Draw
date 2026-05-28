@@ -2,6 +2,7 @@
 import { useCallback, useRef } from 'react';
 import { base64ToTensor } from '../utils/imageUtils';
 import { useTFLite } from './useTFLite';
+import firestore from '@react-native-firebase/firestore';
 
 const CONFIDENCE_THRESHOLD_STANDARD = 0.85;
 const CONFIDENCE_THRESHOLD_PEER_REVIEW = 0.90;
@@ -33,7 +34,7 @@ export function useDrawingInference(peerReviewMode: boolean) {
 
         let acceptedLabel = null; // Default to null, will be set if any prediction meets criteria
         predictions.forEach((p) => {
-          if (p.score >= 0.4 && p.label === targetTopic) {
+          if (p.score >= threshold && p.label === targetTopic) {
             acceptedLabel = p.label;
           }
         });
@@ -53,5 +54,25 @@ export function useDrawingInference(peerReviewMode: boolean) {
     [isReady, predict, peerReviewMode]
   );
 
-  return { runInference, isReady };
+  async function submitPendingResult(
+    roomId: string,
+    roundId: string,
+    drawerId: string,
+    aiLabel: string,
+    aiScore: number,
+    drawDurationMs: number,
+  ) {
+    await firestore()
+      .collection('rooms').doc(roomId)
+      .collection('pending_results').doc(roundId)
+      .set({
+        drawerId,
+        aiLabel,
+        aiScore,
+        drawDurationMs,
+        submittedAt: firestore.FieldValue.serverTimestamp(),
+        status: 'pending',
+      });
+  }
+  return { submitPendingResult, runInference, isReady };
 }

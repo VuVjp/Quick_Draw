@@ -1,19 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
-  Dimensions,
   TouchableOpacity,
   ActivityIndicator,
   Share,
   Alert,
   Image,
 } from 'react-native';
-import user from '../../assets/Icon/user.svg';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import firestore, { doc, collection, updateDoc, deleteDoc } from '@react-native-firebase/firestore';
+import firestore, { doc, updateDoc, deleteDoc } from '@react-native-firebase/firestore';
 import { db } from '../services/firebase';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useRoom } from '../hooks/useRoom';
@@ -27,19 +25,26 @@ import { Spacing, Radius, Shadow } from '../theme/spacing';
 
 import ClockIcon from '../../assets/Icon/clock.svg';
 import PencilRulerIcon from '../../assets/Icon/pencil-ruler.svg';
-
-const { width } = Dimensions.get('window');
+import { LABLES } from '../constants/words';
 
 const RoomScreen = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const roomId = id as string;
 
-  const { room, players, isDrawer, uid } = useRoom(roomId);
-  const joinRoom = useGameStore((s) => s.joinRoom);
+  const { room, players, uid } = useRoom(roomId);
+  const hasNavigatedToDrawingRef = useRef(false);
 
   // ─── Auto Navigate to Drawing screen when status changes to 'drawing' ───
   useEffect(() => {
+    if (room?.status !== 'drawing') {
+      hasNavigatedToDrawingRef.current = false;
+      return;
+    }
+
+    if (hasNavigatedToDrawingRef.current) return;
+    hasNavigatedToDrawingRef.current = true;
+
     if (room && room.status === 'drawing') {
       console.log('⚡ Room status is drawing, navigating to /drawing!');
 
@@ -50,12 +55,13 @@ const RoomScreen = () => {
         avatar: pData.avatar || 'user', // Default avatar
         xp: 1000,
         level: 1,
-        score: 0,
-        isDrawing: playerId === room.hostId, // First drawer is host usually
+        score: pData.score ?? 0,
+        bestDrawTime: pData.bestDrawTime,
+        isDrawing: playerId === room.currentDrawerId,
         isHost: playerId === room.hostId,
         color: playerId === room.hostId ? '#7B5EA7' : '#F4978E',
       }));
-
+ 
       // Join room in state
       useGameStore.getState().setRoomConfig({
         roomId,
@@ -63,17 +69,18 @@ const RoomScreen = () => {
         players: playerList,
         maxPlayers: room.maxPlayers || 8,
         rounds: room.totalRounds || 5,
-        currentRound: 1,
+        currentRound: room.currentRound || 1,
         drawTime: room.roundDurationSecs || 80,
         difficulty: room.difficulty as any || 'Trung bình',
         isSinglePlayer: false,
         phase: 'drawing',
-        currentDrawerId: room.hostId,
+        currentDrawerId: room.currentDrawerId || room.hostId,
+        currentWord: room.currentTopic || '',
       });
 
       router.replace('/drawing');
     }
-  }, [room, roomId, players]);
+  }, [room, roomId, players, router]);
 
   // ─── Kick players if room is deleted ───
   useEffect(() => {
@@ -82,7 +89,7 @@ const RoomScreen = () => {
         { text: 'OK', onPress: () => router.replace('/lobby') }
       ]);
     }
-  }, [room?.status]);
+  }, [room?.status, router]);
 
   if (!room || room.status === 'deleted') {
     return (
@@ -103,11 +110,34 @@ const RoomScreen = () => {
 
   const handleStartGame = async () => {
     try {
-      await updateDoc(doc(db, 'rooms', roomId), {
+      const randomTopic = LABLES[Math.floor(Math.random() * LABLES.length)];
+      const roomRef = firestore().collection('rooms').doc(roomId);
+      const roundRef = roomRef.collection('rounds').doc('round_1');
+
+      const batch = firestore().batch();
+      batch.update(roomRef, {
         status: 'drawing',
         currentDrawerId: room.hostId,
         currentRound: 1,
+        currentTopic: randomTopic,
+        roundStartedAt: firestore.FieldValue.serverTimestamp(),
+        roundCountdownStartedAt: null,
+        roundCountdownSecs: 5,
       });
+
+      batch.set(roundRef, {
+        drawerId: room.hostId,
+        topic: randomTopic,
+        status: 'pending',
+        aiLabel: null,
+        aiScore: null,
+        drawDurationMs: null,
+        score: null,
+        validatedAt: null,
+        validationSource: null,
+      }, { merge: true });
+
+      await batch.commit();
     } catch (err) {
       console.error('Error starting game:', err);
     }
@@ -220,8 +250,8 @@ const RoomScreen = () => {
                     <View style={styles.playerInfo}>
                       {/* <Text style={styles.avatarText}>{isPlayerHost ? '👑' : '👾'}</Text> */}
                       <Image
-                        source={item.avatar === 'user' ? require('../../assets/Icon/user.svg') : { uri: item.avatar }}
-                        style={{ width: 55, height: 55, borderRadius: 10 }}
+                        source={item.avatar === 'user' ? require('../../assets/images/anonymous.png') : { uri: item.avatar }}
+                        style={{ width: 40, height: 40, borderRadius: 10 }}
                       />
                       <View>
                         <Text style={styles.playerName}>{item.displayName}</Text>
@@ -288,9 +318,9 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   loadingText: {
-    fontFamily: FontFamily.accent,
+    fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.lg,
-    color: Colors.text,
+    color: Colors.warmBlack,
   },
   header: {
     flexDirection: 'row',
@@ -311,20 +341,20 @@ const styles = StyleSheet.create({
     ...Shadow.sketch,
   },
   backBtnText: {
-    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.caveatBold,
     fontSize: FontSize.xl,
-    color: Colors.text,
+    color: Colors.warmBlack,
   },
   headerTitleBlock: {
     alignItems: 'center',
   },
   roomName: {
-    fontFamily: FontFamily.accent,
+    fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.xl * 1.1,
-    color: Colors.text,
+    color: Colors.warmBlack,
   },
   subtitle: {
-    fontFamily: FontFamily.regular,
+    fontFamily: FontFamily.caveat,
     fontSize: FontSize.sm,
     color: Colors.softGray,
   },
@@ -342,15 +372,15 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   codeLabel: {
-    fontFamily: FontFamily.regular,
+    fontFamily: FontFamily.caveat,
     fontSize: FontSize.xs,
     color: Colors.softGray,
     letterSpacing: 1,
   },
   codeText: {
-    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.caveatBold,
     fontSize: FontSize.xxl,
-    color: Colors.text,
+    color: Colors.warmBlack,
     letterSpacing: 2,
   },
   shareBtn: {
@@ -363,9 +393,9 @@ const styles = StyleSheet.create({
     ...Shadow.sketch,
   },
   shareBtnText: {
-    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.caveatBold,
     fontSize: FontSize.sm,
-    color: Colors.text,
+    color: Colors.warmBlack,
   },
   configBanner: {
     backgroundColor: Colors.paperWhite,
@@ -384,12 +414,12 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   configText: {
-    fontFamily: FontFamily.regular,
+    fontFamily: FontFamily.caveat,
     fontSize: FontSize.sm,
     color: Colors.warmBlack,
   },
   configDivider: {
-    fontFamily: FontFamily.regular,
+    fontFamily: FontFamily.caveat,
     fontSize: FontSize.sm,
     color: Colors.softGray,
     marginHorizontal: 4,
@@ -398,9 +428,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listTitle: {
-    fontFamily: FontFamily.accent,
+    fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.md,
-    color: Colors.text,
+    color: Colors.warmBlack,
     marginBottom: Spacing.md,
   },
   listContainer: {
@@ -422,12 +452,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xxl,
   },
   playerName: {
-    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.caveatBold,
     fontSize: FontSize.md,
-    color: Colors.text,
+    color: Colors.warmBlack,
   },
   playerStatus: {
-    fontFamily: FontFamily.regular,
+    fontFamily: FontFamily.caveat,
     fontSize: FontSize.xs,
     color: Colors.softGray,
   },
@@ -447,7 +477,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50',
   },
   onlineText: {
-    fontFamily: FontFamily.regular,
+    fontFamily: FontFamily.caveat,
     fontSize: FontSize.xs,
     color: '#2E7D32',
   },
@@ -470,9 +500,9 @@ const styles = StyleSheet.create({
     ...Shadow.sketch,
   },
   guestWaitText: {
-    fontFamily: FontFamily.regular,
+    fontFamily: FontFamily.caveat,
     fontSize: FontSize.md,
-    color: Colors.text,
+    color: Colors.warmBlack,
   },
   hostFooter: {
     flexDirection: 'row',

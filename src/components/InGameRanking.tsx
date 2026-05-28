@@ -13,8 +13,14 @@ const InGameRanking = () => {
   // Không hiển thị nếu chỉ có 1 người (solo không có bot)
   if (players.length <= 1) return null;
 
-  // Sắp xếp người chơi theo điểm giảm dần
-  const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+  // Sắp xếp BXH: score giảm dần, nếu hòa thì bestDrawTime tăng dần
+  const sortedPlayers = [...players].sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+
+    const bestA = typeof a.bestDrawTime === 'number' ? a.bestDrawTime : Number.MAX_SAFE_INTEGER;
+    const bestB = typeof b.bestDrawTime === 'number' ? b.bestDrawTime : Number.MAX_SAFE_INTEGER;
+    return bestA - bestB;
+  });
 
   return (
     <View style={[styles.container, !expanded && styles.collapsed]}>

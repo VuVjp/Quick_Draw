@@ -1,9 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Button,
   Dimensions,
-  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -21,8 +19,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Spacing, Radius, Shadow } from '../theme/spacing';
 import DrawingCanvas, { DrawingCanvasRef } from '../canvas/DrawingCanvas';
 import BrushToolbar from '../canvas/BrushToolbar';
-import WordHint from '../components/WordHint';
-import PlayerAvatar from '../components/PlayerAvatar';
 import InGameRanking from '../components/InGameRanking';
 import { useGameStore } from '../store/useGameStore';
 import { useDrawingStore } from '../store/useDrawingStore';
@@ -30,6 +26,9 @@ import { useTimer } from '../hooks/useTimer';
 import NotebookBackground from '../components/NotebookBackground';
 import AnimatedButton from '../components/AnimatedButton';
 import { useDrawingInference } from '../hooks/useDrawingInference';
+import { auth } from '../services/firebase';
+import { useRoom } from '../hooks/useRoom';
+import { useHostGameMaster } from '../hooks/useHostGameMaster';
 
 
 const { width, height } = Dimensions.get('window');
@@ -80,19 +79,97 @@ const DrawingScreen = () => {
 
   const players = useGameStore((s) => s.players);
   const currentWord = useGameStore((s) => s.currentWord);
-  const wordHint = useGameStore((s) => s.wordHint);
   const currentDrawerId = useGameStore((s) => s.currentDrawerId);
   const currentRound = useGameStore((s) => s.currentRound);
   const rounds = useGameStore((s) => s.rounds);
   const phase = useGameStore((s) => s.phase);
   const startRound = useGameStore((s) => s.startRound);
-  const endGame = useGameStore((s) => s.endGame);
   const maxPlayers = useGameStore((s) => s.maxPlayers);
-  const addPlayer = useGameStore((s) => s.addPlayer);
   const startGame = useGameStore((s) => s.startGame);
   const isSinglePlayer = useGameStore((s) => s.isSinglePlayer);
   const isInferencing = useRef(false);
-  const { runInference, isReady } = useDrawingInference(false);
+  const roomId = useGameStore((s) => s.roomId);
+  const { room, players: roomPlayers, uid } = useRoom(roomId);
+  const { runInference, isReady, submitPendingResult } = useDrawingInference(false);
+  const submittedRoundRef = useRef<string | null>(null);
+  const lastHandledRoomStatusRef = useRef<string | null>(null);
+
+  useHostGameMaster(roomId ?? '', room?.roundDurationSecs ?? drawTime);
+
+  const saveDrawingToStore = useCallback((scores: Record<string, number>, strokes: any[], size?: { width: number, height: number }) => {
+    // End the round in game store
+    useGameStore.getState().endRound(scores, strokes, size);
+
+    // Clear local drawing data so it doesn't carry to the next round
+    useDrawingStore.getState().clearCanvas();
+    canvasRef.current?.clear();
+    router.replace('/round-end' as any);
+  }, [router]);
+
+  // Sync online room state into local game store for correct drawer permissions and leaderboard data.
+  useEffect(() => {
+    if (!roomId || !room) return;
+
+    const nextPhase = room.status === 'round_end'
+      ? 'roundEnd'
+      : room.status === 'drawing'
+        ? 'drawing'
+        : 'waiting';
+
+    const nextTimeLeft = room.status === 'drawing'
+      ? (room.roundDurationSecs || drawTime)
+      : 0;
+
+    const mappedPlayers = Object.entries(roomPlayers).map(([playerId, pData]: [string, any]) => ({
+      id: playerId,
+      name: pData.displayName || 'Người chơi',
+      avatar: pData.avatar || 'user',
+      xp: 0,
+      level: 1,
+      score: pData.score ?? 0,
+      isDrawing: playerId === room.currentDrawerId,
+      isHost: !!pData.isHost,
+      color: pData.isHost ? '#7B5EA7' : '#F4978E',
+    })).sort((a, b) => b.score - a.score);
+
+    useGameStore.getState().setRoomConfig({
+      players: mappedPlayers,
+      currentDrawerId: room.currentDrawerId,
+      currentWord: room.currentTopic || '',
+      currentRound: room.currentRound || 1,
+      rounds: room.totalRounds || rounds,
+      drawTime: room.roundDurationSecs || drawTime,
+      phase: nextPhase,
+      timeLeft: nextTimeLeft,
+      lastRoundScores: (room as any).lastRoundScores ?? {},
+    });
+
+    if (room.status === 'drawing') {
+      lastHandledRoomStatusRef.current = 'drawing';
+      return;
+    }
+
+    if (room.status === 'round_end') {
+      if (lastHandledRoomStatusRef.current === 'round_end') return;
+      lastHandledRoomStatusRef.current = 'round_end';
+      router.replace('/round-end' as any);
+      return;
+    }
+
+    if (room.status === 'game_end') {
+      if (lastHandledRoomStatusRef.current === 'game_end') return;
+      lastHandledRoomStatusRef.current = 'game_end';
+      const sorted = [...mappedPlayers].sort((a, b) => b.score - a.score);
+      const localUid = uid || auth.currentUser?.uid || '1';
+      const top1Id = sorted[0]?.id;
+      if (top1Id && top1Id === localUid) {
+        router.replace('/win' as any);
+      } else {
+        router.replace('/lose' as any);
+      }
+      return;
+    }
+  }, [roomId, room, roomPlayers, router, drawTime, rounds, uid]);
 
   useEffect(() => {
     // Run periodic inference only when model is ready
@@ -138,6 +215,28 @@ const DrawingScreen = () => {
           } else {
             // multiplayer handling
           }
+        } else {
+          if (!result || !result.accepted || !roomId) return;
+
+          const currentUid = uid || auth.currentUser?.uid;
+          if (!currentUid || currentUid !== currentDrawerId) return;
+
+          const roundId = `round_${currentRound}`;
+          if (submittedRoundRef.current === roundId) return;
+
+          const elapsedMs = Math.max(0, (drawTime - timeLeft) * 1000);
+
+          await submitPendingResult(
+            roomId,
+            roundId,
+            currentUid,
+            result.label,
+            result.score,
+            elapsedMs,
+          );
+
+          submittedRoundRef.current = roundId;
+          console.log('[Client] submitted pending result', { roomId, roundId, score: result.score, label: result.label });
         }
       } catch (e) {
         console.error('Inference error:', e);
@@ -147,19 +246,24 @@ const DrawingScreen = () => {
     }, 300); // moderate polling
 
     return () => clearInterval(interval);
-  }, [isReady, currentWord, isSinglePlayer, timeLeft, router]);
+  }, [
+    isReady,
+    currentWord,
+    isSinglePlayer,
+    timeLeft,
+    router,
+    roomId,
+    uid,
+    currentDrawerId,
+    currentRound,
+    drawTime,
+    submitPendingResult,
+    runInference,
+    canvasSize,
+    saveDrawingToStore,
+  ]);
 
-  const saveDrawingToStore = (scores: Record<string, number>, strokes: any[], size?: { width: number, height: number }) => {
-    // End the round in game store
-    useGameStore.getState().endRound(scores, strokes, size);
-
-    // Clear local drawing data so it doesn't carry to the next round
-    useDrawingStore.getState().clearCanvas();
-    canvasRef.current?.clear();
-    router.replace('/round-end' as any);
-  };
-
-  const { progress } = useTimer(undefined, () => {
+  useTimer(undefined, () => {
     // End round instead of end game
     const mockScores: Record<string, number> = {};
     players.forEach(p => {
@@ -176,7 +280,8 @@ const DrawingScreen = () => {
     saveDrawingToStore(mockScores, strokes, canvasSize);
   });
 
-  const isDrawer = currentDrawerId === '1'; // mock: local user is always player 1
+  const localUid = uid || auth.currentUser?.uid || '1';
+  const isDrawer = isSinglePlayer ? true : currentDrawerId === localUid;
 
   const handleUndo = useCallback(() => canvasRef.current?.undo(), []);
   const handleRedo = useCallback(() => canvasRef.current?.redo(), []);

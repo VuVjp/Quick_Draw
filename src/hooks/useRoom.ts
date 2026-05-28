@@ -15,11 +15,15 @@ export interface RoomState {
   peerReviewEnabled: boolean;
   roundStartedAt: Date | null;
   roundDurationSecs: number;
+  roundCountdownStartedAt: Date | null;
+  roundCountdownSecs: number;
   hostId: string;
   roomName: string;
   code: string;
   maxPlayers: number;
   difficulty: string;
+  mvpUid?: string | null;
+  lastRoundScores?: Record<string, number>;
 }
 
 export function useRoom(roomId?: string | null) {
@@ -49,11 +53,15 @@ export function useRoom(roomId?: string | null) {
         peerReviewEnabled: data.peerReviewEnabled ?? false,
         roundStartedAt: data.roundStartedAt?.toDate() ?? null,
         roundDurationSecs: data.roundDurationSecs ?? 80,
+        roundCountdownStartedAt: data.roundCountdownStartedAt?.toDate() ?? null,
+        roundCountdownSecs: data.roundCountdownSecs ?? 5,
         hostId: data.hostId ?? '',
         roomName: data.roomName ?? '',
         code: data.code ?? '',
         maxPlayers: data.maxPlayers ?? 8,
         difficulty: data.difficulty ?? 'Trung bình',
+        mvpUid: data.mvpUid ?? null,
+        lastRoundScores: data.lastRoundScores ?? {},
       });
     });
     return unsub;

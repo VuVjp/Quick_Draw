@@ -9,6 +9,8 @@ export type Player = {
   xp: number;
   level: number;
   score: number;
+  bestDrawTime?: number | null;
+  roundsWon?: number;
   isDrawing: boolean;
   isHost: boolean;
   color: string;
