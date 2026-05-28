@@ -77,33 +77,16 @@ const SinglePlayerConfigScreen = () => {
       </View>
 
       <View style={[styles.content, { flex: 1 }]}>
-        <View style={[styles.formCard, {
-          flex: 1,
-          paddingTop: 0,
-          paddingBottom: 0,
-          paddingLeft: 0,
-          paddingRight: 0,
-          overflow: 'hidden',
-          backgroundColor: '#FFFFFF',
-          gap: 0
-        }]}>
-          <View
-            style={{
-              paddingTop: Spacing.xl,
-              paddingBottom: Spacing.md,
-              paddingLeft: Spacing.xl,
-              paddingRight: Spacing.xl,
-              gap: Spacing.xl
-            }}
-          >
+        <View style={[styles.formCard, { flex: 1, padding: 0, overflow: 'hidden' }]}>
+          <View style={{ padding: Spacing.xl, gap: Spacing.xl }}>
             {renderOptionSelector('Số vòng', [3, 5, 10], rounds, setRounds)}
             {renderOptionSelector('Thời gian (giây)', [40, 60, 80, 120], drawTime, setDrawTime)}
           </View>
 
-          <View style={{ flex: 1, width: '100%' }}>
+          <View style={{ flex: 1, width: '100%', alignItems: 'center', justifyContent: 'flex-end' }}>
             <Image 
-              source={require('../../assets/images/MADE BY DSN.png')} 
-              style={{ width: '100%', height: '100%' }}
+              source={require('../../assets/images/anime.png')} 
+              style={{ width: '90%', height: '110%' }}
               resizeMode="contain"
             />
           </View>
