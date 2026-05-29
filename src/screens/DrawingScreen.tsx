@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Dimensions,
+  ActivityIndicator,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -28,6 +29,8 @@ import AnimatedButton from '../components/AnimatedButton';
 import { useDrawingInference } from '../hooks/useDrawingInference';
 import { auth } from '../services/firebase';
 import { useRoom } from '../hooks/useRoom';
+import { useSubmitDrawing } from '../hooks/useSubmitDrawing';
+import { useHostGameLifecycle } from '../hooks/useHostGameLifecycle';
 
 
 const { width, height } = Dimensions.get('window');
@@ -82,7 +85,6 @@ const DrawingScreen = () => {
   const currentRound = useGameStore((s) => s.currentRound);
   const rounds = useGameStore((s) => s.rounds);
   const phase = useGameStore((s) => s.phase);
-  const startRound = useGameStore((s) => s.startRound);
   const maxPlayers = useGameStore((s) => s.maxPlayers);
   const startGame = useGameStore((s) => s.startGame);
   const isSinglePlayer = useGameStore((s) => s.isSinglePlayer);
@@ -92,6 +94,12 @@ const DrawingScreen = () => {
   const { runInference, isReady } = useDrawingInference(false);
   const submittedRoundRef = useRef<string | null>(null);
   const lastHandledRoomStatusRef = useRef<string | null>(null);
+  const { submitDrawing, submitting, submitted, startTimer } = useSubmitDrawing(roomId ?? '', currentRound);
+  //const [localSubmitted, setLocalSubmitted] = useState(false);
+  const { finishRound } = useHostGameLifecycle(roomId);
+  const currentUid = uid || auth.currentUser?.uid || null;
+  const lastRoomSyncKeyRef = useRef<string>('');
+  const roundEndNavigateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // useHostGameMaster(roomId ?? '', room?.roundDurationSecs ?? drawTime);
 
@@ -105,11 +113,54 @@ const DrawingScreen = () => {
     router.replace('/round-end' as any);
   }, [router]);
 
+  const handleRoundExpire = useCallback(() => {
+    if (roomId) {
+      return;
+    }
+
+    const mockScores: Record<string, number> = {};
+    players.forEach(p => {
+      mockScores[p.id] = Math.floor(Math.random() * 50);
+    });
+
+    if (useGameStore.getState().isSinglePlayer) {
+      mockScores['1'] = 45 + Math.floor(Math.random() * 15);
+    }
+
+    const strokes = useDrawingStore.getState().strokeHistory;
+    saveDrawingToStore(mockScores, strokes, canvasSize);
+  }, [canvasSize, players, roomId, saveDrawingToStore]);
+
+  const clearRoundEndNavigateTimer = useCallback(() => {
+    if (roundEndNavigateTimerRef.current) {
+      clearTimeout(roundEndNavigateTimerRef.current);
+      roundEndNavigateTimerRef.current = null;
+    }
+  }, []);
+
   // Sync online room state into local game store for correct drawer permissions and leaderboard data.
   useEffect(() => {
+    if (isSinglePlayer) return;
     if (!roomId || !room) return;
 
-    const nextPhase = room.status === 'round_end'
+    const roomSyncKey = [
+      room.status,
+      room.currentRound,
+      room.currentDrawerId,
+      room.currentTopic,
+      room.roundDurationSecs,
+      room.totalRounds,
+      JSON.stringify(room.lastRoundScores ?? {}),
+      Object.entries(roomPlayers)
+        .map(([playerId, player]) => `${playerId}:${player.score ?? 0}:${player.isHost ? 1 : 0}`)
+        .sort()
+        .join('|'),
+    ].join('::');
+
+    if (lastRoomSyncKeyRef.current === roomSyncKey) return;
+    lastRoomSyncKeyRef.current = roomSyncKey;
+
+    const nextPhase = room.status === 'round_end' || room.status === 'round_scoring'
       ? 'roundEnd'
       : room.status === 'drawing'
         ? 'drawing'
@@ -144,14 +195,38 @@ const DrawingScreen = () => {
     });
 
     if (room.status === 'drawing') {
+      clearRoundEndNavigateTimer();
       lastHandledRoomStatusRef.current = 'drawing';
+
+      // Clear any previous strokes to avoid immediate inference when a new round starts
+      try {
+        useDrawingStore.getState().clearCanvas();
+        canvasRef.current?.clear();
+      } catch (e) {
+        console.warn('Failed to clear canvas on round start', e);
+      }
+
+      // Reset submitted flag for the new round and inference guard
+      submittedRoundRef.current = null;
+      isInferencing.current = false;
+
+      startTimer();
       return;
     }
 
     if (room.status === 'round_end') {
       if (lastHandledRoomStatusRef.current === 'round_end') return;
       lastHandledRoomStatusRef.current = 'round_end';
-      router.replace('/round-end' as any);
+      clearRoundEndNavigateTimer();
+      roundEndNavigateTimerRef.current = setTimeout(() => {
+        router.replace('/round-end' as any);
+      }, 1000);
+      return;
+    }
+
+    if (room.status === 'round_scoring') {
+      clearRoundEndNavigateTimer();
+      lastHandledRoomStatusRef.current = 'round_scoring';
       return;
     }
 
@@ -168,7 +243,13 @@ const DrawingScreen = () => {
       }
       return;
     }
-  }, [roomId, room, roomPlayers, router, drawTime, rounds, uid]);
+  }, [clearRoundEndNavigateTimer, roomId, room, roomPlayers, router, drawTime, rounds, uid, startTimer]);
+
+  useEffect(() => {
+    return () => {
+      clearRoundEndNavigateTimer();
+    };
+  }, [clearRoundEndNavigateTimer]);
 
   useEffect(() => {
     // Run periodic inference only when model is ready
@@ -211,8 +292,6 @@ const DrawingScreen = () => {
               : { '1': 0 };
             saveDrawingToStore(scores, strokes, canvasSize);
             router.replace('/round-end' as any);
-          } else {
-            // multiplayer handling
           }
         } else {
           if (!result || !result.accepted || !roomId) return;
@@ -223,17 +302,11 @@ const DrawingScreen = () => {
           const roundId = `round_${currentRound}`;
           if (submittedRoundRef.current === roundId) return;
 
-          const elapsedMs = Math.max(0, (drawTime - timeLeft) * 1000);
-
-          // await submitPendingResult(
-          //   roomId,
-          //   roundId,
-          //   currentUid,
-          //   result.label,
-          //   result.score,
-          //   elapsedMs,
-          // );
-
+          await submitDrawing({
+            imageBase64: base64,
+            aiLabel: result.label,
+            aiScore: result.score,
+          });
           submittedRoundRef.current = roundId;
           console.log('[Client] submitted pending result', { roomId, roundId, score: result.score, label: result.label });
         }
@@ -244,7 +317,9 @@ const DrawingScreen = () => {
       }
     }, 300); // moderate polling
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+    };
   }, [
     isReady,
     currentWord,
@@ -259,27 +334,38 @@ const DrawingScreen = () => {
     runInference,
     canvasSize,
     saveDrawingToStore,
+    startTimer,
+    submitDrawing,
   ]);
 
   useTimer(undefined, () => {
-    // End round instead of end game
-    const mockScores: Record<string, number> = {};
-    players.forEach(p => {
-      mockScores[p.id] = Math.floor(Math.random() * 50); // Mock points
-    });
-
-    // Give the local drawer a random high score if they are playing single player to simulate drawing good
-    if (useGameStore.getState().isSinglePlayer) {
-      mockScores['1'] = 45 + Math.floor(Math.random() * 15);
+    if (roomId) {
+      void finishRound();
+      return;
     }
-    const strokes = useDrawingStore.getState().strokeHistory;
 
-    // Save current drawing to store
-    saveDrawingToStore(mockScores, strokes, canvasSize);
+    handleRoundExpire();
   });
 
-  //const localUid = uid || auth.currentUser?.uid || '1';
-  const isDrawer = true;
+  let isDrawer = !roomId
+    ? true
+    : !!room && room.status === 'drawing' && currentUid === currentDrawerId && !submitted && !submitting;
+  if (isSinglePlayer) {
+    isDrawer = true;
+  }
+  const lockMessage = roomId
+    ? submitted
+      ? 'Đã gửi bài vẽ'
+      : room?.status === 'round_scoring'
+        ? 'Đang xử lí kết quả...'
+        : room?.status === 'round_end'
+          ? 'Đang chuyển sang màn kết quả...'
+          : room?.status !== 'drawing'
+            ? 'Đang chờ host chuyển vòng'
+            : currentUid === currentDrawerId
+              ? null
+              : 'Đang chờ đến lượt bạn'
+    : null;
 
   const handleUndo = useCallback(() => canvasRef.current?.undo(), []);
   const handleRedo = useCallback(() => canvasRef.current?.redo(), []);
@@ -323,6 +409,20 @@ const DrawingScreen = () => {
               disabled={!isDrawer}
             />
 
+            {!isSinglePlayer && roomId && lockMessage && (
+              <View style={styles.lockOverlay}>
+                <View style={styles.lockCard}>
+                  {!submitted ? (
+                    <ActivityIndicator size="large" color={Colors.primaryYellow} />
+                  ) : (
+                    <Text style={[styles.lockTitle, { fontSize: 42, marginBottom: Spacing.xs }]}>✓</Text>
+                  )}
+                  <Text style={styles.lockTitle}>{submitted ? 'Bài đã được gửi' : 'Canvas đã bị khóa'}</Text>
+                  <Text style={styles.lockText}>{lockMessage}</Text>
+                </View>
+              </View>
+            )}
+
             {/* Waiting Overlay */}
             {phase === 'waiting' && (
               <View style={styles.waitingOverlay}>
@@ -341,7 +441,6 @@ const DrawingScreen = () => {
                   label="Bắt đầu ngay 🚀"
                   onPress={() => {
                     startGame();
-                    setTimeout(() => startRound(), 100);
                   }}
                   variant="primary"
                   style={{ marginTop: Spacing.xl }}
@@ -357,6 +456,7 @@ const DrawingScreen = () => {
             onUndo={handleUndo}
             onRedo={handleRedo}
             onClear={handleClear}
+            disabled={!isDrawer}
           />
         </View>
         {/* <Button
@@ -498,5 +598,35 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.paperWhite,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  lockOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(254, 251, 240, 0.88)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 90,
+  },
+  lockCard: {
+    backgroundColor: Colors.paperWhite,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    alignItems: 'center',
+    ...Shadow.sketch,
+  },
+  lockTitle: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.xl,
+    color: Colors.warmBlack,
+    marginBottom: Spacing.xs,
+  },
+  lockText: {
+    fontFamily: FontFamily.caveatBold,
+    fontSize: FontSize.md,
+    color: Colors.warmBlack,
+    textAlign: 'center',
+    opacity: 0.85,
   },
 });

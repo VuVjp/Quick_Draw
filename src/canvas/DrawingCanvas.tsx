@@ -83,6 +83,16 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(({ width, height, disa
     updatePicture();
   }, [updatePicture]);
 
+  useEffect(() => {
+    if (!disabled) return;
+
+    if (currentPath.current) {
+      currentPath.current = null;
+      stopBrushSound();
+      forceRepaint();
+    }
+  }, [disabled]);
+
   // Clean up sound on unmount
   useEffect(() => {
     return () => {
@@ -102,11 +112,17 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, Props>(({ width, height, disa
       startBrushSound();
     })
     .onUpdate((e) => {
+      if (disabled) return;
       if (!currentPath.current) return;
       currentPath.current.lineTo(e.x, e.y);
       forceRepaint();
     })
     .onEnd(() => {
+      if (disabled) {
+        stopBrushSound();
+        currentPath.current = null;
+        return;
+      }
       if (!currentPath.current) return;
       const finishedPath = currentPath.current;
       const color = currentColorRef.current;

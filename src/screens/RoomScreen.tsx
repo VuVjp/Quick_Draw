@@ -4,16 +4,14 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  Dimensions,
   TouchableOpacity,
   ActivityIndicator,
   Share,
   Alert,
   Image,
 } from 'react-native';
-import user from '../../assets/Icon/user.svg';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import firestore, { doc, collection, updateDoc, deleteDoc } from '@react-native-firebase/firestore';
+import firestore, { doc, deleteDoc, updateDoc } from '@react-native-firebase/firestore';
 import { db } from '../services/firebase';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useRoom } from '../hooks/useRoom';
@@ -27,9 +25,7 @@ import { Spacing, Radius, Shadow } from '../theme/spacing';
 
 import ClockIcon from '../../assets/Icon/clock.svg';
 import PencilRulerIcon from '../../assets/Icon/pencil-ruler.svg';
-import { getRandomWord } from '../constants/words';
-
-const { width } = Dimensions.get('window');
+import { useHostGameLifecycle } from '../hooks/useHostGameLifecycle';
 
 const RoomScreen = () => {
   const router = useRouter();
@@ -37,20 +33,12 @@ const RoomScreen = () => {
   const roomId = id as string;
 
   const { room, players, uid } = useRoom(roomId);
-  const joinRoom = useGameStore((s) => s.joinRoom);
+  const setRoomConfig = useGameStore((s) => s.setRoomConfig);
+  const { startGame } = useHostGameLifecycle(roomId);
 
   // ─── Auto Navigate to Drawing screen when status changes to 'drawing' ───
   useEffect(() => {
     if (room && room.status === 'drawing') {
-      if (isHost) {
-        const word = getRandomWord();
-        joinRoom(roomId, room.roomName || 'Phòng Online', Object.keys(players).length, room.maxPlayers || 8);
-        updateDoc(doc(db, 'rooms', roomId), {
-          currentTopic: word,
-          currentRound: 1,
-        });
-      }
-
       console.log('⚡ Room status is drawing, navigating to /drawing!');
 
       // Update local Zustand state before navigating
@@ -67,7 +55,7 @@ const RoomScreen = () => {
       }));
 
       // Join room in state
-      useGameStore.getState().setRoomConfig({
+      setRoomConfig({
         roomId,
         currentWord: room.currentTopic,
         roomName: room.roomName || 'Phòng Online',
@@ -85,7 +73,7 @@ const RoomScreen = () => {
 
       router.replace('/drawing');
     }
-  }, [room, roomId, players]);
+  }, [room, roomId, players, setRoomConfig, router]);
 
   // ─── Kick players if room is deleted ───
   useEffect(() => {
@@ -94,7 +82,7 @@ const RoomScreen = () => {
         { text: 'OK', onPress: () => router.replace('/lobby') }
       ]);
     }
-  }, [room?.status]);
+  }, [room?.status, router]);
 
   if (!room || room.status === 'deleted') {
     return (
@@ -115,11 +103,7 @@ const RoomScreen = () => {
 
   const handleStartGame = async () => {
     try {
-      await updateDoc(doc(db, 'rooms', roomId), {
-        status: 'drawing',
-        currentDrawerId: room.hostId,
-        currentRound: 1,
-      });
+      await startGame();
     } catch (err) {
       console.error('Error starting game:', err);
     }

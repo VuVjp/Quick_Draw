@@ -22,6 +22,7 @@ export interface RoomState {
   code: string;
   maxPlayers: number;
   difficulty: string;
+  endedAt: Date | null;
   mvpUid?: string | null;
   lastRoundScores?: Record<string, number>;
 }
@@ -60,6 +61,7 @@ export function useRoom(roomId?: string | null) {
         code: data.code ?? '',
         maxPlayers: data.maxPlayers ?? 8,
         difficulty: data.difficulty ?? 'Trung bình',
+        endedAt: data.endedAt?.toDate() ?? null,
         mvpUid: data.mvpUid ?? null,
         lastRoundScores: data.lastRoundScores ?? {},
       });

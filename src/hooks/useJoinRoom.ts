@@ -1,6 +1,7 @@
 // src/hooks/useJoinRoom.ts
 import { useState } from 'react';
 import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 
 export interface JoinedRoomInfo {
     roomId: string;
@@ -26,7 +27,12 @@ export function useJoinRoom() {
                 .collection('rooms')
                 .doc(code.toUpperCase().trim())
                 .get();
-            const user = await firestore().collection('users').doc(playerId).get();
+
+            const user = auth().currentUser;
+            if (!user) {
+                setError('Bạn cần đăng nhập để vào phòng');
+                return null;
+            }
 
             if (!snap.exists()) {
                 setError('Không tìm thấy phòng hoặc phòng đã bắt đầu');
@@ -64,7 +70,7 @@ export function useJoinRoom() {
                     displayName: playerName,
                     score: 0,
                     isHost: false,
-                    avatar: user.data()?.avatar || 'user',
+                    avatar: user.photoURL || 'user',
                     isOnline: true,
                     joinedAt: firestore.FieldValue.serverTimestamp(),
                 });

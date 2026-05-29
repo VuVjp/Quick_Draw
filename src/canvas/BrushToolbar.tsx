@@ -1,39 +1,28 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Text, Dimensions } from 'react-native';
-
-const { width } = Dimensions.get('window');
-import { BRUSH_COLORS, BRUSH_SIZES, ERASER_SIZES, useDrawingStore } from '../store/useDrawingStore';
-import { playClick } from '../store/useAudioStore';
+import { View, StyleSheet, TouchableOpacity, Text, Dimensions } from 'react-native';
 import { Colors } from '../theme/colors';
+import { FontFamily } from '../theme/typography';
 import { Spacing, Radius, Shadow } from '../theme/spacing';
+import { ERASER_SIZES, useDrawingStore } from '../store/useDrawingStore';
+import { playClick } from '../store/useAudioStore';
 import BrushIcon from '../../assets/brush-icon.svg';
 import EraserIcon from '../../assets/Icon/eraser.svg';
 import UndoIcon from '../../assets/Icon/arrow-big-left.svg';
 import RedoIcon from '../../assets/Icon/arrow-big-right.svg';
 
+const { width } = Dimensions.get('window');
+
 type Props = {
   onUndo: () => void;
   onRedo: () => void;
   onClear: () => void;
+  disabled?: boolean;
 };
 
-// Override colors for the exact reference look
-const EXACT_COLORS = [
-  '#4A443F', // warm black
-  '#F4978E', // red
-  '#B9D7EA', // blue
-  '#C1E1C1', // green
-  '#F6C445', // yellow
-  '#A073CC', // purple
-];
-
-const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
+const BrushToolbar = ({ onUndo, onRedo, onClear, disabled = false }: Props) => {
   const activeColor = useDrawingStore((s) => s.activeColor);
-  const brushSize = useDrawingStore((s) => s.brushSize);
   const eraserSize = useDrawingStore((s) => s.eraserSize);
   const isEraser = useDrawingStore((s) => s.isEraser);
-  const setColor = useDrawingStore((s) => s.setColor);
-  const setBrushSize = useDrawingStore((s) => s.setBrushSize);
   const setEraserSize = useDrawingStore((s) => s.setEraserSize);
   const toggleEraser = useDrawingStore((s) => s.toggleEraser);
 
@@ -82,35 +71,40 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
       <View style={styles.bottomBar}>
         <TouchableOpacity
           onPress={() => {
+            if (disabled) return;
             playClick();
             if (isEraser) toggleEraser();
             setShowSizeSlider(false);
           }}
-          style={[styles.toolBtn, !isEraser ? styles.toolBtnActive : undefined]}
+          style={[styles.toolBtn, !isEraser ? styles.toolBtnActive : undefined, disabled && styles.toolBtnDisabled]}
+          activeOpacity={disabled ? 1 : 0.7}
         >
           <BrushIcon width={24} height={24} color={Colors.warmBlack} />
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => {
+            if (disabled) return;
             playClick();
             if (!isEraser) toggleEraser();
             setShowSizeSlider(false);
           }}
-          style={[styles.toolBtn, isEraser ? styles.toolBtnActive : undefined]}
+          style={[styles.toolBtn, isEraser ? styles.toolBtnActive : undefined, disabled && styles.toolBtnDisabled]}
+          activeOpacity={disabled ? 1 : 0.7}
         >
           <EraserIcon width={24} height={24} color={Colors.warmBlack} />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.toolBtn, showSizeSlider ? styles.toolBtnActive : undefined]}
+        <TouchableOpacity
+          style={[styles.toolBtn, showSizeSlider ? styles.toolBtnActive : undefined, disabled && styles.toolBtnDisabled]}
           onPress={() => {
+            if (disabled) return;
             playClick();
             if (isEraser) {
               setShowSizeSlider(!showSizeSlider);
             }
           }}
-          activeOpacity={isEraser ? 0.2 : 1}
+          activeOpacity={disabled ? 1 : (isEraser ? 0.2 : 1)}
         >
           <View style={[
             styles.sizeDot,
@@ -123,12 +117,16 @@ const BrushToolbar = ({ onUndo, onRedo, onClear }: Props) => {
             }
           ]} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => { playClick(); onUndo(); }} style={styles.toolBtn}>
+        <TouchableOpacity onPress={() => { if (disabled) return; playClick(); onUndo(); }} style={[styles.toolBtn, disabled && styles.toolBtnDisabled]} activeOpacity={disabled ? 1 : 0.7}>
           <UndoIcon width={24} height={24} color={Colors.warmBlack} />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => { playClick(); onRedo(); }} style={styles.toolBtn}>
+        <TouchableOpacity onPress={() => { if (disabled) return; playClick(); onRedo(); }} style={[styles.toolBtn, disabled && styles.toolBtnDisabled]} activeOpacity={disabled ? 1 : 0.7}>
           <RedoIcon width={24} height={24} color={Colors.warmBlack} />
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => { if (disabled) return; playClick(); onClear(); }} style={[styles.toolBtn, disabled && styles.toolBtnDisabled]} activeOpacity={disabled ? 1 : 0.7}>
+          <Text style={styles.clearText}>C</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -218,6 +216,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryYellow,
     borderWidth: 1.5,
     borderColor: Colors.border,
+  },
+  toolBtnDisabled: {
+    opacity: 0.35,
+  },
+  clearText: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: 20,
+    color: Colors.warmBlack,
   },
   toolIcon: {
     fontSize: 22,

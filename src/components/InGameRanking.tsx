@@ -4,18 +4,25 @@ import { useGameStore } from '../store/useGameStore';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius, Shadow } from '../theme/spacing';
+import { useLeaderboard } from '../hooks/useLeaderboard';
 
 const InGameRanking = () => {
-  const players = useGameStore(s => s.players);
-  const lastRoundScores = useGameStore(s => s.lastRoundScores);
+  const roomId = useGameStore(s => s.roomId);
+  const localPlayers = useGameStore(s => s.players);
+  const localLastRoundScores = useGameStore(s => s.lastRoundScores);
   const isSinglePlayer = useGameStore(s => s.isSinglePlayer);
+  const { players: leaderboardPlayers } = useLeaderboard(roomId);
   const [expanded, setExpanded] = useState(false);
+
+  const isOnline = !!roomId;
+  const players = isOnline ? leaderboardPlayers : localPlayers;
 
   // Chỉ hiển thị ở chế độ online
   if (isSinglePlayer || players.length <= 1) return null;
 
-  // Sắp xếp người chơi theo điểm giảm dần
-  const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+  const sortedPlayers = isOnline
+    ? players
+    : [...players].sort((a, b) => b.score - a.score);
 
   return (
     <View style={[styles.container, !expanded && styles.collapsed]}>
@@ -30,15 +37,23 @@ const InGameRanking = () => {
 
       {expanded && (
         <View style={styles.list}>
-          {sortedPlayers.map((p, index) => {
-            const gained = lastRoundScores[p.id];
+          {sortedPlayers.map((p: any, index) => {
+            const playerId = p.uid ?? p.id;
+            const playerName = p.displayName ?? p.name;
+            const playerAvatar = p.avatar ?? 'user';
+            const totalScore = p.score ?? 0;
+            const gained = isOnline ? (p.gainedScore ?? 0) : (localLastRoundScores[playerId] ?? 0);
+            const rank = isOnline ? (p.rank ?? index + 1) : index + 1;
             return (
-              <View key={p.id} style={styles.playerRow}>
-                <Text style={styles.rankText}>#{index + 1}</Text>
-                <Text style={styles.avatar}>{p.avatar}</Text>
-                <Text style={styles.name} numberOfLines={1}>{p.name}</Text>
+              <View key={playerId} style={styles.playerRow}>
+                <Text style={styles.rankText}>#{rank}</Text>
+                <Text style={styles.avatar}>{playerAvatar === 'user' ? '👤' : playerAvatar}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.name} numberOfLines={1}>{playerName}</Text>
+                  <Text style={styles.totalScore}>Tổng: {totalScore}đ</Text>
+                </View>
                 <View style={styles.scoreCol}>
-                  <Text style={styles.score}>{p.score}</Text>
+                  <Text style={styles.score}>{totalScore}</Text>
                   {gained != null && gained > 0 && (
                     <Text style={styles.gained}>+{gained}</Text>
                   )}
@@ -126,6 +141,12 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.sm,
     color: Colors.warmBlack,
+  },
+  totalScore: {
+    fontFamily: FontFamily.caveatBold,
+    fontSize: FontSize.xs,
+    color: Colors.warmBlack,
+    opacity: 0.8,
   },
   gained: {
     fontFamily: FontFamily.patrickHand,

@@ -1,16 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import firestore from '@react-native-firebase/firestore';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
 import { Spacing, Radius } from '../theme/spacing';
 import AnimatedButton from '../components/AnimatedButton';
 import NotebookBackground from '../components/NotebookBackground';
-import { useGameStore, Player } from '../store/useGameStore';
+import { useGameStore } from '../store/useGameStore';
 import ReadOnlyCanvas from '../canvas/ReadOnlyCanvas';
 import { useRoom } from '../hooks/useRoom';
+import { useHostGameLifecycle } from '../hooks/useHostGameLifecycle';
+import { useLeaderboard } from '../hooks/useLeaderboard';
+import firestore from '@react-native-firebase/firestore';
 
 const RoundEndScreen = () => {
   const router = useRouter();
@@ -23,19 +25,24 @@ const RoundEndScreen = () => {
   const endGame = useGameStore((s) => s.endGame);
   const lastRoundScores = useGameStore((s) => s.lastRoundScores);
   const roomId = useGameStore((s) => s.roomId);
-  const { room, players: roomPlayers, uid } = useRoom(roomId);
-  //const { advanceRound } = useHostGameMaster(roomId ?? '', 5);
+  const { room, uid } = useRoom(roomId);
+  const { players: leaderboardPlayers } = useLeaderboard(roomId);
+  useHostGameLifecycle(roomId);
 
   const isLastRound = currentRound >= rounds;
-  const isSinglePlayer = !roomId || players.length <= 1;
+  const isSinglePlayer = useGameStore((s) => s.isSinglePlayer);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [countdown, setCountdown] = useState<number>(5);
-  const countdownCommittedRef = useRef(false);
   const isOnline = !!roomId;
-  const isHost = !!uid && !!room && uid === room.hostId;
+  const displayedPlayers = isOnline ? leaderboardPlayers : players;
+  const top1Player = displayedPlayers[0] as any;
+
+  const [mvpImageBase64, setMvpImageBase64] = useState<string | null>(null);
+  const [mvpStrokes, setMvpStrokes] = useState<any[] | null>(null);
 
   useEffect(() => {
+    if (isSinglePlayer) return;
     if (!isOnline || !room) return;
 
     if (room.status === 'drawing') {
@@ -44,21 +51,66 @@ const RoundEndScreen = () => {
     }
 
     if (room.status === 'game_end') {
-      const sorted = [...players].sort((a, b) => b.score - a.score);
-      const top1Id = sorted[0]?.id;
+      const top1Id = top1Player?.uid ?? top1Player?.id;
       if (top1Id && uid && top1Id === uid) {
         router.replace('/win' as any);
       } else {
         router.replace('/lose' as any);
       }
     }
-  }, [isOnline, room, router, players, uid]);
+  }, [displayedPlayers, isOnline, room, router, top1Player, uid]);
+
+  // Load MVP submission image or strokes from Firestore for the completed round
+  useEffect(() => {
+    if (!isOnline || !room) {
+      setMvpImageBase64(null);
+      setMvpStrokes(null);
+      return;
+    }
+
+    const mvpUid = room.mvpUid;
+    if (!mvpUid) {
+      setMvpImageBase64(null);
+      setMvpStrokes(null);
+      return;
+    }
+
+    const roundKey = `round_${room.currentRound}`;
+    const roundRef = firestore().collection('rooms').doc(roomId).collection('rounds').doc(roundKey);
+
+    let mounted = true;
+    roundRef.get().then((snap) => {
+      if (!mounted || !snap.exists) return;
+      const data = snap.data() as any;
+      const sub = data?.submissions?.[mvpUid];
+      if (sub) {
+        if (sub.imageBase64) {
+          setMvpImageBase64(sub.imageBase64);
+          setMvpStrokes(null);
+        } else if (sub.strokes) {
+          setMvpStrokes(sub.strokes);
+          setMvpImageBase64(null);
+        } else {
+          setMvpImageBase64(null);
+          setMvpStrokes(null);
+        }
+      } else {
+        setMvpImageBase64(null);
+        setMvpStrokes(null);
+      }
+    }).catch((e) => {
+      console.warn('Failed to load MVP submission', e);
+      setMvpImageBase64(null);
+      setMvpStrokes(null);
+    });
+
+    return () => { mounted = false; };
+  }, [isOnline, room, roomId]);
 
   useEffect(() => {
     const countdownActive = room?.status === 'round_countdown' || room?.status === 'round_end';
     if (!room || !countdownActive || !room.roundCountdownStartedAt) {
       setCountdown(5);
-      countdownCommittedRef.current = false;
       return;
     }
 
@@ -74,44 +126,12 @@ const RoundEndScreen = () => {
     return () => clearInterval(id);
   }, [room]);
 
-  useEffect(() => {
-    if (!isHost || !roomId || !room) return;
-    if (room.status !== 'round_end' && room.status !== 'round_countdown') return;
-    if (countdown > 0) return;
-    if (countdownCommittedRef.current) return;
-
-    countdownCommittedRef.current = true;
-    const roomRef = firestore().collection('rooms').doc(roomId);
-
-    if (isLastRound) {
-      roomRef.update({
-        status: 'game_end',
-        endedAt: firestore.FieldValue.serverTimestamp(),
-      }).catch((e) => {
-        countdownCommittedRef.current = false;
-        console.error('[RoundEnd] failed to finish game after countdown', e);
-      });
-      return;
-    }
-
-    //   advanceRound(room.currentRound ?? currentRound, rounds, Object.keys(roomPlayers ?? {}))
-    //     .catch((e) => {
-    //       countdownCommittedRef.current = false;
-    //       console.error('[RoundEnd] failed to advance round after countdown', e);
-    //     });
-    //
-  }, [isHost, roomId, room, countdown, isLastRound, roomPlayers, currentRound, rounds]);
-
-  // The first player in the sorted players list is Top 1
-  const top1Player = players[0];
-
   const handleNext = () => {
-    if (isOnline) return;
 
     if (isLastRound) {
       endGame();
       // Navigate to Win/Lose based on if local player is top 1 (mock logic)
-      if (top1Player?.id === '1') {
+      if ((top1Player?.id ?? top1Player?.uid) === '1') {
         router.replace('/win');
       } else {
         router.replace('/lose');
@@ -123,9 +143,13 @@ const RoundEndScreen = () => {
     }
   };
 
-  const renderPlayer = ({ item, index }: { item: Player; index: number }) => {
+  const renderPlayer = ({ item, index }: { item: any; index: number }) => {
     const isTop1 = index === 0;
-    const pointsGained = lastRoundScores[item.id] || 0;
+    const playerId = item.uid ?? item.id;
+    const playerName = item.displayName ?? item.name;
+    const playerAvatar = item.avatar ?? 'user';
+    const totalScore = item.score ?? 0;
+    const pointsGained = item.gainedScore ?? lastRoundScores[playerId] ?? 0;
     return (
       <Animated.View
         entering={FadeInDown.delay(300 + index * 100).springify().damping(12)}
@@ -134,10 +158,13 @@ const RoundEndScreen = () => {
         <Text style={styles.playerRank}>#{index + 1}</Text>
         {/* <Text style={styles.playerAvatar}>{item.avatar}</Text> */}
         <Image
-          source={item.avatar === 'user' ? require('../../assets/images/anonymous.png') : { uri: item.avatar }}
+          source={playerAvatar === 'user' ? require('../../assets/images/anonymous.png') : { uri: playerAvatar }}
           style={{ width: 30, height: 30, borderRadius: 15, marginRight: Spacing.sm }}
         />
-        <Text style={styles.playerName} numberOfLines={1}>{item.name}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.playerName} numberOfLines={1}>{playerName}</Text>
+          <Text style={styles.playerScore}>Tổng: {totalScore} đ</Text>
+        </View>
         <Text style={styles.playerScore}>+{pointsGained} đ</Text>
       </Animated.View>
     );
@@ -148,24 +175,32 @@ const RoundEndScreen = () => {
       <View style={styles.container}>
         <Animated.View entering={FadeIn.duration(600)} style={styles.header}>
           <Text style={styles.title}>KẾT THÚC VÒNG {currentRound}/{rounds}</Text>
-          <View style={styles.miniLeaderboard}>
-            {players.map((p) => {
-              const pts = lastRoundScores[p.id] || 0;
-              return (
-                <View key={p.id} style={styles.miniPlayerRow}>
-                  {/* <Text style={styles.miniPlayerAvatar}>{p.avatar}</Text> */}
-                  <Image
-                    source={p.avatar === 'user' ? require('../../assets/images/anonymous.png') : { uri: p.avatar }}
-                    style={{ width: 30, height: 30, borderRadius: 15, marginRight: Spacing.sm }}
-                  />
-                  <Text style={styles.miniPlayerName} numberOfLines={1}>{p.name}</Text>
-                  <Text style={[styles.miniPlayerScore, pts > 0 && styles.miniPlayerScorePositive]}>
-                    {pts > 0 ? `+${pts}đ` : `${pts}đ`}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
+          {!isSinglePlayer && (
+            <View style={styles.miniLeaderboard}>
+              {displayedPlayers.map((p: any) => {
+                const playerId = p.uid ?? p.id;
+                const playerName = p.displayName ?? p.name;
+                const playerAvatar = p.avatar ?? 'user';
+                const totalScore = p.score ?? 0;
+                const pts = p.gainedScore ?? lastRoundScores[playerId] ?? 0;
+                return (
+                  <View key={playerId} style={styles.miniPlayerRow}>
+                    {/* <Text style={styles.miniPlayerAvatar}>{p.avatar}</Text> */}
+                    <Image
+                      source={playerAvatar === 'user' ? require('../../assets/images/anonymous.png') : { uri: playerAvatar }}
+                      style={{ width: 30, height: 30, borderRadius: 15, marginRight: Spacing.sm }}
+                    />
+                    <Text style={styles.miniPlayerName} numberOfLines={1}>{playerName}</Text>
+                    <Text style={styles.miniPlayerScore}>
+                      {totalScore} đ
+                    </Text>
+                    <Text style={[styles.miniPlayerScore, pts > 0 && styles.miniPlayerScorePositive]}>
+                      {pts > 0 ? `+${pts}đ` : `${pts}đ`}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>)}
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(200).springify()} style={[styles.artworkContainer, { flex: 1 }]}>
@@ -180,28 +215,44 @@ const RoundEndScreen = () => {
             }}
           >
             {canvasSize.width > 0 && (
-              <ReadOnlyCanvas
-                width={canvasSize.width}
-                height={canvasSize.height}
-                strokes={roundDrawing}
-                originalCanvasSize={originalCanvasSize}
-              />
+              mvpImageBase64
+                ? (
+                  <Image
+                    source={{ uri: `data:image/png;base64,${mvpImageBase64}` }}
+                    style={{ width: canvasSize.width, height: canvasSize.height, resizeMode: 'contain' }}
+                  />
+                ) : mvpStrokes
+                  ? (
+                    <ReadOnlyCanvas
+                      width={canvasSize.width}
+                      height={canvasSize.height}
+                      strokes={mvpStrokes}
+                      originalCanvasSize={originalCanvasSize}
+                    />
+                  ) : (
+                    <ReadOnlyCanvas
+                      width={canvasSize.width}
+                      height={canvasSize.height}
+                      strokes={roundDrawing}
+                      originalCanvasSize={originalCanvasSize}
+                    />
+                  )
             )}
             <View style={styles.artworkAuthorTag}>
               <Image
-                source={top1Player?.avatar === 'user' ? require('../../assets/images/anonymous.png') : { uri: top1Player?.avatar }}
+                source={(top1Player?.avatar ?? 'user') === 'user' ? require('../../assets/images/anonymous.png') : { uri: top1Player?.avatar }}
                 style={{ width: 30, height: 30, borderRadius: 15, marginRight: Spacing.sm }}
               />
-              <Text style={styles.artworkAuthorText}>{top1Player?.name}</Text>
+              <Text style={styles.artworkAuthorText}>{top1Player?.displayName ?? top1Player?.name}</Text>
             </View>
 
-            {showLeaderboard && isSinglePlayer && (
+            {showLeaderboard && !isSinglePlayer && (
               <View style={styles.leaderboardOverlay}>
                 <Text style={styles.leaderboardTitle}>Bảng Xếp Hạng</Text>
                 <FlatList
-                  data={players}
+                  data={displayedPlayers}
                   renderItem={renderPlayer}
-                  keyExtractor={item => item.id}
+                  keyExtractor={(item: any) => item.id ?? item.uid}
                   showsVerticalScrollIndicator={true}
                   contentContainerStyle={styles.listContent}
                   style={{ width: '100%' }}
@@ -221,7 +272,7 @@ const RoundEndScreen = () => {
             </View>
           )}
 
-          {isOnline && room?.status === 'round_end' && !isLastRound && (
+          {/* {isOnline && room?.status === 'round_end' && !isLastRound && (
             <View style={styles.countdownBox}>
               <View style={styles.autoRandomBadge}>
                 <Text style={styles.autoRandomBadgeText}>Chủ đề tự động random</Text>
@@ -230,9 +281,9 @@ const RoundEndScreen = () => {
               <Text style={styles.countdownValue}>{countdown}</Text>
               <Text style={styles.countdownTopic}>Tất cả người chơi sẽ vào cùng một chủ đề được hệ thống chọn ngẫu nhiên.</Text>
             </View>
-          )}
+          )} */}
 
-          {isSinglePlayer && (
+          {!isSinglePlayer && (
             <AnimatedButton
               label={showLeaderboard ? "Ẩn BXH" : "Hiện BXH"}
               onPress={() => setShowLeaderboard(!showLeaderboard)}
@@ -241,7 +292,7 @@ const RoundEndScreen = () => {
               fullWidth
             />
           )}
-          {!isOnline && (
+          {isSinglePlayer && (
             <AnimatedButton
               label={isLastRound ? "Kết thúc game" : "Vòng tiếp theo"}
               onPress={handleNext}

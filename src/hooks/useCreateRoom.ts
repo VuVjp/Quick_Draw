@@ -6,6 +6,7 @@ firestore, {
     writeBatch,
 } from '@react-native-firebase/firestore';
 import { db } from '../services/firebase';
+import auth from '@react-native-firebase/auth';
 
 async function generateRoomCode(): Promise<string> {
     for (let i = 0; i < 10; i++) {
@@ -51,7 +52,11 @@ export function useCreateRoom() {
             const code = await generateRoomCode();
             const roomRef = firestore().collection('rooms').doc(code);
             const batch = writeBatch(db);
-            const user = await firestore().collection('users').doc(options.hostId).get();
+            const user = auth().currentUser;
+            if (!user) {
+                setError('Bạn cần đăng nhập để tạo phòng');
+                return null;
+            }
 
             // Room document
             batch.set(roomRef, {
@@ -79,7 +84,7 @@ export function useCreateRoom() {
                 displayName: options.hostName,
                 score: 0,
                 isHost: true,
-                avatar: user.data()?.photoURL || 'user',
+                avatar: user.photoURL || 'user',
                 isOnline: true,
                 joinedAt: firestore.FieldValue.serverTimestamp(),
             });
