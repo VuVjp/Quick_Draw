@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react';
-import {
-  collection,
-  doc,
-  onSnapshot,
-} from '@react-native-firebase/firestore';
-import { db, auth } from '../services/firebase';
+import firestore from '@react-native-firebase/firestore';
+import { auth } from '../services/firebase';
+import { useHeartbeat } from './useHeartbeat';
 
 export interface RoomState {
   status: string;
@@ -32,14 +29,17 @@ export function useRoom(roomId?: string | null) {
   const [players, setPlayers] = useState<Record<string, any>>({});
   const uid = auth.currentUser?.uid;
 
+  // Start presence heartbeat whenever this hook is used for an active room
+  useHeartbeat(roomId, uid, { intervalMs: 5000 });
+
   // ─── Subscribe room document ──────────────────────────────────────
   useEffect(() => {
     if (!roomId) {
       setRoom(null);
       return;
     }
-    const roomRef = doc(db, 'rooms', roomId);
-    const unsub = onSnapshot(roomRef, (snap) => {
+    const roomRef = firestore().collection('rooms').doc(roomId);
+    const unsub = roomRef.onSnapshot((snap) => {
       if (!snap.exists()) {
         setRoom((prev) => prev ? { ...prev, status: 'deleted' } : null);
         return;
@@ -75,8 +75,8 @@ export function useRoom(roomId?: string | null) {
       setPlayers({});
       return;
     }
-    const playersRef = collection(db, 'rooms', roomId, 'players');
-    const unsub = onSnapshot(playersRef, (snap) => {
+    const playersRef = firestore().collection('rooms').doc(roomId).collection('players');
+    const unsub = playersRef.onSnapshot((snap) => {
       const map: Record<string, any> = {};
       snap.docs.forEach((d) => { map[d.id] = d.data(); });
       setPlayers(map);

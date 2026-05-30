@@ -13,8 +13,7 @@ import {
 } from 'react-native';
 import { playClick } from '../store/useAudioStore';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import firestore, { doc, deleteDoc, updateDoc } from '@react-native-firebase/firestore';
-import { db } from '../services/firebase';
+import firestore from '@react-native-firebase/firestore';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useRoom } from '../hooks/useRoom';
 import { useGameStore } from '../store/useGameStore';
@@ -28,6 +27,8 @@ import { Spacing, Radius, Shadow } from '../theme/spacing';
 import ClockIcon from '../../assets/Icon/clock.svg';
 import PencilRulerIcon from '../../assets/Icon/pencil-ruler.svg';
 import { useHostGameLifecycle } from '../hooks/useHostGameLifecycle';
+import { useHeartbeat } from '../hooks/useHeartbeat';
+import { useHostElection } from '../hooks/useHostElection';
 import { Ionicons } from '@expo/vector-icons';
 
 const RoomScreen = () => {
@@ -38,6 +39,8 @@ const RoomScreen = () => {
   const { room, players, uid } = useRoom(roomId);
   const setRoomConfig = useGameStore((s) => s.setRoomConfig);
   const { startGame } = useHostGameLifecycle(roomId);
+  useHeartbeat(roomId, uid, { intervalMs: 5000 });
+  useHostElection(roomId, room, players, uid, { timeoutMs: 30000 });
 
   // ─── Auto Navigate to Drawing screen when status changes to 'drawing' ───
   useEffect(() => {
@@ -115,11 +118,11 @@ const RoomScreen = () => {
   const confirmLeaveOrDelete = () => {
     if (isHost) {
       Alert.alert(
-        'Delete Room',
-        'You are the host of this room. Leaving will delete the room and kick all players out. Are you sure?',
+        'Leave Room',
+        'You are the host of this room. Leaving will transfer host to the next player. Are you sure?',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete Room', style: 'destructive', onPress: performDeleteRoom },
+          { text: 'Leave Room', style: 'destructive', onPress: performLeaveRoom },
         ]
       );
     } else {
@@ -127,24 +130,53 @@ const RoomScreen = () => {
     }
   };
 
-  const performDeleteRoom = async () => {
-    try {
-      await deleteDoc(doc(db, 'rooms', roomId));
-      router.replace('/lobby');
-    } catch (err) {
-      console.error('Error deleting room:', err);
-      router.replace('/lobby');
-    }
-  };
-
   const performLeaveRoom = async () => {
     try {
-      if (uid) {
-        await deleteDoc(doc(db, 'rooms', roomId, 'players', uid));
-        await updateDoc(doc(db, 'rooms', roomId), {
-          playerCount: firestore.FieldValue.increment(-1),
-        });
+      if (!uid) {
+        router.replace('/lobby');
+        return;
       }
+
+      const roomRef = firestore().collection('rooms').doc(roomId);
+      const playerRef = roomRef.collection('players').doc(uid);
+      let roomWasDeleted = false;
+
+      await firestore().runTransaction(async (tx) => {
+        const roomSnap = await tx.get(roomRef);
+        if (!roomSnap.exists) {
+          roomWasDeleted = true;
+          return;
+        }
+
+        const data = roomSnap.data() || {};
+        const playerCount = typeof data.playerCount === 'number'
+          ? data.playerCount
+          : (data.playerCount ? Number(data.playerCount) : 0);
+
+        if (playerCount <= 1) {
+          tx.delete(roomRef);
+          roomWasDeleted = true;
+        } else {
+          tx.delete(playerRef);
+          const updateData: any = {
+            playerCount: firestore.FieldValue.increment(-1),
+          };
+          if (isHost) updateData.hostId = null;
+          tx.update(roomRef, updateData);
+        }
+      });
+
+      if (roomWasDeleted) {
+        const playersSnap = await firestore().collection('rooms').doc(roomId).collection('players').get();
+        if (!playersSnap.empty) {
+          const batch = firestore().batch();
+          playersSnap.forEach((pDoc) => {
+            batch.delete(pDoc.ref);
+          });
+          await batch.commit();
+        }
+      }
+
       router.replace('/lobby');
     } catch (err) {
       console.error('Error leaving room:', err);
@@ -268,11 +300,11 @@ const RoomScreen = () => {
           {isHost ? (
             <View style={styles.hostFooter}>
               <AnimatedButton
-              label="Delete Room"
-              onPress={() => {
-                playClick();
-                confirmLeaveOrDelete();
-              }}
+                label="Delete Room"
+                onPress={() => {
+                  playClick();
+                  confirmLeaveOrDelete();
+                }}
                 variant="danger"
                 style={styles.flex1}
               />
@@ -472,10 +504,10 @@ const styles = StyleSheet.create({
     color: '#2E7D32',
   },
   footer: {
-  position: 'absolute',
-  left: Spacing.xl,
-  right: Spacing.xl,
-},
+    position: 'absolute',
+    left: Spacing.xl,
+    right: Spacing.xl,
+  },
   guestFooter: {
     flexDirection: 'row',
     alignItems: 'center',

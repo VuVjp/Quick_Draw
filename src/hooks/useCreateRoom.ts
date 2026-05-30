@@ -1,11 +1,6 @@
 // src/hooks/useCreateRoom.ts
 import { useState } from 'react';
-import
-firestore, {
-    doc,
-    writeBatch,
-} from '@react-native-firebase/firestore';
-import { db } from '../services/firebase';
+import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
 async function generateRoomCode(): Promise<string> {
@@ -51,7 +46,7 @@ export function useCreateRoom() {
         try {
             const code = await generateRoomCode();
             const roomRef = firestore().collection('rooms').doc(code);
-            const batch = writeBatch(db);
+            const batch = firestore().batch();
             const user = auth().currentUser;
             if (!user) {
                 setError('You need to be logged in to create a room');
@@ -59,7 +54,7 @@ export function useCreateRoom() {
             }
 
             // Room document
-            batch.set(roomRef, {
+            batch.set(roomRef as any, {
                 code,
                 roomName: options.roomName,
                 hostId: options.hostId,
@@ -79,14 +74,15 @@ export function useCreateRoom() {
             });
 
             // Host vào players sub-collection
-            const playerRef = doc(db, 'rooms', roomRef.id, 'players', options.hostId);
-            batch.set(playerRef, {
+            const playerRef = firestore().collection('rooms').doc(roomRef.id).collection('players').doc(options.hostId);
+            batch.set(playerRef as any, {
                 displayName: options.hostName,
                 score: 0,
                 isHost: true,
                 avatar: user.photoURL || 'user',
                 isOnline: true,
                 joinedAt: firestore.FieldValue.serverTimestamp(),
+                lastSeen: firestore.FieldValue.serverTimestamp(),
             });
 
             await batch.commit();

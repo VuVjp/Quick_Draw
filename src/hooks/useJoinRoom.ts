@@ -73,6 +73,7 @@ export function useJoinRoom() {
                     avatar: user.photoURL || 'user',
                     isOnline: true,
                     joinedAt: firestore.FieldValue.serverTimestamp(),
+                    lastSeen: firestore.FieldValue.serverTimestamp(),
                 });
 
                 // Increment playerCount

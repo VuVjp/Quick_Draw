@@ -32,6 +32,8 @@ import { auth } from '../services/firebase';
 import { useRoom } from '../hooks/useRoom';
 import { useSubmitDrawing } from '../hooks/useSubmitDrawing';
 import { useHostGameLifecycle } from '../hooks/useHostGameLifecycle';
+import { useHeartbeat } from '../hooks/useHeartbeat';
+import { useHostElection } from '../hooks/useHostElection';
 
 
 const { width, height } = Dimensions.get('window');
@@ -92,6 +94,8 @@ const DrawingScreen = () => {
   const isInferencing = useRef(false);
   const roomId = useGameStore((s) => s.roomId);
   const { room, players: roomPlayers, uid } = useRoom(roomId);
+  useHeartbeat(roomId, uid, { intervalMs: 5000 });
+  useHostElection(roomId, room, roomPlayers, uid, { timeoutMs: 30000 });
   const { runInference, isReady } = useDrawingInference(false);
   const submittedRoundRef = useRef<string | null>(null);
   const lastHandledRoomStatusRef = useRef<string | null>(null);
@@ -392,7 +396,7 @@ const DrawingScreen = () => {
       <View style={styles.container}>
         {/* ── Header ── */}
         <View style={[styles.header, { paddingTop: Math.max(insets.top + Spacing.sm, 40) }]}>
-          <TouchableOpacity onPress={() =>{playClick(); router.back()}} style={styles.closeBtn}>
+          <TouchableOpacity onPress={() => { playClick(); router.back() }} style={styles.closeBtn}>
             <Text style={styles.closeBtnText}>X</Text>
           </TouchableOpacity>
 
@@ -468,18 +472,18 @@ const DrawingScreen = () => {
 
         {/* ── Toolbar ── */}
         <View
-        style={[
-          styles.toolbarWrapper,
-          { paddingBottom: Math.max(insets.bottom, 8) }
-        ]}
-      >
-        <BrushToolbar
-          onUndo={handleUndo}
-          onRedo={handleRedo}
-          onClear={handleClear}
-          disabled={!isDrawer}
-        />
-      </View>
+          style={[
+            styles.toolbarWrapper,
+            { paddingBottom: Math.max(insets.bottom, 8) }
+          ]}
+        >
+          <BrushToolbar
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            onClear={handleClear}
+            disabled={!isDrawer}
+          />
+        </View>
         {/* <Button
           title={isReady ? 'Test Inference' : 'Model loading...'}
           disabled={!isReady}

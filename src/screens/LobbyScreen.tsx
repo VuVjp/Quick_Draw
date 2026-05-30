@@ -105,7 +105,7 @@ const LobbyScreen = () => {
     } catch {
       throw new Error('Failed to join room'); // Let the error propagate to be caught in the calling function
     } finally {
-      router.push(`/room/${room.id}`);
+      router.replace(`/room/${room.id}`);
       joinRoom(room.id, room.name, room.players, room.maxPlayers);
       setRoomConfig({
         roomId: room.id,
@@ -134,7 +134,7 @@ const LobbyScreen = () => {
           timeLeft: result.roundDurationSecs,
           difficulty: result.difficulty as any,
         });
-        router.push(`/room/${result.roomId}`);
+        router.replace(`/room/${result.roomId}`);
       }
     }
     catch (e) {
