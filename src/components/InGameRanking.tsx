@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Image } from 'react-native';
 import { useGameStore } from '../store/useGameStore';
 import { Colors } from '../theme/colors';
 import { FontFamily, FontSize } from '../theme/typography';
@@ -47,7 +47,8 @@ const InGameRanking = () => {
             return (
               <View key={playerId} style={styles.playerRow}>
                 <Text style={styles.rankText}>#{rank}</Text>
-                <Text style={styles.avatar}>{playerAvatar === 'user' ? '👤' : playerAvatar}</Text>
+                <Image source={playerAvatar === 'user' ? require('../assets/user.png') : { uri: playerAvatar }} style={{ width: 24, height: 24, borderRadius: 12 }} />
+                {/* <Text style={styles.avatar}>{playerAvatar === 'user' ? '👤' : playerAvatar}</Text> */}
                 <View style={{ flex: 1 }}>
                   <Text style={styles.name} numberOfLines={1}>{playerName}</Text>
                   <Text style={styles.totalScore}>Tổng: {totalScore}đ</Text>

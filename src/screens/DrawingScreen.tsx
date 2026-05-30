@@ -382,9 +382,10 @@ const DrawingScreen = () => {
           ? 'Transitioning to results screen...'
           : room?.status !== 'drawing'
             ? 'Waiting for host to advance round'
-            : currentUid === currentDrawerId
-              ? null
-              : 'Waiting for your turn to draw...'
+            // : currentUid === currentDrawerId
+            //   ? null
+            //   : 'Waiting for your turn to draw...'
+            : null
     : null;
 
   const handleUndo = useCallback(() => canvasRef.current?.undo(), []);
