@@ -47,7 +47,7 @@ const InGameRanking = () => {
             return (
               <View key={playerId} style={styles.playerRow}>
                 <Text style={styles.rankText}>#{rank}</Text>
-                <Image source={playerAvatar === 'user' ? require('../assets/images/anonymous.png') : { uri: playerAvatar }} style={{ width: 24, height: 24, borderRadius: 12 }} />
+                <Image source={playerAvatar === 'user' ? require('../../assets/images/anonymous.png') : { uri: playerAvatar }} style={{ width: 24, height: 24, borderRadius: 12 }} />
                 {/* <Text style={styles.avatar}>{playerAvatar === 'user' ? '👤' : playerAvatar}</Text> */}
                 <View style={{ flex: 1 }}>
                   <Text style={styles.name} numberOfLines={1}>{playerName}</Text>
