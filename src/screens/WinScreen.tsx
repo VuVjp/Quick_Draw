@@ -33,7 +33,7 @@ const formatDuration = (seconds: number) => {
 };
 
 const getPlayerId = (player: any) => player?.uid ?? player?.id;
-const getPlayerName = (player: any) => player?.displayName ?? player?.name ?? 'Người chơi';
+const getPlayerName = (player: any) => player?.displayName ?? player?.name ?? 'Unknown';
 
 const WinScreen = () => {
     const router = useRouter();
@@ -132,16 +132,16 @@ const WinScreen = () => {
     const renderRoundResult = ({ item }: { item: any }) => (
         <View style={styles.roundCard}>
             <View style={styles.roundHeader}>
-                <Text style={styles.roundTitle}>Vòng {item.round}</Text>
+                <Text style={styles.roundTitle}>Round {item.round}</Text>
                 <Text style={[styles.roundBadge, item.aiCorrect ? styles.roundBadgeSuccess : styles.roundBadgeFail]}>
-                    {item.aiCorrect ? 'AI đoán đúng' : 'AI chưa đúng'}
+                    {item.aiCorrect ? 'AI guessed correctly' : 'AI guessed incorrectly'}
                 </Text>
             </View>
-            <Text style={styles.roundWord}>Chủ đề: {item.word}</Text>
-            <Text style={styles.roundMeta}>Thời gian vẽ: {formatDuration(item.timeSpent)} / {formatDuration(item.drawTime)}</Text>
-            <Text style={styles.roundMeta}>Dự đoán: {item.aiLabel ?? 'Không có'}</Text>
+            <Text style={styles.roundWord}>Topic: {item.word}</Text>
+            <Text style={styles.roundMeta}>Drawing Time: {formatDuration(item.timeSpent)} / {formatDuration(item.drawTime)}</Text>
+            <Text style={styles.roundMeta}>Guess: {item.aiLabel ?? 'None'}</Text>
             {/* {item.aiScore != null && (
-        <Text style={styles.roundMeta}>Độ tin cậy: {(item.aiScore * 100).toFixed(1)}%</Text>
+        <Text style={styles.roundMeta}>Confidence: {(item.aiScore * 100).toFixed(1)}%</Text>
       )} */}
         </View>
     );
@@ -158,21 +158,21 @@ const WinScreen = () => {
                             <View style={styles.circle2} />
 
                             <Text style={styles.trophy}>🏆</Text>
-                            <Text style={styles.title}>KẾT QUẢ GAME</Text>
-                            <Text style={styles.subtitle}>{roomName || room?.roomName || 'Bảng xếp hạng cuối game'}</Text>
+                            <Text style={styles.title}>GAME RESULTS</Text>
+                            <Text style={styles.subtitle}>{roomName || room?.roomName || 'Final Leaderboard'}</Text>
 
                             <View style={styles.rankCard}>
-                                <Text style={styles.rankLabel}>Bạn xếp hạng</Text>
+                                <Text style={styles.rankLabel}>Your Rank</Text>
                                 <Text style={styles.rankValue}>#{myRank ?? '-'}</Text>
                                 <Text style={styles.rankHint}>
                                     {room?.status === 'waiting'
-                                        ? 'Phòng đã về waiting, bạn có thể vào lại lobby.'
-                                        : `Phòng sẽ về waiting sau ${countdown}s`}
+                                        ? 'Room is waiting, you can rejoin the lobby.'
+                                        : `Room will be waiting in ${countdown}s`}
                                 </Text>
                             </View>
 
                             <View style={styles.listBlock}>
-                                <Text style={styles.sectionTitle}>Bảng xếp hạng</Text>
+                                <Text style={styles.sectionTitle}>Final Leaderboard</Text>
                                 <FlatList
                                     data={sortedOnlinePlayers.slice(0, 6)}
                                     renderItem={renderOnlinePlayer}
@@ -185,7 +185,7 @@ const WinScreen = () => {
 
                             <View style={styles.actions}>
                                 <AnimatedButton
-                                    label="Về lobby"
+                                    label="Back to Lobby"
                                     onPress={() => {
                                         leaveRoom();
                                         router.replace('/lobby');
@@ -203,75 +203,109 @@ const WinScreen = () => {
     }
 
     return (
-        <NotebookBackground>
-            <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
-                <View style={styles.shell}>
-                    <Animated.View style={[styles.mainFrame, styles.offlineFrame, containerStyle]}>
-                        <Animated.Text style={[styles.star1, s1Style]}>⭐</Animated.Text>
-                        <Animated.Text style={[styles.star2, s2Style]}>⭐</Animated.Text>
-                        <View style={styles.circle1} />
-                        <View style={styles.circle2} />
+  <NotebookBackground>
+    <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
+      <View style={styles.shell}>
+        <Animated.View
+          style={[styles.mainFrame, styles.offlineFrame, containerStyle]}
+        >
+          <Animated.Text style={[styles.star1, s1Style]}>⭐</Animated.Text>
+          <Animated.Text style={[styles.star2, s2Style]}>⭐</Animated.Text>
 
-                        <Text style={styles.trophy}>🏆</Text>
-                        <Text style={styles.title}>Result</Text>
-                        <Text style={styles.subtitle}>Kết quả từng vòng của bạn</Text>
+          <View style={styles.circle1} />
+          <View style={styles.circle2} />
 
-                        <View style={styles.summaryCard}>
-                            <Text style={styles.summaryLabel}>Tổng điểm</Text>
-                            <Text style={styles.summaryValue}>{localScore} đ</Text>
-                            <Text style={styles.summaryHint}>{roundResults.length}/{rounds} vòng đã hoàn thành</Text>
-                        </View>
+          <FlatList
+            style={styles.flatList}
+            showsVerticalScrollIndicator={false}
+            data={
+            roundResults.length > 0
+                ? roundResults
+                : ([{ round: 0, empty: true }] as any)
+            }
+            keyExtractor={(item: any, index) =>
+              String(item.round ?? index)
+            }
+            ListHeaderComponent={
+                 <View style={styles.listHeader}>
+              <>
+                <Text style={styles.trophy}>🏆</Text>
 
-                        <View style={styles.listBlock}>
-                            <Text style={styles.sectionTitle}>Chi tiết từng vòng</Text>
-                            <FlatList
-                                data={roundResults.length > 0 ? roundResults : [{ round: 0, word: '', drawTime: 0, timeSpent: 0, aiCorrect: false, aiLabel: null, aiScore: null, empty: true }]}
-                                renderItem={({ item }) => {
-                                    if ((item as any).empty) {
-                                        return (
-                                            <View style={styles.roundCard}>
-                                                <Text style={styles.roundTitle}>Chưa có dữ liệu vòng nào</Text>
-                                                <Text style={styles.roundMeta}>Hãy chơi lại để xem tổng kết từng vòng.</Text>
-                                            </View>
-                                        );
-                                    }
-                                    return renderRoundResult({ item } as any);
-                                }}
-                                keyExtractor={(item: any, index: number) => String(item.round ?? index)}
-                                showsVerticalScrollIndicator={false}
-                                contentContainerStyle={styles.flatListContent}
-                                style={styles.flatList}
-                            />
-                        </View>
+                <Text style={styles.title}>Result</Text>
 
-                        <View style={styles.actions}>
-                            <AnimatedButton
-                                label="Chơi lại"
-                                onPress={() => {
-                                    leaveRoom();
-                                    router.replace('/single-player-config');
-                                }}
-                                variant="ghost"
-                                style={styles.actionBtn}
-                                textStyle={styles.btnText}
-                            />
-                            <AnimatedButton
-                                label="Sảnh chính"
-                                onPress={() => {
-                                    leaveRoom();
-                                    router.dismissAll();
-                                    router.replace('/home');
-                                }}
-                                variant="ghost"
-                                style={styles.actionBtn}
-                                textStyle={styles.btnText}
-                            />
-                        </View>
-                    </Animated.View>
+                <Text style={styles.subtitle}>
+                  Round-by-round results
+                </Text>
+
+                <View style={styles.summaryCard}>
+                  <Text style={styles.summaryLabel}>
+                    Total Score
+                  </Text>
+
+                  <Text style={styles.summaryValue}>
+                    {localScore} points
+                  </Text>
+
+                  <Text style={styles.summaryHint}>
+                    {roundResults.length}/{rounds} rounds completed
+                  </Text>
                 </View>
-            </SafeAreaView>
-        </NotebookBackground>
-    );
+
+                <Text style={styles.sectionTitle}>
+                  Round Details
+                </Text>
+              </>
+              </View>
+            }
+            renderItem={({ item }) => {
+              if ((item as any).empty) {
+                return (
+                  <View style={styles.roundCard}>
+                    <Text style={styles.roundTitle}>
+                      No round data available
+                    </Text>
+
+                    <Text style={styles.roundMeta}>
+                      Play again to see the results for each round.
+                    </Text>
+                  </View>
+                );
+              }
+
+              return renderRoundResult({ item } as any);
+            }}
+            contentContainerStyle={styles.flatListContent}
+          />
+
+          <View style={styles.actions}>
+            <AnimatedButton
+              label="Play Again"
+              onPress={() => {
+                leaveRoom();
+                router.replace('/single-player-config');
+              }}
+              variant="ghost"
+              style={styles.actionBtn}
+              textStyle={styles.btnText}
+            />
+
+            <AnimatedButton
+              label="Main Menu"
+              onPress={() => {
+                leaveRoom();
+                router.dismissAll();
+                router.replace('/home');
+              }}
+              variant="ghost"
+              style={styles.actionBtn}
+              textStyle={styles.btnText}
+            />
+          </View>
+        </Animated.View>
+      </View>
+    </SafeAreaView>
+  </NotebookBackground>
+);
 };
 
 export default WinScreen;
@@ -298,8 +332,9 @@ const styles = StyleSheet.create({
         ...Shadow.sketch,
     },
     offlineFrame: {
-        minHeight: height * 0.87,
-    },
+  minHeight: height * 0.87,
+  paddingBottom: 0, // bỏ padding dưới
+},
     onlineFrame: {
         minHeight: height * 0.87,
     },
@@ -413,10 +448,11 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.lg,
     },
     sectionTitle: {
-        fontFamily: FontFamily.patrickHand,
-        fontSize: FontSize.lg,
-        color: Colors.warmBlack,
-        marginBottom: Spacing.sm,
+    width: '100%',
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.lg,
+    color: Colors.warmBlack,
+    marginBottom: Spacing.sm,
     },
     listBlock: {
         flex: 1,
@@ -424,12 +460,12 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.md,
     },
     flatList: {
-        flex: 1,
-        width: '100%',
+    flex: 1,
+    width: '100%',
     },
     flatListContent: {
-        gap: Spacing.sm,
-        paddingBottom: Spacing.sm,
+    paddingBottom: Spacing.md,
+    gap: Spacing.sm,
     },
     leaderRow: {
         flexDirection: 'row',
@@ -511,9 +547,11 @@ const styles = StyleSheet.create({
         color: Colors.warmBlack,
     },
     actions: {
-        width: '100%',
-        gap: Spacing.md,
-        marginBottom: Spacing.sm,
+    width: '100%',
+    gap: Spacing.md,
+
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
     },
     actionBtn: {
         paddingVertical: Spacing.sm,
@@ -523,4 +561,8 @@ const styles = StyleSheet.create({
     btnText: {
         fontSize: FontSize.md,
     },
+    listHeader: {
+  width: '100%',
+  alignItems: 'center',
+},
 });

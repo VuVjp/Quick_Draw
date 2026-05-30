@@ -39,14 +39,14 @@ const RegisterScreen = () => {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backBtnText}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Đăng ký</Text>
+        <Text style={styles.title}>Register</Text>
         <View style={{ width: 44 }} />
       </View>
 
       <View style={styles.content}>
         <View style={styles.formCard}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Tên đăng nhập mới</Text>
+            <Text style={styles.label}>New Username</Text>
             <TextInput
               style={styles.textInput}
               value={username}
@@ -58,7 +58,7 @@ const RegisterScreen = () => {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Tên hiển thị (Tên trong game)</Text>
+            <Text style={styles.label}>Display Name (InGame name)</Text>
             <TextInput
               style={styles.textInput}
               value={displayName}
@@ -69,24 +69,24 @@ const RegisterScreen = () => {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Mật khẩu</Text>
+            <Text style={styles.label}>Password</Text>
             <TextInput
               style={styles.textInput}
               value={password}
               onChangeText={setPassword}
-              placeholder="Tạo mật khẩu..."
+              placeholder="Create a password..."
               placeholderTextColor={Colors.softGray}
               secureTextEntry
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nhập lại mật khẩu</Text>
+            <Text style={styles.label}>Confirm Password</Text>
             <TextInput
               style={styles.textInput}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
-              placeholder="Xác nhận mật khẩu..."
+              placeholder="Confirm your password..."
               placeholderTextColor={Colors.softGray}
               secureTextEntry
             />
@@ -94,14 +94,14 @@ const RegisterScreen = () => {
         </View>
 
         <AnimatedButton
-          label="Tạo tài khoản 📝"
+          label="New account 📝"
           onPress={handleRegister}
           variant="primary"
           style={styles.submitBtn}
         />
 
         <AnimatedButton
-          label="Chơi với tư cách khách 👤"
+          label="Play as Guest 👤"
           onPress={async () => {
             const guestName = `Guest${Math.floor(Math.random() * 10000)}`;
             await AsyncStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({
@@ -116,7 +116,7 @@ const RegisterScreen = () => {
         />
 
         <TouchableOpacity onPress={() => router.replace('/login')} style={styles.switchLink}>
-          <Text style={styles.switchLinkText}>Đã có tài khoản? Đăng nhập</Text>
+          <Text style={styles.switchLinkText}>Already have an account? Log in</Text>
         </TouchableOpacity>
       </View>
     </NotebookBackground>

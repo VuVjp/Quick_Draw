@@ -12,6 +12,7 @@ import { useCreateRoom } from '../hooks/useCreateRoom';
 import { playClick } from '../store/useAudioStore';
 import { useHaptics } from '../hooks/useHaptics';
 import { useUserStore } from '../store/useUserStore';
+import { Ionicons } from '@expo/vector-icons';
 
 const CreateRoomScreen = () => {
   const router = useRouter();
@@ -19,13 +20,13 @@ const CreateRoomScreen = () => {
   const joinRoom = useGameStore((s) => s.joinRoom);
   const addRoom = useGameStore((s) => s.addRoom);
 
-  const [roomName, setRoomName] = useState('Phòng của tôi');
+  const [roomName, setRoomName] = useState('My Room');
   const [maxPlayers, setMaxPlayers] = useState(8);
   const [rounds, setRounds] = useState(5);
   const [drawTime, setDrawTime] = useState(80);
-  const [difficulty, setDifficulty] = useState<Difficulty>('Trung bình');
+  const [difficulty, setDifficulty] = useState<Difficulty>('Medium');
   const [peerReview, setPeerReview] = useState(false);
-  const [roomType, setRoomType] = useState('Công khai');
+  const [roomType, setRoomType] = useState('Public');
 
   const { light } = useHaptics();
   const insets = useSafeAreaInsets();
@@ -42,7 +43,7 @@ const CreateRoomScreen = () => {
       difficulty,
       peerReviewEnabled: peerReview,
       isSinglePlayer: false,
-      isPrivate: roomType === 'Riêng tư',
+      isPrivate: roomType === 'Private',
     });
 
     const result = await createRoom({
@@ -54,7 +55,7 @@ const CreateRoomScreen = () => {
       roundDurationSecs: drawTime,
       difficulty,
       peerReviewEnabled: peerReview,
-      isPrivate: roomType === 'Riêng tư',
+      isPrivate: roomType === 'Private',
     });
 
     if (!result) return; // Lỗi đã được log trong hook
@@ -107,13 +108,13 @@ const CreateRoomScreen = () => {
     <NotebookBackground>
       <View style={[styles.header, { paddingTop: Math.max(insets.top + Spacing.md, 40) }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backBtnText}>←</Text>
+          <Ionicons name="arrow-back" size={24} color={Colors.warmBlack} />
         </TouchableOpacity>
-        <Text style={styles.title}>Cấu hình phòng</Text>
+        <Text style={styles.title}>Room Config</Text>
         <View style={{ width: 44 }} />
       </View>
 
-      <View style={[styles.content, { flex: 1 }]}>
+      <View style={[styles.content, { flex: 1 ,  marginTop: -15 } ]}>
         <View style={[styles.formCard, {
           flex: 1,
           paddingTop: Spacing.md,
@@ -135,26 +136,26 @@ const CreateRoomScreen = () => {
             }}
           >
             <View style={styles.inputGroup}>
-              <Text style={styles.optionLabel}>Tên phòng</Text>
+              <Text style={styles.optionLabel}>Room Name</Text>
               <TextInput
                 style={styles.textInput}
                 value={roomName}
                 onChangeText={setRoomName}
-                placeholder="Nhập tên phòng..."
+                placeholder="Enter room name..."
                 placeholderTextColor={Colors.softGray}
               />
             </View>
 
-            {renderOptionSelector('Loại phòng', ['Công khai', 'Riêng tư'], roomType, setRoomType)}
-            {renderOptionSelector('Số người tối đa', [2, 4, 8, 12], maxPlayers, setMaxPlayers)}
-            {renderOptionSelector('Số vòng', [3, 5, 10], rounds, setRounds)}
-            {renderOptionSelector('Thời gian (giây)', [5, 60, 80, 120], drawTime, setDrawTime)}
-            {/* {renderOptionSelector('Độ khó', ['Dễ', 'Trung bình', 'Khó'], difficulty, setDifficulty)} */}
+            {renderOptionSelector('Room Type', ['Public', 'Private'], roomType, setRoomType)}
+            {renderOptionSelector('Max Players', [2, 4, 8, 12], maxPlayers, setMaxPlayers)}
+            {renderOptionSelector('Number of Rounds', [3, 5, 10], rounds, setRounds)}
+            {renderOptionSelector('Draw Time (seconds)', [5, 60, 80, 120], drawTime, setDrawTime)}
+            {/* {renderOptionSelector('Difficulty', ['Easy', 'Medium', 'Hard'], difficulty, setDifficulty)} */}
 
             <View style={styles.switchGroup}>
               <View>
                 <Text style={styles.optionLabel}>Peer Review (Comming Soon)</Text>
-                <Text style={styles.optionHint}>Cho phép người chơi chấm điểm bài vẽ của nhau</Text>
+                <Text style={styles.optionHint}>Allow players to rate each other's drawings</Text>
               </View>
               <Switch
                 disabled={true} // Tạm thời khóa vì chưa hoàn thiện backend
@@ -170,7 +171,7 @@ const CreateRoomScreen = () => {
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, Spacing.xl) }]}>
         <AnimatedButton
-          label={loading ? 'Đang tạo...' : 'Bắt đầu '}
+          label={loading ? 'Creating...' : 'Create Room'}
           onPress={handleCreate}
           disabled={loading}
           variant="primary"
@@ -205,12 +206,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  backBtnText: {
-    fontFamily: FontFamily.patrickHand,
-    fontSize: 24,
-    color: Colors.warmBlack,
-    marginTop: -2,
   },
   content: {
     padding: Spacing.xl,
@@ -287,5 +282,6 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.sm,
+    marginBottom: Spacing.lg,
   },
 });

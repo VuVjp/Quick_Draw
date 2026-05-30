@@ -164,7 +164,7 @@ const RoundEndScreen = () => {
         />
         <View style={{ flex: 1 }}>
           <Text style={styles.playerName} numberOfLines={1}>{playerName}</Text>
-          <Text style={styles.playerScore}>Tổng: {totalScore} đ</Text>
+          <Text style={styles.playerScore}>Total: {totalScore} đ</Text>
         </View>
         <Text style={styles.playerScore}>+{pointsGained} đ</Text>
       </Animated.View>
@@ -175,7 +175,7 @@ const RoundEndScreen = () => {
     <NotebookBackground>
       <View style={styles.container}>
         <Animated.View entering={FadeIn.duration(600)} style={styles.header}>
-          <Text style={styles.title}>KẾT THÚC VÒNG {currentRound}/{rounds}</Text>
+          <Text style={styles.title}>ROUND END {currentRound}/{rounds}</Text>
           {!isSinglePlayer && (
             <FlatList
               data={sortedDisplayedPlayers}
@@ -209,7 +209,7 @@ const RoundEndScreen = () => {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(200).springify()} style={[styles.artworkContainer, { flex: 1 }]}>
-          <Text style={styles.artworkTitle}>Tác phẩm xuất sắc nhất</Text>
+          <Text style={styles.artworkTitle}>Best Artwork</Text>
           <View
             style={[styles.canvasWrapper, { flex: 1, width: '100%', marginBottom: Spacing.md }]}
             onLayout={(e) => {
@@ -253,13 +253,13 @@ const RoundEndScreen = () => {
               </View>
             ) : (
               <View style={styles.noMvpTag}>
-                <Text style={styles.noMvpText}>Không ai hoàn thành hết</Text>
+                <Text style={styles.noMvpText}>No one finished</Text>
               </View>
             )}
 
             {showLeaderboard && !isSinglePlayer && (
               <View style={styles.leaderboardOverlay}>
-                <Text style={styles.leaderboardTitle}>Bảng Xếp Hạng</Text>
+                <Text style={styles.leaderboardTitle}>Leaderboard</Text>
                 <FlatList
                   data={displayedPlayers}
                   renderItem={renderPlayer}
@@ -295,7 +295,7 @@ const RoundEndScreen = () => {
 
           {!isSinglePlayer && (
             <AnimatedButton
-              label={showLeaderboard ? `Ẩn BXH (${countdown})` : `Hiện BXH (${countdown})`}
+              label={showLeaderboard ? `Hide Leaderboard (${countdown})` : `Show Leaderboard (${countdown})`}
               onPress={() => setShowLeaderboard(!showLeaderboard)}
               variant="secondary"
               style={{ marginBottom: Spacing.md }}
@@ -304,7 +304,7 @@ const RoundEndScreen = () => {
           )}
           {isSinglePlayer && (
             <AnimatedButton
-              label={isLastRound ? "Xem tổng kết" : "Vòng tiếp theo"}
+              label={isLastRound ? "View Summary" : "Next Round"}
               onPress={handleNext}
               variant="primary"
               fullWidth

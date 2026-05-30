@@ -25,7 +25,7 @@ async function generateRoomCode(): Promise<string> {
         }
     }
 
-    throw new Error('Không thể tạo room code');
+    throw new Error('Can not generate unique room code. Please try again.');
 }
 
 interface CreateRoomOptions {
@@ -54,7 +54,7 @@ export function useCreateRoom() {
             const batch = writeBatch(db);
             const user = auth().currentUser;
             if (!user) {
-                setError('Bạn cần đăng nhập để tạo phòng');
+                setError('You need to be logged in to create a room');
                 return null;
             }
 
@@ -94,7 +94,7 @@ export function useCreateRoom() {
 
         } catch (e: any) {
             console.error('[createRoom]', e);
-            setError(e.message ?? 'Không thể tạo phòng');
+            setError(e.message ?? 'Cannot create room. Please try again.');
             return null;
         } finally {
             setLoading(false);

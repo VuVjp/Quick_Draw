@@ -38,8 +38,8 @@ const LoseScreen = () => {
         
         <Text style={styles.heart}>💔</Text>
         
-        <Text style={styles.title}>THUA RỒI!</Text>
-        <Text style={styles.subtitle}>Ai không thể hiểu được{'\n'}nghệ thuật của bạn.</Text>
+        <Text style={styles.title}>You lose!</Text>
+        <Text style={styles.subtitle}>The AI couldn't understand your artwork.</Text>
 
         <View style={styles.graphicBox}>
           <Text style={styles.scribble}>〰️〰️〰️</Text>
@@ -50,7 +50,7 @@ const LoseScreen = () => {
 
         <View style={styles.rewardRow}>
           <Text style={styles.rewardIcon}>⭐</Text>
-          <Text style={styles.rewardText}>Thường an ủi: +5 EXP</Text>
+          <Text style={styles.rewardText}>Comforting: +5 EXP</Text>
         </View>
 
         <View style={styles.actions}>

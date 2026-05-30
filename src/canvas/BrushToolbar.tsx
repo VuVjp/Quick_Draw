@@ -126,7 +126,7 @@ const BrushToolbar = ({ onUndo, onRedo, onClear, disabled = false }: Props) => {
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => { if (disabled) return; playClick(); onClear(); }} style={[styles.toolBtn, disabled && styles.toolBtnDisabled]} activeOpacity={disabled ? 1 : 0.7}>
-          <Text style={styles.clearText}>C</Text>
+          <Text style={styles.clearText}>🗑</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -193,25 +193,31 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.warmBlack,
   },
   bottomBar: {
-    flexDirection: 'row',
-    backgroundColor: Colors.paperWhite,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: Radius.xl,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    gap: Spacing.md,
-    width: width * 0.9,
-    justifyContent: 'space-between',
-    ...Shadow.sketch,
-  },
+  flexDirection: 'row',
+  backgroundColor: Colors.paperWhite,
+  borderWidth: 1.5,
+  borderColor: Colors.border,
+  borderRadius: Radius.xl,
+
+  paddingHorizontal: Spacing.sm,
+  paddingVertical: Spacing.sm,
+
+  gap: Spacing.xs,
+
+  alignItems: 'center',
+  justifyContent: 'center',
+
+  maxWidth: width * 0.95,
+
+  ...Shadow.sketch,
+},
   toolBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  width: 40,
+  height: 40,
+  borderRadius: Radius.md,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
   toolBtnActive: {
     backgroundColor: Colors.primaryYellow,
     borderWidth: 1.5,

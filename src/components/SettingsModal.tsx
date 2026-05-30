@@ -63,20 +63,20 @@ const SettingsModal = ({ visible, onClose }: Props) => {
     <Modal transparent visible={visible} animationType="fade">
       <View style={styles.overlay}>
         <Animated.View style={styles.modalContent}>
-          <Text style={styles.title}>Cài Đặt</Text>
+          <Text style={styles.title}>Settings</Text>
 
           <View style={styles.settingRow}>
-            <Text style={styles.label}>Tắt tiếng</Text>
+            <Text style={styles.label}>Music</Text>
             <TouchableOpacity
               style={[styles.toggleBtn, isMuted && styles.toggleBtnOff]}
               onPress={handleToggleMute}
             >
-              <Text style={styles.toggleText}>{isMuted ? 'TẮT' : 'BẬT'}</Text>
+              <Text style={styles.toggleText}>{isMuted ? 'OFF' : 'ON'}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.settingRow}>
-            <Text style={styles.label}>Âm lượng</Text>
+            <Text style={styles.label}>Music Volume</Text>
             <View style={styles.sliderContainer}>
               <Slider
                 style={styles.slider}
@@ -97,7 +97,7 @@ const SettingsModal = ({ visible, onClose }: Props) => {
           <Text style={styles.sectionTitle}>Cài đặt thêm</Text> */}
 
           <View style={styles.settingRow}>
-            <Text style={styles.label}>SFX (Âm thanh vẽ)</Text>
+            <Text style={styles.label}>SFX (Drawing Sounds)</Text>
             <TouchableOpacity
               style={[styles.toggleBtn, !soundEnabled && styles.toggleBtnOff]}
               onPress={() => {
@@ -105,12 +105,12 @@ const SettingsModal = ({ visible, onClose }: Props) => {
                 toggleSound();
               }}
             >
-              <Text style={styles.toggleText}>{soundEnabled ? 'BẬT' : 'TẮT'}</Text>
+              <Text style={styles.toggleText}>{soundEnabled ? 'ON' : 'OFF'}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.settingRow}>
-            <Text style={styles.label}>Âm lượng SFX</Text>
+            <Text style={styles.label}>SFX Volume</Text>
             <View style={styles.sliderContainer}>
               <Slider
                 style={styles.slider}
@@ -129,7 +129,7 @@ const SettingsModal = ({ visible, onClose }: Props) => {
 
 
           <AnimatedButton
-            label="Đóng"
+            label="Close"
             onPress={handleClose}
             variant="secondary"
             style={{ marginTop: Spacing.xl }}

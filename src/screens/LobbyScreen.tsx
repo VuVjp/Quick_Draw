@@ -12,6 +12,7 @@ import AnimatedButton from '../components/AnimatedButton';
 import { usePublicRooms, RoomItem } from '../hooks/usePublicRooms';
 import { useJoinRoom } from '../hooks/useJoinRoom';
 import { useUserStore } from '../store/useUserStore';
+import { Ionicons } from '@expo/vector-icons';
 
 const { height } = Dimensions.get('window');
 
@@ -40,7 +41,7 @@ const RoomCard = React.memo(({ room, index, onJoin, onRemove }: { room: Room; in
           <View style={{ flexDirection: 'row', gap: Spacing.sm }}>
             {room.isOwner && (
               <AnimatedButton
-                label="Hủy"
+                label="Cancel"
                 onPress={() => onRemove?.(room.id)}
                 variant="danger"
                 style={styles.joinBtn}
@@ -48,7 +49,7 @@ const RoomCard = React.memo(({ room, index, onJoin, onRemove }: { room: Room; in
               />
             )}
             <AnimatedButton
-              label={isFull ? 'Đầy' : 'Vào'}
+              label={isFull ? 'Full' : 'Join'}
               onPress={() => onJoin(room)}
               disabled={isFull}
               variant="ghost"
@@ -156,26 +157,26 @@ const LobbyScreen = () => {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <TouchableOpacity onPress={() => router.replace('/home?bypassAuthRedirect=1')} style={styles.backBtn}>
-            <Text style={styles.backBtnText}>←</Text>
+            <Ionicons name="arrow-back" size={24} color={Colors.warmBlack} />
           </TouchableOpacity>
           <View style={{ alignItems: 'center' }}>
-            <Text style={styles.title}>Phòng Chờ</Text>
-            <Text style={styles.greetingText}>Xin chào, {session?.displayName || 'Player'}</Text>
+            <Text style={styles.title}>Lobby</Text>
+            <Text style={styles.greetingText}>Hello, {session?.displayName || 'Player'}</Text>
           </View>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
-            <Text style={styles.logoutBtnText}>Đăng xuất</Text>
+            <Text style={styles.logoutBtnText}>Logout</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.headerButtons}>
           <AnimatedButton
-            label="Tạo Phòng ➕"
+            label="Create room ➕"
             onPress={() => router.push('/create-room')}
             variant="primary"
             style={styles.createRoomBtn}
             textStyle={styles.createRoomBtnText}
           />
           <AnimatedButton
-            label="Nhập mã 🔑"
+            label="Enter code 🔑"
             onPress={() => setModalVisible(true)}
             variant="ghost"
             style={styles.joinCodeBtn}
@@ -213,8 +214,8 @@ const LobbyScreen = () => {
         >
           <View style={styles.modalCard}>
             {/* Title */}
-            <Text style={styles.modalTitle}>Nhập mã phòng</Text>
-            <Text style={styles.modalHint}>Hỏi chủ phòng để lấy mã 6 ký tự</Text>
+            <Text style={styles.modalTitle}>Enter Room Code</Text>
+            <Text style={styles.modalHint}>Ask the room host for the 6-character code</Text>
 
             {/* Input */}
             <TextInput
@@ -236,7 +237,7 @@ const LobbyScreen = () => {
             {/* Buttons */}
             <View style={styles.modalButtons}>
               <AnimatedButton
-                label="Huỷ"
+                label="Cancel"
                 onPress={() => {
                   setModalVisible(false);
                   setRoomCode('');
@@ -245,7 +246,7 @@ const LobbyScreen = () => {
                 style={styles.modalBtn}
               />
               <AnimatedButton
-                label={joinLoading ? 'Đang vào...' : 'Vào phòng →'}
+                label={joinLoading ? 'Joining...' : 'Join'}
                 onPress={() => handleJoinByCode()}
                 disabled={roomCode.length < 6 || joinLoading}
                 variant="primary"
@@ -293,20 +294,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  backBtnText: {
-    fontFamily: FontFamily.patrickHand,
-    fontSize: 24,
-    color: Colors.warmBlack,
-    marginTop: -2,
-  },
   greetingText: {
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.md,
     color: Colors.border,
   },
   logoutBtn: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: Radius.sm,
     borderWidth: 1,
     borderColor: Colors.pastelRed,
@@ -406,13 +401,14 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
   },
   modalCard: {
-    width: '100%',
-    backgroundColor: Colors.paperWhite,
-    borderRadius: Radius.lg,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    padding: Spacing.xl,
-    gap: Spacing.md,
+  width: '100%',
+  minHeight: 340,
+  backgroundColor: Colors.paperWhite,
+  borderRadius: Radius.lg,
+  borderWidth: 1.5,
+  borderColor: Colors.border,
+  padding: Spacing.xl,
+  gap: Spacing.md,
   },
   modalTitle: {
     fontFamily: FontFamily.patrickHand,
@@ -428,14 +424,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   codeInput: {
-    fontFamily: FontFamily.patrickHand,
-    fontSize: FontSize.hero,
-    textAlign: 'center',
-    letterSpacing: 12,
-    borderBottomWidth: 2,
-    borderColor: Colors.primaryYellow,
-    paddingVertical: Spacing.md,
-    color: Colors.warmBlack,
+  fontFamily: FontFamily.patrickHand,
+  fontSize: FontSize.xxl,
+  textAlign: 'center',
+  letterSpacing: 6,
+  borderBottomWidth: 2,
+  borderColor: Colors.primaryYellow,
+  paddingVertical: Spacing.sm,
+  color: Colors.warmBlack,
   },
   errorText: {
     fontFamily: FontFamily.patrickHand,
@@ -449,7 +445,8 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   modalBtn: {
-    flex: 1,
-    paddingVertical: Spacing.sm,
+  flex: 1,
+  minHeight: 60,
+  justifyContent: 'center',
   },
 });

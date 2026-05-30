@@ -185,7 +185,7 @@ const DrawingScreen = () => {
 
     const mappedPlayers = Object.entries(roomPlayers).map(([playerId, pData]: [string, any]) => ({
       id: playerId,
-      name: pData.displayName || 'Người chơi',
+      name: pData.displayName || 'Player',
       avatar: pData.avatar || 'user',
       xp: 0,
       level: 1,
@@ -285,7 +285,7 @@ const DrawingScreen = () => {
 
         const base64 = canvasRef.current?.getSnapshot();
         if (!base64) {
-          console.warn('Canvas trống hoặc chưa sẵn sàng');
+          console.warn('Canvas snapshot failed or is empty');
           isInferencing.current = false;
           return;
         }
@@ -370,16 +370,16 @@ const DrawingScreen = () => {
   }
   const lockMessage = roomId
     ? submitted
-      ? 'Đã gửi bài vẽ'
+      ? 'Drawing submitted, waiting for others...'
       : room?.status === 'round_scoring'
-        ? 'Đang xử lí kết quả...'
+        ? 'Processing results...'
         : room?.status === 'round_end'
-          ? 'Đang chuyển sang màn kết quả...'
+          ? 'Transitioning to results screen...'
           : room?.status !== 'drawing'
-            ? 'Đang chờ host chuyển vòng'
+            ? 'Waiting for host to advance round'
             : currentUid === currentDrawerId
               ? null
-              : 'Đang chờ đến lượt bạn'
+              : 'Waiting for your turn to draw...'
     : null;
 
   const handleUndo = useCallback(() => canvasRef.current?.undo(), []);
@@ -432,7 +432,7 @@ const DrawingScreen = () => {
                   ) : (
                     <Text style={[styles.lockTitle, { fontSize: 42, marginBottom: Spacing.xs }]}>✓</Text>
                   )}
-                  <Text style={styles.lockTitle}>{submitted ? 'Bài đã được gửi' : 'Canvas đã bị khóa'}</Text>
+                  <Text style={styles.lockTitle}>{submitted ? 'Drawing submitted, waiting for others...' : 'Canvas locked'}</Text>
                   <Text style={styles.lockText}>{lockMessage}</Text>
                 </View>
               </View>
@@ -441,7 +441,7 @@ const DrawingScreen = () => {
             {/* Waiting Overlay */}
             {phase === 'waiting' && (
               <View style={styles.waitingOverlay}>
-                <Text style={styles.waitingTitle}>Đang chờ người chơi...</Text>
+                <Text style={styles.waitingTitle}>Waiting for players...</Text>
                 <Text style={styles.waitingCount}>{players.length} / {maxPlayers}</Text>
 
                 <View style={styles.waitingPlayers}>
@@ -453,7 +453,7 @@ const DrawingScreen = () => {
                 </View>
 
                 <AnimatedButton
-                  label="Bắt đầu ngay 🚀"
+                  label="Start Game 🚀"
                   onPress={() => {
                     startGame();
                   }}

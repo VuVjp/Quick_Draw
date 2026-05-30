@@ -10,6 +10,7 @@ import { useGameStore } from '../store/useGameStore';
 import NotebookBackground from '../components/NotebookBackground';
 import { playClick } from '../store/useAudioStore';
 import { useHaptics } from '../hooks/useHaptics';
+import { Ionicons } from '@expo/vector-icons';
 
 const SinglePlayerConfigScreen = () => {
   const router = useRouter();
@@ -26,7 +27,7 @@ const SinglePlayerConfigScreen = () => {
   const handleStart = () => {
     const finalName = nickname.trim();
     if (!finalName) return;
-    startSinglePlayer(finalName, rounds, drawTime, 'Trung bình', botCount);
+    startSinglePlayer(finalName, rounds, drawTime, 'Medium', botCount);
     router.replace('/drawing');
   };
 
@@ -70,17 +71,17 @@ const SinglePlayerConfigScreen = () => {
     <NotebookBackground>
       <View style={[styles.header, { paddingTop: Math.max(insets.top + Spacing.md, 40) }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backBtnText}>←</Text>
+          <Ionicons name="arrow-back" size={24} color={Colors.warmBlack} />
         </TouchableOpacity>
-        <Text style={styles.title}>Cấu hình chơi đơn</Text>
+        <Text style={styles.title}>Solo Config</Text>
         <View style={{ width: 44 }} />
       </View>
 
-      <View style={[styles.content, { flex: 1 }]}>
+      <View style={[styles.content, { flex: 1, marginTop: -15 }]}>
         <View style={[styles.formCard, { flex: 1, padding: 0, overflow: 'hidden' }]}>
           <View style={{ padding: Spacing.xl, gap: Spacing.xl }}>
-            {renderOptionSelector('Số vòng', [3, 5, 10], rounds, setRounds)}
-            {renderOptionSelector('Thời gian (giây)', [40, 60, 80, 120], drawTime, setDrawTime)}
+            {renderOptionSelector('Rounds', [3, 5, 10], rounds, setRounds)}
+            {renderOptionSelector('Draw Time (seconds)', [40, 60, 80, 120], drawTime, setDrawTime)}
           </View>
 
           <View style={{ flex: 1, width: '100%', alignItems: 'center', justifyContent: 'flex-end' }}>
@@ -95,7 +96,7 @@ const SinglePlayerConfigScreen = () => {
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, Spacing.xl) }]}>
         <AnimatedButton
-          label="Bắt đầu"
+          label="Start"
           onPress={handleStart}
           variant="primary"
           style={styles.createBtn}
@@ -129,12 +130,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  backBtnText: {
-    fontFamily: FontFamily.patrickHand,
-    fontSize: 24,
-    color: Colors.warmBlack,
-    marginTop: -2,
   },
   content: {
     padding: Spacing.xl,
@@ -197,5 +192,6 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.sm,
+    marginBottom: Spacing.lg,
   }
 });
