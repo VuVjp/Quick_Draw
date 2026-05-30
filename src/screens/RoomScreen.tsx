@@ -83,6 +83,7 @@ const RoomScreen = () => {
 
   // ─── Kick players if room is deleted ───
   useEffect(() => {
+    if (isHost) return; // Deny alert for host since they are the one deleting the room
     if (room?.status === 'deleted') {
       Alert.alert('Room Deleted', 'The host has deleted this room.', [
         { text: 'OK', onPress: () => router.replace('/lobby') }

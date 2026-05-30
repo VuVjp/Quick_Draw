@@ -51,7 +51,7 @@ const InGameRanking = () => {
                 {/* <Text style={styles.avatar}>{playerAvatar === 'user' ? '👤' : playerAvatar}</Text> */}
                 <View style={{ flex: 1 }}>
                   <Text style={styles.name} numberOfLines={1}>{playerName}</Text>
-                  <Text style={styles.totalScore}>Tổng: {totalScore}đ</Text>
+                  <Text style={styles.totalScore}>Total: {totalScore} P</Text>
                 </View>
                 <View style={styles.scoreCol}>
                   <Text style={styles.score}>{totalScore}</Text>

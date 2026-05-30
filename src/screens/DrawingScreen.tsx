@@ -316,7 +316,7 @@ const DrawingScreen = () => {
           if (!result || !result.accepted || !roomId) return;
 
           const currentUid = uid || auth.currentUser?.uid;
-          if (!currentUid || currentUid !== currentDrawerId) return;
+          if (!currentUid) return;
 
           const roundId = `round_${currentRound}`;
           if (submittedRoundRef.current === roundId) return;
@@ -367,12 +367,14 @@ const DrawingScreen = () => {
     handleRoundExpire();
   });
 
-  let isDrawer = !roomId
-    ? true
-    : !!room && room.status === 'drawing' && currentUid === currentDrawerId && !submitted && !submitting;
-  if (isSinglePlayer) {
-    isDrawer = true;
+  // Clear canvas when component mounts to avoid showing stale drawing from previous game
+  useEffect(() => {
+    useDrawingStore.getState().clearCanvas();
+    canvasRef.current?.clear();
   }
+    , []);
+
+  let isDrawer = true
   const lockMessage = roomId
     ? submitted
       ? 'Drawing submitted, waiting for others...'
