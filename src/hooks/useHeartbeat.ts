@@ -12,18 +12,29 @@ export function useHeartbeat(
 ) {
     const intervalMs = options?.intervalMs ?? 5000;
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const activeRef = useRef(false);
+
+    const stopHeartbeat = () => {
+        activeRef.current = false;
+        if (timerRef.current) {
+            clearInterval(timerRef.current as any);
+            timerRef.current = null;
+        }
+    };
 
     useEffect(() => {
-        if (!roomId || !uid) return;
+        if (!roomId || !uid) return stopHeartbeat;
 
         const playerRef = firestore()
             .collection('rooms')
             .doc(roomId)
             .collection('players')
             .doc(uid);
+        activeRef.current = true;
 
         const sendHeartbeat = async () => {
             try {
+                if (!activeRef.current) return;
                 await playerRef.set(
                     {
                         lastSeen: firestore.FieldValue.serverTimestamp(),
@@ -40,10 +51,9 @@ export function useHeartbeat(
         timerRef.current = setInterval(sendHeartbeat, intervalMs);
 
         return () => {
-            if (timerRef.current) {
-                clearInterval(timerRef.current as any);
-                timerRef.current = null;
-            }
+            stopHeartbeat();
         };
     }, [roomId, uid, intervalMs]);
+
+    return { stopHeartbeat };
 }

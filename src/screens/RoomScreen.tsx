@@ -36,7 +36,7 @@ const RoomScreen = () => {
   const { id } = useLocalSearchParams();
   const roomId = id as string;
   const insets = useSafeAreaInsets();
-  const { room, players, uid } = useRoom(roomId);
+  const { room, players, uid, stopHeartbeat } = useRoom(roomId);
   const setRoomConfig = useGameStore((s) => s.setRoomConfig);
   const { startGame } = useHostGameLifecycle(roomId);
   useHeartbeat(roomId, uid, { intervalMs: 5000 });
@@ -83,13 +83,19 @@ const RoomScreen = () => {
 
   // ─── Kick players if room is deleted ───
   useEffect(() => {
-    if (isHost) return; // Deny alert for host since they are the one deleting the room
+    if (room?.status !== 'deleted') return;
+
+    if (uid === room?.hostId) {
+      router.replace('/lobby');
+      return;
+    }
+
     if (room?.status === 'deleted') {
       Alert.alert('Room Deleted', 'The host has deleted this room.', [
         { text: 'OK', onPress: () => router.replace('/lobby') }
       ]);
     }
-  }, [room?.status, router]);
+  }, [room?.status, room?.hostId, uid, router]);
 
   if (!room || room.status === 'deleted') {
     return (
@@ -126,13 +132,32 @@ const RoomScreen = () => {
           { text: 'Leave Room', style: 'destructive', onPress: performLeaveRoom },
         ]
       );
-    } else {
-      performLeaveRoom();
+      return;
     }
+
+    performLeaveRoom();
+  };
+
+  const confirmDeleteRoom = () => {
+    if (!isHost) {
+      performLeaveRoom();
+      return;
+    }
+
+    Alert.alert(
+      'Delete Room',
+      'This will remove the room for everyone. Are you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete Room', style: 'destructive', onPress: performDeleteRoom },
+      ]
+    );
   };
 
   const performLeaveRoom = async () => {
     try {
+      stopHeartbeat();
+
       if (!uid) {
         router.replace('/lobby');
         return;
@@ -140,12 +165,10 @@ const RoomScreen = () => {
 
       const roomRef = firestore().collection('rooms').doc(roomId);
       const playerRef = roomRef.collection('players').doc(uid);
-      let roomWasDeleted = false;
 
       await firestore().runTransaction(async (tx) => {
         const roomSnap = await tx.get(roomRef);
         if (!roomSnap.exists) {
-          roomWasDeleted = true;
           return;
         }
 
@@ -154,33 +177,54 @@ const RoomScreen = () => {
           ? data.playerCount
           : (data.playerCount ? Number(data.playerCount) : 0);
 
+        tx.delete(playerRef);
+        tx.update(roomRef, {
+          playerCount: firestore.FieldValue.increment(-1),
+        });
+
         if (playerCount <= 1) {
           tx.delete(roomRef);
-          roomWasDeleted = true;
-        } else {
-          tx.delete(playerRef);
-          const updateData: any = {
-            playerCount: firestore.FieldValue.increment(-1),
-          };
-          if (isHost) updateData.hostId = null;
-          tx.update(roomRef, updateData);
         }
       });
-
-      if (roomWasDeleted) {
-        const playersSnap = await firestore().collection('rooms').doc(roomId).collection('players').get();
-        if (!playersSnap.empty) {
-          const batch = firestore().batch();
-          playersSnap.forEach((pDoc) => {
-            batch.delete(pDoc.ref);
-          });
-          await batch.commit();
-        }
-      }
 
       router.replace('/lobby');
     } catch (err) {
       console.error('Error leaving room:', err);
+      router.replace('/lobby');
+    }
+  };
+
+  const performDeleteRoom = async () => {
+    try {
+      stopHeartbeat();
+
+      if (!uid) {
+        router.replace('/lobby');
+        return;
+      }
+
+      const roomRef = firestore().collection('rooms').doc(roomId);
+      const playersRef = roomRef.collection('players');
+      const roundsRef = roomRef.collection('rounds');
+
+      const deleteCollection = async (collectionRef: any) => {
+        const snap = await collectionRef.get();
+        if (snap.empty) return;
+
+        const batch = firestore().batch();
+        snap.forEach((doc: any) => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+      };
+
+      await deleteCollection(playersRef);
+      await deleteCollection(roundsRef);
+      await roomRef.delete();
+
+      router.replace('/lobby');
+    } catch (err) {
+      console.error('Error deleting room:', err);
       router.replace('/lobby');
     }
   };
@@ -304,7 +348,7 @@ const RoomScreen = () => {
                 label="Delete Room"
                 onPress={() => {
                   playClick();
-                  confirmLeaveOrDelete();
+                  confirmDeleteRoom();
                 }}
                 variant="danger"
                 style={styles.flex1}

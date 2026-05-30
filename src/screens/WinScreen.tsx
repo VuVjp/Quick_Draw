@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
 
     paddingTop: Spacing.md,
-    paddingBottom: Spacing.lg,
+    paddingBottom: Spacing.sm,
     },
     actionBtn: {
         paddingVertical: Spacing.sm,

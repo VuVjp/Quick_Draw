@@ -30,7 +30,7 @@ export function useRoom(roomId?: string | null) {
   const uid = auth.currentUser?.uid;
 
   // Start presence heartbeat whenever this hook is used for an active room
-  useHeartbeat(roomId, uid, { intervalMs: 5000 });
+  const { stopHeartbeat } = useHeartbeat(roomId, uid, { intervalMs: 5000 });
 
   // ─── Subscribe room document ──────────────────────────────────────
   useEffect(() => {
@@ -84,5 +84,5 @@ export function useRoom(roomId?: string | null) {
     return unsub;
   }, [roomId]);
 
-  return { room, players, uid };
+  return { room, players, uid, stopHeartbeat };
 }
