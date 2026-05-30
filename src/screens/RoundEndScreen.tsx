@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
@@ -36,10 +36,14 @@ const RoundEndScreen = () => {
   const [countdown, setCountdown] = useState<number>(5);
   const isOnline = !!roomId;
   const displayedPlayers = isOnline ? leaderboardPlayers : players;
+  const sortedDisplayedPlayers = useMemo(() => {
+    return [...displayedPlayers].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+  }, [displayedPlayers]);
   const top1Player = displayedPlayers[0] as any;
 
   const [mvpImageBase64, setMvpImageBase64] = useState<string | null>(null);
   const [mvpStrokes, setMvpStrokes] = useState<any[] | null>(null);
+  const hasMvpArtwork = useRef(!!room?.mvpUid && (mvpImageBase64 !== null || mvpStrokes !== null));
 
   useEffect(() => {
     if (isSinglePlayer) return;
@@ -58,7 +62,7 @@ const RoundEndScreen = () => {
         router.replace('/lose' as any);
       }
     }
-  }, [displayedPlayers, isOnline, room, router, top1Player, uid]);
+  }, [displayedPlayers, isOnline, room, router, top1Player, uid, isSinglePlayer]);
 
   // Load MVP submission image or strokes from Firestore for the completed round
   useEffect(() => {
@@ -171,16 +175,20 @@ const RoundEndScreen = () => {
         <Animated.View entering={FadeIn.duration(600)} style={styles.header}>
           <Text style={styles.title}>KẾT THÚC VÒNG {currentRound}/{rounds}</Text>
           {!isSinglePlayer && (
-            <View style={styles.miniLeaderboard}>
-              {displayedPlayers.map((p: any) => {
-                const playerId = p.uid ?? p.id;
-                const playerName = p.displayName ?? p.name;
-                const playerAvatar = p.avatar ?? 'user';
-                const totalScore = p.score ?? 0;
-                const pts = p.gainedScore ?? lastRoundScores[playerId] ?? 0;
+            <FlatList
+              data={sortedDisplayedPlayers}
+              horizontal
+              keyExtractor={(item: any) => String(item.uid ?? item.id)}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.miniLeaderboard}
+              renderItem={({ item }: { item: any }) => {
+                const playerId = item.uid ?? item.id;
+                const playerName = item.displayName ?? item.name;
+                const playerAvatar = item.avatar ?? 'user';
+                const totalScore = item.score ?? 0;
+                const pts = item.gainedScore ?? lastRoundScores[playerId] ?? 0;
                 return (
-                  <View key={playerId} style={styles.miniPlayerRow}>
-                    {/* <Text style={styles.miniPlayerAvatar}>{p.avatar}</Text> */}
+                  <View style={styles.miniPlayerRow}>
                     <Image
                       source={playerAvatar === 'user' ? require('../../assets/images/anonymous.png') : { uri: playerAvatar }}
                       style={{ width: 30, height: 30, borderRadius: 15, marginRight: Spacing.sm }}
@@ -194,8 +202,8 @@ const RoundEndScreen = () => {
                     </Text>
                   </View>
                 );
-              })}
-            </View>)}
+              }}
+            />)}
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(200).springify()} style={[styles.artworkContainer, { flex: 1 }]}>
@@ -214,7 +222,7 @@ const RoundEndScreen = () => {
                 ? (
                   <Image
                     source={{ uri: `data:image/png;base64,${mvpImageBase64}` }}
-                    style={{ width: canvasSize.width, height: canvasSize.height, resizeMode: 'contain' }}
+                    style={{ width: canvasSize.width, height: canvasSize.height }}
                   />
                 ) : mvpStrokes
                   ? (
@@ -233,13 +241,19 @@ const RoundEndScreen = () => {
                     />
                   )
             )}
-            <View style={styles.artworkAuthorTag}>
-              <Image
-                source={(top1Player?.avatar ?? 'user') === 'user' ? require('../../assets/images/anonymous.png') : { uri: top1Player?.avatar }}
-                style={{ width: 30, height: 30, borderRadius: 15, marginRight: Spacing.sm }}
-              />
-              <Text style={styles.artworkAuthorText}>{top1Player?.displayName ?? top1Player?.name}</Text>
-            </View>
+            {hasMvpArtwork ? (
+              <View style={styles.artworkAuthorTag}>
+                <Image
+                  source={(top1Player?.avatar ?? 'user') === 'user' ? require('../../assets/images/anonymous.png') : { uri: top1Player?.avatar }}
+                  style={{ width: 30, height: 30, borderRadius: 15, marginRight: Spacing.sm }}
+                />
+                <Text style={styles.artworkAuthorText}>{top1Player?.displayName ?? top1Player?.name}</Text>
+              </View>
+            ) : (
+              <View style={styles.noMvpTag}>
+                <Text style={styles.noMvpText}>Không ai hoàn thành hết</Text>
+              </View>
+            )}
 
             {showLeaderboard && !isSinglePlayer && (
               <View style={styles.leaderboardOverlay}>
@@ -356,7 +370,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  noMvpTag: {
+    position: 'absolute',
+    bottom: -12,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.lightPink,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 4,
+    borderRadius: Radius.md,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   artworkAuthorText: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.sm,
+    color: Colors.warmBlack,
+  },
+  noMvpText: {
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.sm,
     color: Colors.warmBlack,

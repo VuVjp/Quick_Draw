@@ -148,7 +148,7 @@ const CreateRoomScreen = () => {
             {renderOptionSelector('Loại phòng', ['Công khai', 'Riêng tư'], roomType, setRoomType)}
             {renderOptionSelector('Số người tối đa', [2, 4, 8, 12], maxPlayers, setMaxPlayers)}
             {renderOptionSelector('Số vòng', [3, 5, 10], rounds, setRounds)}
-            {renderOptionSelector('Thời gian (giây)', [30, 60, 80, 120], drawTime, setDrawTime)}
+            {renderOptionSelector('Thời gian (giây)', [5, 60, 80, 120], drawTime, setDrawTime)}
             {/* {renderOptionSelector('Độ khó', ['Dễ', 'Trung bình', 'Khó'], difficulty, setDifficulty)} */}
 
             <View style={styles.switchGroup}>
