@@ -149,7 +149,7 @@ const CreateRoomScreen = () => {
             {renderOptionSelector('Room Type', ['Public', 'Private'], roomType, setRoomType)}
             {renderOptionSelector('Max Players', [2, 4, 8, 12], maxPlayers, setMaxPlayers)}
             {renderOptionSelector('Number of Rounds', [3, 5, 10], rounds, setRounds)}
-            {renderOptionSelector('Draw Time (seconds)', [5, 60, 80, 120], drawTime, setDrawTime)}
+            {renderOptionSelector('Draw Time (seconds)', [30, 60, 80, 120], drawTime, setDrawTime)}
             {/* {renderOptionSelector('Difficulty', ['Easy', 'Medium', 'Hard'], difficulty, setDifficulty)} */}
 
             <View style={styles.switchGroup}>
