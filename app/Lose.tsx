@@ -1,1 +1,1 @@
-export { default } from '../src/screens/LoseScreen';
+export { default } from '../src/screens/WinScreen';

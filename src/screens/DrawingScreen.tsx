@@ -113,6 +113,18 @@ const DrawingScreen = () => {
     router.replace('/round-end' as any);
   }, [router]);
 
+  const recordSinglePlayerRound = useCallback((aiCorrect: boolean, aiLabel: string | null, aiScore: number | null) => {
+    useGameStore.getState().recordRoundResult({
+      round: currentRound,
+      word: currentWord,
+      drawTime,
+      timeSpent: aiCorrect ? Math.max(0, drawTime - timeLeft) : drawTime,
+      aiCorrect,
+      aiLabel,
+      aiScore,
+    });
+  }, [currentRound, currentWord, drawTime, timeLeft]);
+
   const handleRoundExpire = useCallback(() => {
     if (roomId) {
       return;
@@ -128,8 +140,9 @@ const DrawingScreen = () => {
     }
 
     const strokes = useDrawingStore.getState().strokeHistory;
+    recordSinglePlayerRound(false, null, null);
     saveDrawingToStore(mockScores, strokes, canvasSize);
-  }, [canvasSize, players, roomId, saveDrawingToStore]);
+  }, [canvasSize, players, recordSinglePlayerRound, roomId, saveDrawingToStore]);
 
   const clearRoundEndNavigateTimer = useCallback(() => {
     if (roundEndNavigateTimerRef.current) {
@@ -283,6 +296,7 @@ const DrawingScreen = () => {
         if (isSinglePlayer) {
           if (!result) return;
           if (result.accepted) {
+            recordSinglePlayerRound(true, result.label, result.score);
             const scores = drawTime > 0 && timeLeft > 0
               ? {
                 '1': Math.floor(
@@ -334,6 +348,7 @@ const DrawingScreen = () => {
     runInference,
     canvasSize,
     saveDrawingToStore,
+    recordSinglePlayerRound,
     startTimer,
     submitDrawing,
   ]);

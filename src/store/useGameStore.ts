@@ -17,6 +17,16 @@ export type Player = {
 export type GamePhase = 'waiting' | 'choosing' | 'drawing' | 'roundEnd' | 'gameEnd';
 export type Difficulty = 'Dễ' | 'Trung bình' | 'Khó';
 
+export type RoundResult = {
+  round: number;
+  word: string;
+  drawTime: number;
+  timeSpent: number;
+  aiCorrect: boolean;
+  aiLabel: string | null;
+  aiScore: number | null;
+};
+
 export type RoomInfo = {
   id: string;
   name: string;
@@ -49,6 +59,7 @@ type GameStore = {
   roundDrawing: any[]; // We will use StrokeRecord[] but use any[] here to avoid circular dependency if not imported or just import it
   originalCanvasSize: { width: number, height: number } | null;
   lastRoundScores: Record<string, number>;
+  roundResults: RoundResult[];
 
   // Lobby
   availableRooms: RoomInfo[];
@@ -64,6 +75,7 @@ type GameStore = {
   setTimeLeft: (t: number) => void;
   setRoomConfig: (config: Partial<GameStore>) => void;
   startSinglePlayer: (nickname: string, rounds: number, drawTime: number, difficulty: Difficulty, botCount: number) => void;
+  recordRoundResult: (result: RoundResult) => void;
   addPlayer: (player: Player) => void;
   removePlayer: (id: string) => void;
   updateScore: (playerId: string, points: number) => void;
@@ -92,6 +104,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   roundDrawing: [],
   originalCanvasSize: null,
   lastRoundScores: {},
+  roundResults: [],
   availableRooms: [
     { id: '1', name: 'Doodle to Win ', players: 4, maxPlayers: 8, color: 'blue' },
     { id: '2', name: 'Nét Vẽ Chết Chóc ', players: 2, maxPlayers: 8, color: 'default' },
@@ -101,10 +114,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   joinRoom: (roomId, roomName, initialPlayersCount = 1, maxPlayers = 8) => {
     const realPlayer = MOCK_PLAYERS[0];
-    
+
     const avatars = ['🤖', '👾', '👻', '👽', '🤠', '🤡', '🎃', '🐯', '🐼', '🦊'];
     const colors = ['#F4978E', '#B9D7EA', '#A8D5BA', '#F7D6D0', '#7B5EA7', '#FF7043', '#4CAF50', '#FFEB3B', '#00BCD4', '#E91E63'];
-    
+
     const botsCount = Math.max(0, initialPlayersCount - 1);
     const bots = Array.from({ length: botsCount }).map((_, i) => ({
       id: `bot-${i}`,
@@ -118,19 +131,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       color: colors[i % colors.length]
     }));
 
-    set({ 
-      roomId, 
-      roomName, 
-      phase: 'waiting', 
+    set({
+      roomId,
+      roomName,
+      phase: 'waiting',
       players: [realPlayer, ...bots],
       maxPlayers,
       isSinglePlayer: false,
       lastRoundScores: {},
+      roundResults: [],
     });
   },
 
   leaveRoom: () =>
-    set({ roomId: null, roomName: '', phase: 'waiting', currentRound: 0, lastRoundScores: {} }),
+    set({ roomId: null, roomName: '', phase: 'waiting', currentRound: 0, lastRoundScores: {}, roundResults: [] }),
 
   startGame: () => {
     const { players } = get();
@@ -141,6 +155,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       currentDrawerId: drawer.id,
       players: players.map((p) => ({ ...p, score: 0, isDrawing: p.id === drawer.id })),
       lastRoundScores: {},
+      roundResults: [],
     });
   },
 
@@ -179,9 +194,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startSinglePlayer: (nickname, rounds, drawTime, difficulty, botCount) => {
     const word = getRandomWord();
     const hint = word.replace(/[a-zA-Z]/g, '_');
-    
+
     const realPlayer = { ...MOCK_PLAYERS[0], name: nickname, isDrawing: true, score: 0 };
-    
+
     const avatars = ['🤖', '👾', '👻', '👽', '🤠', '🤡', '🎃'];
     const colors = ['#F4978E', '#B9D7EA', '#A8D5BA', '#F7D6D0', '#7B5EA7', '#FF7043', '#4CAF50'];
     const bots = Array.from({ length: botCount }).map((_, i) => ({
@@ -209,8 +224,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
       timeLeft: drawTime,
       difficulty,
       peerReviewEnabled: false,
+      roundResults: [],
     });
   },
+
+  recordRoundResult: (result) =>
+    set((state) => ({
+      roundResults: [
+        ...state.roundResults.filter((item) => item.round !== result.round),
+        result,
+      ].sort((a, b) => a.round - b.round),
+    })),
 
   addPlayer: (player) =>
     set((state) => ({ players: [...state.players, player] })),

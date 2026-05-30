@@ -130,12 +130,7 @@ const RoundEndScreen = () => {
 
     if (isLastRound) {
       endGame();
-      // Navigate to Win/Lose based on if local player is top 1 (mock logic)
-      if ((top1Player?.id ?? top1Player?.uid) === '1') {
-        router.replace('/win');
-      } else {
-        router.replace('/lose');
-      }
+      router.replace('/win');
     } else {
       startRound();
       useGameStore.setState(s => ({ currentRound: s.currentRound + 1 }));
@@ -294,7 +289,7 @@ const RoundEndScreen = () => {
           )}
           {isSinglePlayer && (
             <AnimatedButton
-              label={isLastRound ? "Kết thúc game" : "Vòng tiếp theo"}
+              label={isLastRound ? "Xem tổng kết" : "Vòng tiếp theo"}
               onPress={handleNext}
               variant="primary"
               fullWidth
