@@ -37,13 +37,15 @@ const HomeScreen = () => {
   const session = useUserStore((s) => s.session);
 
   const handleOnlinePress = () => {
-    if (session?.uid) {
-      router.replace('/lobby');
-      return;
-    }
+  playClick();
 
-    setShowAuth(true);
-  };
+  if (session?.uid) {
+    router.replace('/lobby');
+    return;
+  }
+
+  setShowAuth(true);
+};
 
   return (
     <NotebookBackground>
@@ -106,9 +108,10 @@ const HomeScreen = () => {
               styles.sketchButton,
               styles.soloButton,
             ]}
-            onPress={() =>
-              router.push('/single-player-config')
-            }
+            onPress={() => {
+              playClick();
+              router.push('/single-player-config');
+            }}
           >
             <Text style={styles.buttonEmoji}>
               🎨

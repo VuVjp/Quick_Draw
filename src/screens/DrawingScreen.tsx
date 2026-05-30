@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { playClick } from '../store/useAudioStore';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -391,12 +392,12 @@ const DrawingScreen = () => {
       <View style={styles.container}>
         {/* ── Header ── */}
         <View style={[styles.header, { paddingTop: Math.max(insets.top + Spacing.sm, 40) }]}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn}>
+          <TouchableOpacity onPress={() =>{playClick(); router.back()}} style={styles.closeBtn}>
             <Text style={styles.closeBtnText}>X</Text>
           </TouchableOpacity>
 
           <View style={styles.wordLabelContainer}>
-            <Text style={styles.roundIndicator}>Vòng {currentRound}/{rounds} • HÃY VẼ:</Text>
+            <Text style={styles.roundIndicator}>Rounds {currentRound}/{rounds} • Let's drawing:</Text>
             <Text style={styles.wordText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{currentWord}</Text>
           </View>
 
@@ -466,14 +467,19 @@ const DrawingScreen = () => {
         </View>
 
         {/* ── Toolbar ── */}
-        <View style={styles.toolbarWrapper}>
-          <BrushToolbar
-            onUndo={handleUndo}
-            onRedo={handleRedo}
-            onClear={handleClear}
-            disabled={!isDrawer}
-          />
-        </View>
+        <View
+        style={[
+          styles.toolbarWrapper,
+          { paddingBottom: Math.max(insets.bottom, 8) }
+        ]}
+      >
+        <BrushToolbar
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          onClear={handleClear}
+          disabled={!isDrawer}
+        />
+      </View>
         {/* <Button
           title={isReady ? 'Test Inference' : 'Model loading...'}
           disabled={!isReady}

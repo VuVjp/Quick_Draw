@@ -107,7 +107,7 @@ const CreateRoomScreen = () => {
   return (
     <NotebookBackground>
       <View style={[styles.header, { paddingTop: Math.max(insets.top + Spacing.md, 40) }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() =>{playClick(); router.back()}} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={Colors.warmBlack} />
         </TouchableOpacity>
         <Text style={styles.title}>Room Config</Text>

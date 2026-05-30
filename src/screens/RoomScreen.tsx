@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -10,6 +11,7 @@ import {
   Alert,
   Image,
 } from 'react-native';
+import { playClick } from '../store/useAudioStore';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import firestore, { doc, deleteDoc, updateDoc } from '@react-native-firebase/firestore';
 import { db } from '../services/firebase';
@@ -26,12 +28,13 @@ import { Spacing, Radius, Shadow } from '../theme/spacing';
 import ClockIcon from '../../assets/Icon/clock.svg';
 import PencilRulerIcon from '../../assets/Icon/pencil-ruler.svg';
 import { useHostGameLifecycle } from '../hooks/useHostGameLifecycle';
+import { Ionicons } from '@expo/vector-icons';
 
 const RoomScreen = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const roomId = id as string;
-
+  const insets = useSafeAreaInsets();
   const { room, players, uid } = useRoom(roomId);
   const setRoomConfig = useGameStore((s) => s.setRoomConfig);
   const { startGame } = useHostGameLifecycle(roomId);
@@ -164,8 +167,14 @@ const RoomScreen = () => {
       <View style={styles.container}>
         {/* Header */}
         <Animated.View entering={FadeInUp.duration(400)} style={styles.header}>
-          <TouchableOpacity onPress={confirmLeaveOrDelete} style={styles.backBtn}>
-            <Text style={styles.backBtnText}>←</Text>
+          <TouchableOpacity
+            onPress={() => {
+              playClick();
+              confirmLeaveOrDelete();
+            }}
+            style={styles.backBtn}
+          >
+            <Ionicons name="arrow-back" size={24} color={Colors.warmBlack} />
           </TouchableOpacity>
           <View style={styles.headerTitleBlock}>
             <Text style={styles.roomName}>{room.roomName}</Text>
@@ -181,7 +190,13 @@ const RoomScreen = () => {
               <Text style={styles.codeLabel}>Room code</Text>
               <Text style={styles.codeText}>{room.code}</Text>
             </View>
-            <TouchableOpacity onPress={handleShareCode} style={styles.shareBtn}>
+            <TouchableOpacity
+              onPress={() => {
+                playClick();
+                handleShareCode();
+              }}
+              style={styles.shareBtn}
+            >
               <Text style={styles.shareBtnText}>Share 🔗</Text>
             </TouchableOpacity>
           </PaperCard>
@@ -194,7 +209,7 @@ const RoomScreen = () => {
             <Text style={styles.configText}>{room.roundDurationSecs}s</Text>
             <Text style={styles.configDivider}>|</Text>
             <PencilRulerIcon width={16} height={16} color={Colors.warmBlack} />
-            <Text style={styles.configText}>{room.totalRounds} vòng</Text>
+            <Text style={styles.configText}>{room.totalRounds} Rounds</Text>
           </View>
         </Animated.View>
 
@@ -241,18 +256,32 @@ const RoomScreen = () => {
         </View>
 
         {/* Action Button Footer */}
-        <Animated.View entering={FadeInDown.delay(500)} style={styles.footer}>
+        <Animated.View
+          entering={FadeInDown.delay(500)}
+          style={[
+            styles.footer,
+            {
+              bottom: Math.max(insets.bottom + 24, 50),
+            },
+          ]}
+        >
           {isHost ? (
             <View style={styles.hostFooter}>
               <AnimatedButton
-                label="Delete Room"
-                onPress={confirmLeaveOrDelete}
+              label="Delete Room"
+              onPress={() => {
+                playClick();
+                confirmLeaveOrDelete();
+              }}
                 variant="danger"
                 style={styles.flex1}
               />
               <AnimatedButton
-                label="Bắt đầu ngay"
-                onPress={handleStartGame}
+                label="Start Game"
+                onPress={() => {
+                  playClick();
+                  handleStartGame();
+                }}
                 variant="primary"
                 style={styles.flex2}
                 disabled={playerArray.length < 1}
@@ -305,11 +334,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadow.sketch,
-  },
-  backBtnText: {
-    fontFamily: FontFamily.bold,
-    fontSize: FontSize.xl,
-    color: Colors.text,
   },
   headerTitleBlock: {
     alignItems: 'center',
@@ -448,11 +472,10 @@ const styles = StyleSheet.create({
     color: '#2E7D32',
   },
   footer: {
-    position: 'absolute',
-    bottom: 30,
-    left: Spacing.xl,
-    right: Spacing.xl,
-  },
+  position: 'absolute',
+  left: Spacing.xl,
+  right: Spacing.xl,
+},
   guestFooter: {
     flexDirection: 'row',
     alignItems: 'center',

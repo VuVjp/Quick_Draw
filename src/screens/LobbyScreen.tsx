@@ -13,6 +13,7 @@ import { usePublicRooms, RoomItem } from '../hooks/usePublicRooms';
 import { useJoinRoom } from '../hooks/useJoinRoom';
 import { useUserStore } from '../store/useUserStore';
 import { Ionicons } from '@expo/vector-icons';
+import { playClick } from '../store/useAudioStore';
 
 const { height } = Dimensions.get('window');
 
@@ -156,7 +157,7 @@ const LobbyScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => router.replace('/home?bypassAuthRedirect=1')} style={styles.backBtn}>
+          <TouchableOpacity onPress={() => {playClick(); router.replace('/home?bypassAuthRedirect=1')}} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={24} color={Colors.warmBlack} />
           </TouchableOpacity>
           <View style={{ alignItems: 'center' }}>
