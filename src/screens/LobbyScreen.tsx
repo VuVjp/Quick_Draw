@@ -442,12 +442,17 @@ const styles = StyleSheet.create({
   },
   modalButtons: {
     flexDirection: 'row',
-    gap: Spacing.md,
+    width: '100%',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.sm,
     marginTop: Spacing.sm,
   },
   modalBtn: {
-  flex: 1,
-  minHeight: 60,
-  justifyContent: 'center',
+    flex: 1,
+    flexBasis: 0,
+    minWidth: 140,
+    minHeight: 60,
+    justifyContent: 'center',
   },
 });

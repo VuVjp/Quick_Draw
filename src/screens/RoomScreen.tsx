@@ -116,6 +116,11 @@ const RoomScreen = () => {
 
   const handleStartGame = async () => {
     try {
+      if (!isHost) return;
+      if (playerArray.length < 2) {
+        Alert.alert('Not enough players', 'At least 2 players are required to start the game.');
+        return;
+      }
       await startGame();
     } catch (err) {
       console.error('Error starting game:', err);
@@ -361,7 +366,7 @@ const RoomScreen = () => {
                 }}
                 variant="primary"
                 style={styles.flex2}
-                disabled={playerArray.length < 1}
+                disabled={playerArray.length < 2}
               />
             </View>
           ) : (
