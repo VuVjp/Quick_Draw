@@ -43,8 +43,10 @@ const RoundEndScreen = () => {
 
   const [mvpImageBase64, setMvpImageBase64] = useState<string | null>(null);
   const [mvpStrokes, setMvpStrokes] = useState<any[] | null>(null);
-  const hasMvpArtwork = useRef(!!room?.mvpUid && (mvpImageBase64 !== null || mvpStrokes !== null));
-
+  let hasMvpArtwork = !!room?.mvpUid && (mvpImageBase64 !== null || mvpStrokes !== null);
+  if (isSinglePlayer) {
+    hasMvpArtwork = true // Luôn hiển thị tác phẩm ở chế độ đơn, dù không có MVP chính thức
+  }
   useEffect(() => {
     if (isSinglePlayer) return;
     if (!isOnline || !room) return;
@@ -114,12 +116,12 @@ const RoundEndScreen = () => {
   useEffect(() => {
     const countdownActive = room?.status === 'round_countdown' || room?.status === 'round_end';
     if (!room || !countdownActive || !room.roundCountdownStartedAt) {
-      setCountdown(5);
+      setCountdown(0);
       return;
     }
 
     const tick = () => {
-      const totalMs = (room.roundCountdownSecs ?? 5) * 1000;
+      const totalMs = (room.roundCountdownSecs ?? 0) * 1000;
       const elapsed = Date.now() - room.roundCountdownStartedAt!.getTime();
       const remain = Math.max(0, Math.ceil((totalMs - elapsed) / 1000));
       setCountdown(remain);
@@ -273,13 +275,12 @@ const RoundEndScreen = () => {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(800).springify()} style={styles.footer}>
-          {isOnline && room?.status === 'round_countdown' && (
+          {/* {!isSinglePlayer && (
             <View style={styles.countdownBox}>
-              <Text style={styles.countdownTitle}>Vòng mới bắt đầu sau</Text>
+              <Text style={styles.countdownTitle}>New Round Begins In</Text>
               <Text style={styles.countdownValue}>{countdown}</Text>
-              <Text style={styles.countdownTopic}>Chủ đề: {room.currentTopic}</Text>
             </View>
-          )}
+          )} */}
 
           {/* {isOnline && room?.status === 'round_end' && !isLastRound && (
             <View style={styles.countdownBox}>
@@ -294,7 +295,7 @@ const RoundEndScreen = () => {
 
           {!isSinglePlayer && (
             <AnimatedButton
-              label={showLeaderboard ? "Ẩn BXH" : "Hiện BXH"}
+              label={showLeaderboard ? `Ẩn BXH (${countdown})` : `Hiện BXH (${countdown})`}
               onPress={() => setShowLeaderboard(!showLeaderboard)}
               variant="secondary"
               style={{ marginBottom: Spacing.md }}

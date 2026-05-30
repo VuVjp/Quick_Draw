@@ -94,9 +94,13 @@ export function useHostGameLifecycle(roomId?: string | null) {
             roundStartedAt: firestore.FieldValue.serverTimestamp(),
             roundCountdownStartedAt: null,
             endedAt: null,
-            mvpUid: null,
-            lastRoundScores: {},
         });
+        setTimeout(() => {
+            transaction.update(roomRef, {
+                mvpUid: null,
+                lastRoundScores: {},
+            });
+        }, 1000);
     }, []);
 
     const startGame = useCallback(async () => {
