@@ -129,22 +129,13 @@ const DrawingScreen = () => {
   }, [currentRound, currentWord, drawTime, timeLeft]);
 
   const handleRoundExpire = useCallback(() => {
-    if (roomId) {
+    if (!isSinglePlayer) {
       return;
-    }
-
-    const mockScores: Record<string, number> = {};
-    players.forEach(p => {
-      mockScores[p.id] = Math.floor(Math.random() * 50);
-    });
-
-    if (useGameStore.getState().isSinglePlayer) {
-      mockScores['1'] = 45 + Math.floor(Math.random() * 15);
     }
 
     const strokes = useDrawingStore.getState().strokeHistory;
     recordSinglePlayerRound(false, null, null);
-    saveDrawingToStore(mockScores, strokes, canvasSize);
+    saveDrawingToStore({}, strokes, canvasSize);
   }, [canvasSize, players, recordSinglePlayerRound, roomId, saveDrawingToStore]);
 
   const clearRoundEndNavigateTimer = useCallback(() => {
@@ -357,12 +348,13 @@ const DrawingScreen = () => {
   ]);
 
   useTimer(undefined, () => {
+    if (isSinglePlayer) {
+      handleRoundExpire();
+    }
     if (roomId) {
       void finishRound();
       return;
     }
-
-    handleRoundExpire();
   });
 
   // Clear canvas when component mounts to avoid showing stale drawing from previous game
@@ -482,7 +474,7 @@ const DrawingScreen = () => {
             onUndo={handleUndo}
             onRedo={handleRedo}
             onClear={handleClear}
-            disabled={!isDrawer}
+            disabled={!isDrawer || lockMessage !== null && !isSinglePlayer}
           />
         </View>
         {/* <Button

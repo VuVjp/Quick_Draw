@@ -81,7 +81,7 @@ const SinglePlayerConfigScreen = () => {
         <View style={[styles.formCard, { flex: 1, padding: 0, overflow: 'hidden' }]}>
           <View style={{ padding: Spacing.xl, gap: Spacing.xl }}>
             {renderOptionSelector('Rounds', [3, 5, 10], rounds, setRounds)}
-            {renderOptionSelector('Draw Time (seconds)', [40, 60, 80, 120], drawTime, setDrawTime)}
+            {renderOptionSelector('Draw Time (seconds)', [5, 60, 80, 120], drawTime, setDrawTime)}
           </View>
 
           <View style={{ flex: 1, width: '100%', alignItems: 'center', justifyContent: 'flex-end' }}>

@@ -29,7 +29,7 @@ const RoundEndScreen = () => {
   const { players: leaderboardPlayers } = useLeaderboard(roomId);
   useHostGameLifecycle(roomId);
 
-  const isLastRound = currentRound >= rounds;
+  const isLastRound = useRef(currentRound >= rounds).current;
   const isSinglePlayer = useGameStore((s) => s.isSinglePlayer);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -192,7 +192,7 @@ const RoundEndScreen = () => {
                 return (
                   <View style={styles.miniPlayerRow}>
                     <Image
-                      source={playerAvatar ? require('../../assets/images/anonymous.png') : playerAvatar === 'user' ? require('../../assets/images/anonymous.png') : { uri: playerAvatar }}
+                      source={playerAvatar ? playerAvatar === 'user' ? require('../../assets/images/anonymous.png') : { uri: playerAvatar } : require('../../assets/images/anonymous.png')}
                       style={{ width: 30, height: 30, borderRadius: 15, marginRight: Spacing.sm }}
                     />
                     <Text style={styles.miniPlayerName} numberOfLines={1}>{playerName ?? 'Player'}</Text>
@@ -246,10 +246,10 @@ const RoundEndScreen = () => {
             {hasMvpArtwork ? (
               <View style={styles.artworkAuthorTag}>
                 <Image
-                  source={(top1Player?.avatar ?? 'user') === 'user' ? require('../../assets/images/anonymous.png') : { uri: top1Player?.avatar }}
+                  source={isSinglePlayer || (top1Player?.avatar ?? 'user') === 'user' ? require('../../assets/images/anonymous.png') : { uri: top1Player?.avatar }}
                   style={{ width: 30, height: 30, borderRadius: 15, marginRight: Spacing.sm }}
                 />
-                <Text style={styles.artworkAuthorText}>{top1Player?.displayName ?? top1Player?.name}</Text>
+                <Text style={styles.artworkAuthorText}>{isSinglePlayer ? 'You' : top1Player?.displayName ?? top1Player?.name}</Text>
               </View>
             ) : (
               <View style={styles.noMvpTag}>
