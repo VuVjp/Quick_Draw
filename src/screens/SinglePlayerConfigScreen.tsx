@@ -70,7 +70,7 @@ const SinglePlayerConfigScreen = () => {
   return (
     <NotebookBackground>
       <View style={[styles.header, { paddingTop: Math.max(insets.top + Spacing.md, 40) }]}>
-        <TouchableOpacity onPress={() =>{playClick(); router.back()}} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => { playClick(); router.back() }} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={Colors.warmBlack} />
         </TouchableOpacity>
         <Text style={styles.title}>Solo Config</Text>
@@ -81,12 +81,12 @@ const SinglePlayerConfigScreen = () => {
         <View style={[styles.formCard, { flex: 1, padding: 0, overflow: 'hidden' }]}>
           <View style={{ padding: Spacing.xl, gap: Spacing.xl }}>
             {renderOptionSelector('Rounds', [3, 5, 10], rounds, setRounds)}
-            {renderOptionSelector('Draw Time (seconds)', [5, 60, 80, 120], drawTime, setDrawTime)}
+            {renderOptionSelector('Draw Time (seconds)', [30, 60, 80, 120], drawTime, setDrawTime)}
           </View>
 
           <View style={{ flex: 1, width: '100%', alignItems: 'center', justifyContent: 'flex-end' }}>
-            <Image 
-              source={require('../../assets/images/anime.png')} 
+            <Image
+              source={require('../../assets/images/anime.png')}
               style={{ width: '90%', height: '110%' }}
               resizeMode="contain"
             />
