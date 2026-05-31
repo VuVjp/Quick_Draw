@@ -32,7 +32,6 @@ import { auth } from '../services/firebase';
 import { useRoom } from '../hooks/useRoom';
 import { useSubmitDrawing } from '../hooks/useSubmitDrawing';
 import { useHostGameLifecycle } from '../hooks/useHostGameLifecycle';
-import { useHeartbeat } from '../hooks/useHeartbeat';
 import { useHostElection } from '../hooks/useHostElection';
 
 
@@ -94,7 +93,6 @@ const DrawingScreen = () => {
   const isInferencing = useRef(false);
   const roomId = useGameStore((s) => s.roomId);
   const { room, players: roomPlayers, uid } = useRoom(roomId);
-  useHeartbeat(roomId, uid, { intervalMs: 5000 });
   useHostElection(roomId, room, roomPlayers, uid, { timeoutMs: 30000 });
   const { runInference, isReady } = useDrawingInference(false);
   const submittedRoundRef = useRef<string | null>(null);

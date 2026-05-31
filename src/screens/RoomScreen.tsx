@@ -27,7 +27,6 @@ import { Spacing, Radius, Shadow } from '../theme/spacing';
 import ClockIcon from '../../assets/Icon/clock.svg';
 import PencilRulerIcon from '../../assets/Icon/pencil-ruler.svg';
 import { useHostGameLifecycle } from '../hooks/useHostGameLifecycle';
-import { useHeartbeat } from '../hooks/useHeartbeat';
 import { useHostElection } from '../hooks/useHostElection';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -39,7 +38,6 @@ const RoomScreen = () => {
   const { room, players, uid, stopHeartbeat } = useRoom(roomId);
   const setRoomConfig = useGameStore((s) => s.setRoomConfig);
   const { startGame } = useHostGameLifecycle(roomId);
-  useHeartbeat(roomId, uid, { intervalMs: 5000 });
   useHostElection(roomId, room, players, uid, { timeoutMs: 30000 });
 
   // ─── Auto Navigate to Drawing screen when status changes to 'drawing' ───

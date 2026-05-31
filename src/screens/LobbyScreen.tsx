@@ -157,7 +157,7 @@ const LobbyScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => {playClick(); router.replace('/home?bypassAuthRedirect=1')}} style={styles.backBtn}>
+          <TouchableOpacity onPress={() => { playClick(); router.replace('/home?bypassAuthRedirect=1') }} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={24} color={Colors.warmBlack} />
           </TouchableOpacity>
           <View style={{ alignItems: 'center' }}>
@@ -402,14 +402,14 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
   },
   modalCard: {
-  width: '100%',
-  minHeight: 340,
-  backgroundColor: Colors.paperWhite,
-  borderRadius: Radius.lg,
-  borderWidth: 1.5,
-  borderColor: Colors.border,
-  padding: Spacing.xl,
-  gap: Spacing.md,
+    width: '100%',
+    minHeight: 340,
+    backgroundColor: Colors.paperWhite,
+    borderRadius: Radius.lg,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    padding: Spacing.xl,
+    gap: Spacing.md,
   },
   modalTitle: {
     fontFamily: FontFamily.patrickHand,
@@ -425,14 +425,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   codeInput: {
-  fontFamily: FontFamily.patrickHand,
-  fontSize: FontSize.xxl,
-  textAlign: 'center',
-  letterSpacing: 6,
-  borderBottomWidth: 2,
-  borderColor: Colors.primaryYellow,
-  paddingVertical: Spacing.sm,
-  color: Colors.warmBlack,
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.xxl,
+    textAlign: 'center',
+    letterSpacing: 6,
+    borderBottomWidth: 2,
+    borderColor: Colors.primaryYellow,
+    paddingVertical: Spacing.sm,
+    color: Colors.warmBlack,
   },
   errorText: {
     fontFamily: FontFamily.patrickHand,

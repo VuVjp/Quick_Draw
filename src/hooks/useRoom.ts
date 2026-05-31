@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import firestore from '@react-native-firebase/firestore';
 import { auth } from '../services/firebase';
 import { useHeartbeat } from './useHeartbeat';
+import { usePruneStalePlayers } from './usePruneStalePlayers';
 
 export interface RoomState {
   status: string;
@@ -83,6 +84,8 @@ export function useRoom(roomId?: string | null) {
     });
     return unsub;
   }, [roomId]);
+
+  usePruneStalePlayers(roomId, room, players, uid, { timeoutMs: 30000 });
 
   return { room, players, uid, stopHeartbeat };
 }
