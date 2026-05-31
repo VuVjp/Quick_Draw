@@ -43,6 +43,7 @@ export function useAuth() {
                 email: result.user.email,
                 photoURL: result.user.photoURL,
                 isGuest: false,
+                createdAt: firestore.FieldValue.serverTimestamp(),
                 lastLoginAt: firestore.FieldValue.serverTimestamp(),
             }, { merge: true });
 

@@ -164,9 +164,9 @@ const RoundEndScreen = () => {
         />
         <View style={{ flex: 1 }}>
           <Text style={styles.playerName} numberOfLines={1}>{playerName}</Text>
-          <Text style={styles.playerScore}>Total: {totalScore} đ</Text>
+          <Text style={styles.playerScore}>Total: {totalScore} P</Text>
         </View>
-        <Text style={styles.playerScore}>+{pointsGained} đ</Text>
+        <Text style={styles.playerScore}>+{pointsGained} P</Text>
       </Animated.View>
     );
   };
@@ -192,15 +192,15 @@ const RoundEndScreen = () => {
                 return (
                   <View style={styles.miniPlayerRow}>
                     <Image
-                      source={playerAvatar === 'user' ? require('../../assets/images/anonymous.png') : { uri: playerAvatar }}
+                      source={playerAvatar ? require('../../assets/images/anonymous.png') : playerAvatar === 'user' ? require('../../assets/images/anonymous.png') : { uri: playerAvatar }}
                       style={{ width: 30, height: 30, borderRadius: 15, marginRight: Spacing.sm }}
                     />
-                    <Text style={styles.miniPlayerName} numberOfLines={1}>{playerName}</Text>
+                    <Text style={styles.miniPlayerName} numberOfLines={1}>{playerName ?? 'Player'}</Text>
                     <Text style={styles.miniPlayerScore}>
-                      {totalScore} đ
+                      {totalScore} P
                     </Text>
                     <Text style={[styles.miniPlayerScore, pts > 0 && styles.miniPlayerScorePositive]}>
-                      {pts > 0 ? `+${pts}đ` : `${pts}đ`}
+                      {pts > 0 ? `+${pts}P` : `${pts}P`}
                     </Text>
                   </View>
                 );

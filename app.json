@@ -24,6 +24,10 @@
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "assets": [
+        "./assets/model.tflite",
+        "./assets/labels.json"
       ]
     },
     "web": {
@@ -33,6 +37,18 @@
     "plugins": [
       "@react-native-firebase/app",
       "@react-native-google-signin/google-signin",
+      "expo-build-properties",
+      {
+        "android": {
+          "packagingOptions": {
+            "pickFirst": [
+              "**/libnetcompat.so"
+            ]
+          },
+          "extraProguardRules": "-keep class org.tensorflow.lite.** { *; }\n-keep class com.google.android.gms.tflite.** { *; }\n-keep class com.margelo.nitro.** { *; }\n-keepclasseswithmembernames class * {\n    native <methods>;\n}\n-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod"
+        }
+      },
+      "./plugins/withTfliteNoCompress.js",
       "expo-router",
       [
         "expo-splash-screen",
@@ -51,6 +67,12 @@
         {
           "enableCoreMLDelegate": true,
           "enableAndroidGPUDelegate": false
+        }
+      ],
+      [
+        "expo-assets",
+        {
+          "assetExtensions": ["tflite"]
         }
       ],
       "expo-audio",

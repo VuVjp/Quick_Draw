@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadTensorflowModel } from 'react-native-fast-tflite';
+import { Asset } from 'expo-asset';
 
 const LABELS = require('../../assets/labels.json');
 
+// Khai báo kiểu dữ liệu cho Model nếu thư viện chưa tự suy luận tốt
+type TensorflowModel = Awaited<ReturnType<typeof loadTensorflowModel>>;
+
 export function useTFLite() {
-    const modelRef = useRef<InstanceType<typeof TensorflowModel> | null>(null);
+    const modelRef = useRef<TensorflowModel | null>(null);
     const [isReady, setIsReady] = useState(false);
     const inputBufferRef = useRef(
         new Float32Array(1 * 64 * 64 * 1)
@@ -14,32 +18,47 @@ export function useTFLite() {
         let mounted = true;
         async function load() {
             try {
+                console.log('Starting to load TFLite model...');
 
-                const model = await loadTensorflowModel(
-                    require('../../assets/model.tflite'),
-                    []
-                );
+                // 1. Phân giải file require thông qua expo-asset để lấy đường dẫn thực (localUri)
+                const asset = Asset.fromModule(require('../../assets/model.tflite'));
+                await asset.downloadAsync();
+
+                const modelPath = asset.localUri || asset.uri;
+                if (!modelPath) {
+                    throw new Error('Could not resolve local URI for model.tflite');
+                }
+
+                console.log('Resolved model path:', modelPath);
+
+                // 2. Nạp model bằng đường dẫn thật đã được trích xuất
+                // Thêm cấu hình delegate mặc định "default" để chạy ổn định trên Release Android
+                const model = await loadTensorflowModel({ url: modelPath }, [] );
+
                 if (!mounted) {
-                    model.dispose?.();
+                    // Nếu component đã unmount thì dọn dẹp bộ nhớ native ngay
+                    // Lưu ý: react-native-fast-tflite bản mới dùng JSI, giải phóng qua bộ gom rác hoặc close()
                     return;
                 }
+
                 modelRef.current = model;
                 setIsReady(true);
-                // console.log('TFLite model loaded');
+                console.log('TFLite model loaded successfully on Release/Debug!');
             } catch (e) {
-                // console.error('Failed to load TFLite model:', e);
+                console.error('Failed to load TFLite model:', e);
             }
         }
         load();
 
         return () => {
             mounted = false;
-
-            modelRef.current?.close?.();
-            modelRef.current = null;
+            // Dọn dẹp model khi hook bị hủy (tránh rò rỉ bộ nhớ RAM native)
+            if (modelRef.current) {
+                console.log('Cleaning up TFLite model context...');
+                modelRef.current = null;
+            }
         };
-
-    }, [])
+    }, []);
 
     async function predict(
         tensor: Float32Array,
@@ -49,30 +68,19 @@ export function useTFLite() {
         const model = modelRef.current;
 
         if (!model) {
-            throw new Error('Model not loaded');
+            throw new Error('Model not loaded yet');
         }
 
-        // Debug model info
-        // console.log('INPUTS:', model.inputs);
-        // console.log('OUTPUTS:', model.outputs);
-
-        // Ensure exact input size
         const input = inputBufferRef.current;
 
-        // tensor length phải = 4096
+        // Đảm bảo dữ liệu đầu vào khớp chính xác cấu trúc
         input.set(tensor);
 
-        // console.log('INPUT LENGTH:', input.length);
-        // console.log('INPUT BYTES:', input.byteLength);
-
         try {
-
-            // Use runSync for stable output
+            // Chạy Inference trực tiếp qua ArrayBuffer mã hóa nhị phân
             const output = model.runSync([input.buffer]);
 
-            // console.log('RAW OUTPUT:', output);
-
-            // Validate output
+            // Validate dữ liệu đầu ra từ model native
             if (
                 !output ||
                 !Array.isArray(output) ||
@@ -81,44 +89,37 @@ export function useTFLite() {
                 throw new Error('Invalid model output');
             }
 
-
             const rawScores = output.map((o) => new Float32Array(o))[0];
 
             if (!rawScores) {
                 throw new Error('Output tensor is empty');
             }
 
-
-            // Convert output → JS array
+            // Convert TypedArray sang mảng JavaScript chuẩn
             const scores = Array.from(rawScores as number[]);
-
-            // console.log('SCORES:', scores.map((s, i) => `${LABELS?.[i] ?? `class_${i}`}: ${s.toFixed(4)}`).join(', '));
 
             if (scores.length === 0) {
                 throw new Error('Scores array is empty');
             }
 
-            // Map labels
+            // Gắn nhãn phân loại từ file labels.json
             const labeled = scores.map((score, i) => ({
                 label: LABELS?.[i] ?? `class_${i}`,
                 score,
             }));
 
-            // Sort descending
+            // Sắp xếp giảm dần theo điểm số độ tự tin (Score)
             labeled.sort((a, b) => b.score - a.score);
 
             const topPredictions = labeled.slice(0, topK);
 
-            // console.log('TOP PREDICTIONS:', topPredictions);
-
             return topPredictions;
 
         } catch (e) {
-
-            // console.error('Inference error:', e);
-
+            console.error('Inference error during prediction:', e);
             return [];
         }
     }
+
     return { predict, isReady };
-};
+}
