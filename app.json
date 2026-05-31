@@ -12,16 +12,19 @@
       "supportsTablet": true
     },
     "android": {
+      "icon": "./assets/icon.png",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundImage": "./assets/logo/logo.png"
       },
       "googleServicesFile": "./google-services.json",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.BeHold.Quick_Draw"
+      "package": "com.BeHold.Quick_Draw",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "output": "static",
@@ -63,6 +66,7 @@
       "eas": {
         "projectId": "4565f035-4bc5-4e15-83c8-c105a77e240b"
       }
-    }
+    },
+    "owner": "vuvjp123zzz"
   }
 }

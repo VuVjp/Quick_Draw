@@ -205,111 +205,111 @@ const WinScreen = () => {
     }
 
     return (
-  <NotebookBackground>
-    <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
-      <View style={styles.shell}>
-        <Animated.View
-          style={[styles.mainFrame, styles.offlineFrame, containerStyle]}
-        >
-          <Animated.Text style={[styles.star1, s1Style]}>⭐</Animated.Text>
-          <Animated.Text style={[styles.star2, s2Style]}>⭐</Animated.Text>
+        <NotebookBackground>
+            <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
+                <View style={styles.shell}>
+                    <Animated.View
+                        style={[styles.mainFrame, styles.offlineFrame, containerStyle]}
+                    >
+                        <Animated.Text style={[styles.star1, s1Style]}>⭐</Animated.Text>
+                        <Animated.Text style={[styles.star2, s2Style]}>⭐</Animated.Text>
 
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+                        <View style={styles.circle1} />
+                        <View style={styles.circle2} />
 
-          <FlatList
-            style={styles.flatList}
-            showsVerticalScrollIndicator={false}
-            data={
-            roundResults.length > 0
-                ? roundResults
-                : ([{ round: 0, empty: true }] as any)
-            }
-            keyExtractor={(item: any, index) =>
-              String(item.round ?? index)
-            }
-            ListHeaderComponent={
-                 <View style={styles.listHeader}>
-              <>
-                <Text style={styles.trophy}>🏆</Text>
+                        <FlatList
+                            style={styles.flatList}
+                            showsVerticalScrollIndicator={false}
+                            data={
+                                roundResults.length > 0
+                                    ? roundResults
+                                    : ([{ round: 0, empty: true }] as any)
+                            }
+                            keyExtractor={(item: any, index) =>
+                                String(item.round ?? index)
+                            }
+                            ListHeaderComponent={
+                                <View style={styles.listHeader}>
+                                    <>
+                                        <Text style={styles.trophy}>🏆</Text>
 
-                <Text style={styles.title}>Result</Text>
+                                        <Text style={styles.title}>Result</Text>
 
-                <Text style={styles.subtitle}>
-                  Round-by-round results
-                </Text>
+                                        <Text style={styles.subtitle}>
+                                            Round-by-round results
+                                        </Text>
 
-                <View style={styles.summaryCard}>
-                  <Text style={styles.summaryLabel}>
-                    Total Score
-                  </Text>
+                                        <View style={styles.summaryCard}>
+                                            <Text style={styles.summaryLabel}>
+                                                Total Score
+                                            </Text>
 
-                  <Text style={styles.summaryValue}>
-                    {localScore} points
-                  </Text>
+                                            <Text style={styles.summaryValue}>
+                                                {localScore} points
+                                            </Text>
 
-                  <Text style={styles.summaryHint}>
-                    {roundResults.length}/{rounds} rounds completed
-                  </Text>
+                                            <Text style={styles.summaryHint}>
+                                                {roundResults.length}/{rounds} rounds completed
+                                            </Text>
+                                        </View>
+
+                                        <Text style={styles.sectionTitle}>
+                                            Round Details
+                                        </Text>
+                                    </>
+                                </View>
+                            }
+                            renderItem={({ item }) => {
+                                if ((item as any).empty) {
+                                    return (
+                                        <View style={styles.roundCard}>
+                                            <Text style={styles.roundTitle}>
+                                                No round data available
+                                            </Text>
+
+                                            <Text style={styles.roundMeta}>
+                                                Play again to see the results for each round.
+                                            </Text>
+                                        </View>
+                                    );
+                                }
+
+                                return renderRoundResult({ item } as any);
+                            }}
+                            contentContainerStyle={styles.flatListContent}
+                        />
+
+                        <View style={styles.actions}>
+                            <AnimatedButton
+                                label="Play Again"
+                                onPress={() => {
+                                    leaveRoom();
+                                    playClick();
+                                    router.replace('/single-player-config');
+                                }}
+                                variant="ghost"
+                                style={styles.actionBtn}
+                                textStyle={styles.btnText}
+                            />
+
+                            <AnimatedButton
+                                label="Main Menu"
+                                onPress={() => {
+                                    leaveRoom();
+                                    playClick();
+                                    router.dismissAll();
+                                    router.replace('/home');
+                                }}
+                                variant="ghost"
+                                style={styles.actionBtn}
+                                textStyle={styles.btnText}
+                            />
+                        </View>
+                    </Animated.View>
                 </View>
-
-                <Text style={styles.sectionTitle}>
-                  Round Details
-                </Text>
-              </>
-              </View>
-            }
-            renderItem={({ item }) => {
-              if ((item as any).empty) {
-                return (
-                  <View style={styles.roundCard}>
-                    <Text style={styles.roundTitle}>
-                      No round data available
-                    </Text>
-
-                    <Text style={styles.roundMeta}>
-                      Play again to see the results for each round.
-                    </Text>
-                  </View>
-                );
-              }
-
-              return renderRoundResult({ item } as any);
-            }}
-            contentContainerStyle={styles.flatListContent}
-          />
-
-          <View style={styles.actions}>
-            <AnimatedButton
-              label="Play Again"
-              onPress={() => {
-                leaveRoom();
-                playClick();
-                router.replace('/single-player-config');
-              }}
-              variant="ghost"
-              style={styles.actionBtn}
-              textStyle={styles.btnText}
-            />
-
-            <AnimatedButton
-              label="Main Menu"
-              onPress={() => {
-                leaveRoom();
-                playClick();
-                router.dismissAll();
-                router.replace('/home');
-              }}
-              variant="ghost"
-              style={styles.actionBtn}
-              textStyle={styles.btnText}
-            />
-          </View>
-        </Animated.View>
-      </View>
-    </SafeAreaView>
-  </NotebookBackground>
-);
+            </SafeAreaView>
+        </NotebookBackground>
+    );
 };
 
 export default WinScreen;
@@ -336,9 +336,9 @@ const styles = StyleSheet.create({
         ...Shadow.sketch,
     },
     offlineFrame: {
-  minHeight: height * 0.87,
-  paddingBottom: 0, // bỏ padding dưới
-},
+        minHeight: height * 0.87,
+        paddingBottom: 0, // bỏ padding dưới
+    },
     onlineFrame: {
         minHeight: height * 0.87,
     },
@@ -452,11 +452,11 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.lg,
     },
     sectionTitle: {
-    width: '100%',
-    fontFamily: FontFamily.patrickHand,
-    fontSize: FontSize.lg,
-    color: Colors.warmBlack,
-    marginBottom: Spacing.sm,
+        width: '100%',
+        fontFamily: FontFamily.patrickHand,
+        fontSize: FontSize.lg,
+        color: Colors.warmBlack,
+        marginBottom: Spacing.sm,
     },
     listBlock: {
         flex: 1,
@@ -464,12 +464,12 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.md,
     },
     flatList: {
-    flex: 1,
-    width: '100%',
+        flex: 1,
+        width: '100%',
     },
     flatListContent: {
-    paddingBottom: Spacing.md,
-    gap: Spacing.sm,
+        paddingBottom: Spacing.md,
+        gap: Spacing.sm,
     },
     leaderRow: {
         flexDirection: 'row',
@@ -551,11 +551,11 @@ const styles = StyleSheet.create({
         color: Colors.warmBlack,
     },
     actions: {
-    width: '100%',
-    gap: Spacing.md,
+        width: '100%',
+        gap: Spacing.md,
 
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
+        paddingTop: Spacing.md,
+        paddingBottom: Spacing.sm,
     },
     actionBtn: {
         paddingVertical: Spacing.sm,
@@ -566,7 +566,7 @@ const styles = StyleSheet.create({
         fontSize: FontSize.md,
     },
     listHeader: {
-  width: '100%',
-  alignItems: 'center',
-},
+        width: '100%',
+        alignItems: 'center',
+    },
 });
