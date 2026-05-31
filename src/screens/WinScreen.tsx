@@ -19,6 +19,7 @@ import { useLeaderboard } from '../hooks/useLeaderboard';
 import { useRoom } from '../hooks/useRoom';
 import { useHostGameLifecycle } from '../hooks/useHostGameLifecycle';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { playClick } from '../store/useAudioStore';
 
 const { height } = Dimensions.get('window');
 
@@ -187,6 +188,7 @@ const WinScreen = () => {
                                 <AnimatedButton
                                     label="Back to Lobby"
                                     onPress={() => {
+                                        playClick();
                                         leaveRoom();
                                         router.replace('/lobby');
                                     }}
@@ -282,6 +284,7 @@ const WinScreen = () => {
               label="Play Again"
               onPress={() => {
                 leaveRoom();
+                playClick();
                 router.replace('/single-player-config');
               }}
               variant="ghost"
@@ -293,6 +296,7 @@ const WinScreen = () => {
               label="Main Menu"
               onPress={() => {
                 leaveRoom();
+                playClick();
                 router.dismissAll();
                 router.replace('/home');
               }}
