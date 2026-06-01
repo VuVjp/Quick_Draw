@@ -1,9 +1,4 @@
 import { Skia, ColorType, AlphaType } from '@shopify/react-native-skia';
-import {
-  documentDirectory,
-  writeAsStringAsync,
-} from 'expo-file-system/legacy';
-import * as MediaLibrary from 'expo-media-library';
 
 /**
  * Base64 PNG -> Float32Array tensor [64x64]
@@ -291,75 +286,4 @@ export async function base64ToTensor(
   //await saveDebugImage(tensor);
 
   return tensor;
-}
-
-/**
- * Save tensor image ra Gallery để debug
- */
-async function saveDebugImage(
-  tensor: Float32Array
-): Promise<void> {
-  const size = 64;
-
-  const surface = Skia.Surface.Make(size, size);
-
-  if (!surface) return;
-
-  const canvas = surface.getCanvas();
-
-  for (let i = 0; i < size * size; i++) {
-    const x = i % size;
-    const y = Math.floor(i / size);
-
-    // invert lại để nhìn đúng:
-    // tensor=1 => black stroke
-    // tensor=0 => white bg
-
-    const brightness = Math.round(
-      (tensor[i]) * 255
-    );
-
-    const hex = brightness
-      .toString(16)
-      .padStart(2, '0');
-
-    const color = `#${hex}${hex}${hex}FF`;
-
-    const paint = Skia.Paint();
-
-    paint.setColor(Skia.Color(color));
-
-    canvas.drawRect(
-      Skia.XYWHRect(x, y, 1, 1),
-      paint
-    );
-  }
-
-  const image = surface.makeImageSnapshot();
-
-  const pngBytes = image.encodeToBytes();
-
-  const binary = Array.from(pngBytes)
-    .map((b) => String.fromCharCode(b))
-    .join('');
-
-  const base64Png = btoa(binary);
-
-  const path =
-    documentDirectory + `debug_tensor_${Date.now()}.png`;
-
-  await writeAsStringAsync(path, base64Png, {
-    encoding: 'base64',
-  });
-
-  const { status } =
-    await MediaLibrary.requestPermissionsAsync();
-
-  if (status === 'granted') {
-    await MediaLibrary.saveToLibraryAsync(path);
-
-    console.log(
-      '✅ Debug tensor image saved'
-    );
-  }
 }

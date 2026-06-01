@@ -12,6 +12,13 @@
       "supportsTablet": true
     },
     "android": {
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED"
+      ],
       "icon": "./assets/logo/logo.png",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -72,7 +79,9 @@
       [
         "expo-assets",
         {
-          "assetExtensions": ["tflite"]
+          "assetExtensions": [
+            "tflite"
+          ]
         }
       ],
       "expo-audio",
