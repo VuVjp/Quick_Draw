@@ -127,20 +127,20 @@ export function useLeaderboard(roomId?: string | null) {
     const confirmMvp = useCallback(async (uid: string) => {
         if (!roomKey) return;
 
-        setLoading(true);
-        try {
-            await firestore().collection('rooms').doc(roomKey).update({
-                mvpUid: uid,
-                mvpReason: 'fastest_draw',
-                status: 'game_end',
-                endedAt: firestore.FieldValue.serverTimestamp(),
-            });
-        } finally {
-            setLoading(false);
-        }
+        // setLoading(true);
+        // try {
+        //     await firestore().collection('rooms').doc(roomKey).update({
+        //         mvpUid: uid,
+        //         mvpReason: 'fastest_draw',
+        //         status: 'game_end',
+        //         endedAt: firestore.FieldValue.serverTimestamp(),
+        //     });
+        // } finally {
+        //     setLoading(false);
+        // }
     }, [roomKey]);
 
-    const isHost = leaderboard.find((p) => p.uid === currentUid)?.isHost ?? false;
+    const isHost = players.find(p => p.uid === currentUid)?.isHost;
 
     return {
         players: leaderboard,

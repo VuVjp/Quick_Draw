@@ -357,7 +357,7 @@ const RoomScreen = () => {
                 style={styles.flex1}
               />
               <AnimatedButton
-                label="Start"
+                label="Start Game"
                 onPress={() => {
                   playClick();
                   handleStartGame();

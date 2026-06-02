@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Dimensions,
   ActivityIndicator,
+  Dimensions,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -16,24 +16,24 @@ import Animated, {
   withSequence,
   withSpring
 } from 'react-native-reanimated';
-import { Colors } from '../theme/colors';
-import { FontFamily, FontSize } from '../theme/typography';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Spacing, Radius, Shadow } from '../theme/spacing';
-import DrawingCanvas, { DrawingCanvasRef } from '../canvas/DrawingCanvas';
 import BrushToolbar from '../canvas/BrushToolbar';
-import InGameRanking from '../components/InGameRanking';
-import { useGameStore } from '../store/useGameStore';
-import { useDrawingStore } from '../store/useDrawingStore';
-import { useTimer } from '../hooks/useTimer';
-import NotebookBackground from '../components/NotebookBackground';
+import DrawingCanvas, { DrawingCanvasRef } from '../canvas/DrawingCanvas';
 import AnimatedButton from '../components/AnimatedButton';
+import InGameRanking from '../components/InGameRanking';
+import NotebookBackground from '../components/NotebookBackground';
 import { useDrawingInference } from '../hooks/useDrawingInference';
-import { auth } from '../services/firebase';
+import { useHostElection } from '../hooks/useHostElection';
+import { useHostGameLifecycle } from '../hooks/useHostGameLifecycle';
 import { useRoom } from '../hooks/useRoom';
 import { useSubmitDrawing } from '../hooks/useSubmitDrawing';
-import { useHostGameLifecycle } from '../hooks/useHostGameLifecycle';
-import { useHostElection } from '../hooks/useHostElection';
+import { useTimer } from '../hooks/useTimer';
+import { auth } from '../services/firebase';
+import { useDrawingStore } from '../store/useDrawingStore';
+import { useGameStore } from '../store/useGameStore';
+import { Colors } from '../theme/colors';
+import { Radius, Shadow, Spacing } from '../theme/spacing';
+import { FontFamily, FontSize } from '../theme/typography';
 
 
 const { width, height } = Dimensions.get('window');
@@ -288,8 +288,8 @@ const DrawingScreen = () => {
 
         const result = await runInference(base64, currentWord);
         if (result?.label) {
-  setCurrentGuess(result.label);
-}
+          setCurrentGuess(result.label);
+        }
         //console.log('Inference result:', result);
 
         if (isSinglePlayer) {
@@ -322,11 +322,13 @@ const DrawingScreen = () => {
             aiScore: result.score,
           });
           submittedRoundRef.current = roundId;
+          setCurrentGuess(currentWord);
           console.log('[Client] submitted pending result', { roomId, roundId, score: result.score, label: result.label });
         }
       } catch (e) {
         console.error('Inference error:', e);
       } finally {
+        setCurrentGuess(currentWord);
         isInferencing.current = false;
       }
     }, 300); // moderate polling
@@ -409,27 +411,27 @@ const DrawingScreen = () => {
 
         {/* ── In-Game Ranking Tab ── */}
         <InGameRanking />
-<View
-  style={[
-    styles.aiPanel,
-    guessedCorrectly && styles.aiPanelCorrect,
-  ]}
->
-  <Text style={styles.aiTitle}>
-    {guessedCorrectly
-      ? 'AI guessed correctly!'
-      : 'AI thinks it is:'}
-  </Text>
+        <View
+          style={[
+            styles.aiPanel,
+            guessedCorrectly && styles.aiPanelCorrect,
+          ]}
+        >
+          <Text style={styles.aiTitle}>
+            {guessedCorrectly
+              ? 'AI guessed correctly!'
+              : 'AI thinks it is:'}
+          </Text>
 
-  <Text
-    style={[
-      styles.aiGuess,
-      guessedCorrectly && styles.aiGuessCorrect,
-    ]}
-  >
-    {currentGuess}
-  </Text>
-</View>
+          <Text
+            style={[
+              styles.aiGuess,
+              guessedCorrectly && styles.aiGuessCorrect,
+            ]}
+          >
+            {currentGuess}
+          </Text>
+        </View>
         {/* ── Canvas ── */}
         <View style={styles.canvasContainer}>
           <View
@@ -674,52 +676,52 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   aiPanel: {
-  marginHorizontal: Spacing.xl,
-  marginBottom: Spacing.sm,
-  backgroundColor: Colors.paperWhite,
-  borderRadius: Radius.lg,
-  borderWidth: 1.5,
-  borderColor: Colors.border,
-  paddingVertical: 12,
-  alignItems: 'center',
-  ...Shadow.sketch,
-},
+    marginHorizontal: Spacing.xl,
+    marginBottom: Spacing.sm,
+    backgroundColor: Colors.paperWhite,
+    borderRadius: Radius.lg,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    paddingVertical: 12,
+    alignItems: 'center',
+    ...Shadow.sketch,
+  },
 
-aiPanelCorrect: {
-  borderColor: '#22C55E',
-  backgroundColor: '#F0FDF4',
-},
+  aiPanelCorrect: {
+    borderColor: '#22C55E',
+    backgroundColor: '#F0FDF4',
+  },
 
-aiTitle: {
-  fontFamily: FontFamily.patrickHand,
-  fontSize: FontSize.md,
-  color: Colors.warmBlack,
-  opacity: 0.7,
-},
+  aiTitle: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.md,
+    color: Colors.warmBlack,
+    opacity: 0.7,
+  },
 
-aiGuess: {
-  marginTop: 2,
-  fontFamily: FontFamily.patrickHand,
-  fontSize: 30,
-  color: '#3B82F6',
-},
+  aiGuess: {
+    marginTop: 2,
+    fontFamily: FontFamily.patrickHand,
+    fontSize: 30,
+    color: '#3B82F6',
+  },
 
-aiGuessCorrect: {
-  color: '#16A34A',
-  fontSize: 34,
-},
+  aiGuessCorrect: {
+    color: '#16A34A',
+    fontSize: 34,
+  },
 
-aiHistory: {
-  marginTop: 6,
-  flexDirection: 'row',
-  flexWrap: 'wrap',
-  justifyContent: 'center',
-  gap: 8,
-},
+  aiHistory: {
+    marginTop: 6,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+  },
 
-aiHistoryText: {
-  fontFamily: FontFamily.caveatBold,
-  fontSize: 16,
-  color: '#666',
-},
+  aiHistoryText: {
+    fontFamily: FontFamily.caveatBold,
+    fontSize: 16,
+    color: '#666',
+  },
 });
