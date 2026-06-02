@@ -1,14 +1,15 @@
+import { Feather } from '@expo/vector-icons';
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Dimensions } from 'react-native';
-import { Colors } from '../theme/colors';
-import { FontFamily } from '../theme/typography';
-import { Spacing, Radius, Shadow } from '../theme/spacing';
-import { ERASER_SIZES, useDrawingStore } from '../store/useDrawingStore';
-import { playClick } from '../store/useAudioStore';
+import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import BrushIcon from '../../assets/brush-icon.svg';
-import EraserIcon from '../../assets/Icon/eraser.svg';
 import UndoIcon from '../../assets/Icon/arrow-big-left.svg';
 import RedoIcon from '../../assets/Icon/arrow-big-right.svg';
+import EraserIcon from '../../assets/Icon/eraser.svg';
+import { playClick } from '../store/useAudioStore';
+import { ERASER_SIZES, useDrawingStore } from '../store/useDrawingStore';
+import { Colors } from '../theme/colors';
+import { Radius, Shadow, Spacing } from '../theme/spacing';
+import { FontFamily } from '../theme/typography';
 
 const { width } = Dimensions.get('window');
 
@@ -126,7 +127,7 @@ const BrushToolbar = ({ onUndo, onRedo, onClear, disabled = false }: Props) => {
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => { if (disabled) return; playClick(); onClear(); }} style={[styles.toolBtn, disabled && styles.toolBtnDisabled]} activeOpacity={disabled ? 1 : 0.7}>
-          <Text style={styles.clearText}>🗑</Text>
+          <Feather name="delete" size={24} color={Colors.warmBlack} />
         </TouchableOpacity>
       </View>
     </View>
