@@ -35,7 +35,7 @@ const RoundEndScreen = () => {
 
   const currentRoundResult = useMemo(
     () => roundResults.find(r => r.round === currentRound),
-    [roundResults, currentRound]
+    []
   );
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -225,7 +225,7 @@ const RoundEndScreen = () => {
           styles.artworkContainer,
           !isSinglePlayer && { flex: 1 }
         ]}>
-          <Text style={styles.artworkTitle}>Best Artwork</Text>
+          <Text style={styles.artworkTitle}>{isSinglePlayer ? 'Your Artwork' : 'Best Artwork'}</Text>
           <View
             style={[
               styles.canvasWrapper,
