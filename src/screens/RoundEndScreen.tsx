@@ -31,6 +31,12 @@ const RoundEndScreen = () => {
 
   const isLastRound = useRef(currentRound >= rounds).current;
   const isSinglePlayer = useGameStore((s) => s.isSinglePlayer);
+  const roundResults = useGameStore((s) => s.roundResults);
+
+const currentRoundResult = useMemo(
+  () => roundResults.find(r => r.round === currentRound),
+  [roundResults, currentRound]
+);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [countdown, setCountdown] = useState<number>(5);
@@ -173,7 +179,12 @@ const RoundEndScreen = () => {
 
   return (
     <NotebookBackground>
-      <View style={styles.container}>
+      <View
+  style={[
+    styles.container,
+    isSinglePlayer && styles.containerSolo
+  ]}
+>
         <Animated.View entering={FadeIn.duration(600)} style={styles.header}>
           <Text style={styles.title}>ROUND END {currentRound}/{rounds}</Text>
           {!isSinglePlayer && (
@@ -208,10 +219,21 @@ const RoundEndScreen = () => {
             />)}
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(200).springify()} style={[styles.artworkContainer, { flex: 1 }]}>
+        <Animated.View entering={FadeInDown.delay(200).springify()} style={[
+  styles.artworkContainer,
+  !isSinglePlayer && { flex: 1 }
+]}>
           <Text style={styles.artworkTitle}>Best Artwork</Text>
           <View
-            style={[styles.canvasWrapper, { flex: 1, width: '100%', marginBottom: Spacing.md }]}
+            style={[
+  styles.canvasWrapper,
+  {
+    width: '100%',
+    height: isSinglePlayer ? 340 : undefined,
+    flex: isSinglePlayer ? undefined : 1,
+    marginBottom: Spacing.lg,
+  }
+]}
             onLayout={(e) => {
               const { width: w, height: h } = e.nativeEvent.layout;
               if (w > 0 && h > 0) {
@@ -302,6 +324,33 @@ const RoundEndScreen = () => {
               fullWidth
             />
           )}
+         {isSinglePlayer && currentRoundResult && (
+  <View
+    style={[
+      styles.aiResultCard,
+      currentRoundResult.aiCorrect
+        ? styles.aiResultSuccess
+        : styles.aiResultFail,
+    ]}
+  >
+    <Text style={styles.aiResultTitle}>
+      {currentRoundResult.aiCorrect
+        ? 'AI Guessed It!'
+        : 'AI Missed It'}
+    </Text>
+
+    {currentRoundResult.aiCorrect ? (
+      <Text style={styles.aiResultText}>
+        Guessed "{currentRoundResult.aiLabel}" in{" "}
+        {currentRoundResult.timeSpent}s
+      </Text>
+    ) : (
+      <Text style={styles.aiResultText}>
+        AI couldn't recognize the drawing
+      </Text>
+    )}
+  </View>
+)}
           {isSinglePlayer && (
             <AnimatedButton
               label={isLastRound ? "View Summary" : "Next Round"}
@@ -325,18 +374,18 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   header: {
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-  },
+  alignItems: 'center',
+  marginBottom: Spacing.md, // thay vì xl
+},
   title: {
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.xxl,
     color: Colors.warmBlack,
   },
   artworkContainer: {
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-  },
+  alignItems: 'center',
+  marginBottom: Spacing.md,
+},
   artworkTitle: {
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.lg,
@@ -451,8 +500,9 @@ const styles = StyleSheet.create({
     color: Colors.warmBlack,
   },
   footer: {
-    marginBottom: Spacing.md,
-  },
+  marginTop: Spacing.sm,
+  marginBottom: 24,
+},
   countdownBox: {
     width: '100%',
     backgroundColor: Colors.primaryYellow,
@@ -534,4 +584,40 @@ const styles = StyleSheet.create({
   miniPlayerScorePositive: {
     color: '#4A9B6F',
   },
+  aiResultCard: {
+  width: '100%',
+  borderRadius: Radius.lg,
+  borderWidth: 2,
+  padding: Spacing.md,
+  marginTop: -18,
+  marginBottom: Spacing.md,
+},
+
+aiResultSuccess: {
+  backgroundColor: '#E7F8EC',
+  borderColor: '#4CAF50',
+},
+
+aiResultFail: {
+  backgroundColor: '#FDECEC',
+  borderColor: '#E57373',
+},
+
+aiResultTitle: {
+  fontFamily: FontFamily.patrickHand,
+  fontSize: FontSize.lg,
+  color: Colors.warmBlack,
+  textAlign: 'center',
+  marginBottom: Spacing.xs,
+},
+
+aiResultText: {
+  fontFamily: FontFamily.patrickHand,
+  fontSize: FontSize.md,
+  color: Colors.warmBlack,
+  textAlign: 'center',
+},
+containerSolo: {
+  justifyContent: 'flex-start',
+},
 });
