@@ -5,7 +5,7 @@ export default {
   ...appJson.expo,  // kế thừa toàn bộ app.json
   android: {
     ...appJson.expo.android,
-    googleServicesFile: "./google-services.json",
+    googleServicesFile: process.env.GOOGLE_SERVICES_JSON || './google-services.json',
   },
   extra: {
     eas: {
