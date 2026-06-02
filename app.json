@@ -44,18 +44,6 @@
     "plugins": [
       "@react-native-firebase/app",
       "@react-native-google-signin/google-signin",
-      "expo-build-properties",
-      {
-        "android": {
-          "packagingOptions": {
-            "pickFirst": [
-              "**/libnetcompat.so"
-            ]
-          },
-          "extraProguardRules": "-keep class org.tensorflow.lite.** { *; }\n-keep class com.google.android.gms.tflite.** { *; }\n-keep class com.margelo.nitro.** { *; }\n-keepclasseswithmembernames class * {\n    native <methods>;\n}\n-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod"
-        }
-      },
-      "./plugins/withTfliteNoCompress.js",
       "expo-router",
       [
         "expo-splash-screen",
@@ -77,11 +65,24 @@
         }
       ],
       [
-        "expo-assets",
+        "expo-asset",
         {
           "assetExtensions": [
             "tflite"
           ]
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "packagingOptions": {
+              "pickFirst": [
+                "**/libnetcompat.so"
+              ]
+            },
+            "extraProguardRules": "-keep class org.tensorflow.lite.** { *; }\n-keep class com.google.android.gms.tflite.** { *; }\n-keep class com.margelo.nitro.** { *; }\n-keepclasseswithmembernames class * {\n    native <methods>;\n}\n-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod"
+          }
         }
       ],
       "expo-audio",

@@ -1,9 +1,6 @@
 // src/services/firebase.ts
-// Centralized Firebase initialization using the modular v9+ API
-import { getApp } from '@react-native-firebase/app';
-import { getFirestore } from '@react-native-firebase/firestore';
-import { getAuth } from '@react-native-firebase/auth';
+import firebaseAuth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
-export const app = getApp();
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+export const db = firestore();
+export const auth = firebaseAuth();
