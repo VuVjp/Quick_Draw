@@ -1,18 +1,18 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image } from 'react-native';
+import firestore from '@react-native-firebase/firestore';
 import { useRouter } from 'expo-router';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import { Colors } from '../theme/colors';
-import { FontFamily, FontSize } from '../theme/typography';
-import { Spacing, Radius } from '../theme/spacing';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { FlatList, Image, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import ReadOnlyCanvas from '../canvas/ReadOnlyCanvas';
 import AnimatedButton from '../components/AnimatedButton';
 import NotebookBackground from '../components/NotebookBackground';
-import { useGameStore } from '../store/useGameStore';
-import ReadOnlyCanvas from '../canvas/ReadOnlyCanvas';
-import { useRoom } from '../hooks/useRoom';
 import { useHostGameLifecycle } from '../hooks/useHostGameLifecycle';
 import { useLeaderboard } from '../hooks/useLeaderboard';
-import firestore from '@react-native-firebase/firestore';
+import { useRoom } from '../hooks/useRoom';
+import { useGameStore } from '../store/useGameStore';
+import { Colors } from '../theme/colors';
+import { Radius, Spacing } from '../theme/spacing';
+import { FontFamily, FontSize } from '../theme/typography';
 
 const RoundEndScreen = () => {
   const router = useRouter();
@@ -33,12 +33,14 @@ const RoundEndScreen = () => {
   const isSinglePlayer = useGameStore((s) => s.isSinglePlayer);
   const roundResults = useGameStore((s) => s.roundResults);
 
-const currentRoundResult = useMemo(
-  () => roundResults.find(r => r.round === currentRound),
-  [roundResults, currentRound]
-);
+  const currentRoundResult = useMemo(
+    () => roundResults.find(r => r.round === currentRound),
+    [roundResults, currentRound]
+  );
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const { height: windowHeight } = useWindowDimensions();
+  const singlePlayerCanvasHeight = Math.round(Math.max(300, Math.min(0.58 * windowHeight, 720)));
   const [countdown, setCountdown] = useState<number>(5);
   const isOnline = !!roomId;
   const displayedPlayers = isOnline ? leaderboardPlayers : players;
@@ -180,11 +182,11 @@ const currentRoundResult = useMemo(
   return (
     <NotebookBackground>
       <View
-  style={[
-    styles.container,
-    isSinglePlayer && styles.containerSolo
-  ]}
->
+        style={[
+          styles.container,
+          isSinglePlayer && styles.containerSolo
+        ]}
+      >
         <Animated.View entering={FadeIn.duration(600)} style={styles.header}>
           <Text style={styles.title}>ROUND END {currentRound}/{rounds}</Text>
           {!isSinglePlayer && (
@@ -220,20 +222,20 @@ const currentRoundResult = useMemo(
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(200).springify()} style={[
-  styles.artworkContainer,
-  !isSinglePlayer && { flex: 1 }
-]}>
+          styles.artworkContainer,
+          !isSinglePlayer && { flex: 1 }
+        ]}>
           <Text style={styles.artworkTitle}>Best Artwork</Text>
           <View
             style={[
-  styles.canvasWrapper,
-  {
-    width: '100%',
-    height: isSinglePlayer ? 340 : undefined,
-    flex: isSinglePlayer ? undefined : 1,
-    marginBottom: Spacing.lg,
-  }
-]}
+              styles.canvasWrapper,
+              {
+                width: '100%',
+                height: isSinglePlayer ? singlePlayerCanvasHeight : undefined,
+                flex: isSinglePlayer ? undefined : 1,
+                marginBottom: Spacing.lg,
+              }
+            ]}
             onLayout={(e) => {
               const { width: w, height: h } = e.nativeEvent.layout;
               if (w > 0 && h > 0) {
@@ -324,33 +326,33 @@ const currentRoundResult = useMemo(
               fullWidth
             />
           )}
-         {isSinglePlayer && currentRoundResult && (
-  <View
-    style={[
-      styles.aiResultCard,
-      currentRoundResult.aiCorrect
-        ? styles.aiResultSuccess
-        : styles.aiResultFail,
-    ]}
-  >
-    <Text style={styles.aiResultTitle}>
-      {currentRoundResult.aiCorrect
-        ? 'AI Guessed It!'
-        : 'AI Missed It'}
-    </Text>
+          {isSinglePlayer && currentRoundResult && (
+            <View
+              style={[
+                styles.aiResultCard,
+                currentRoundResult.aiCorrect
+                  ? styles.aiResultSuccess
+                  : styles.aiResultFail,
+              ]}
+            >
+              <Text style={styles.aiResultTitle}>
+                {currentRoundResult.aiCorrect
+                  ? 'AI Guessed It!'
+                  : 'AI Missed It'}
+              </Text>
 
-    {currentRoundResult.aiCorrect ? (
-      <Text style={styles.aiResultText}>
-        Guessed "{currentRoundResult.aiLabel}" in{" "}
-        {currentRoundResult.timeSpent}s
-      </Text>
-    ) : (
-      <Text style={styles.aiResultText}>
-        AI couldn't recognize the drawing
-      </Text>
-    )}
-  </View>
-)}
+              {currentRoundResult.aiCorrect ? (
+                <Text style={styles.aiResultText}>
+                  Guessed `{currentRoundResult.aiLabel}`` in{" "}
+                  {currentRoundResult.timeSpent}s
+                </Text>
+              ) : (
+                <Text style={styles.aiResultText}>
+                  AI couldn't recognize the drawing
+                </Text>
+              )}
+            </View>
+          )}
           {isSinglePlayer && (
             <AnimatedButton
               label={isLastRound ? "View Summary" : "Next Round"}
@@ -374,18 +376,18 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   header: {
-  alignItems: 'center',
-  marginBottom: Spacing.md, // thay vì xl
-},
+    alignItems: 'center',
+    marginBottom: Spacing.md, // thay vì xl
+  },
   title: {
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.xxl,
     color: Colors.warmBlack,
   },
   artworkContainer: {
-  alignItems: 'center',
-  marginBottom: Spacing.md,
-},
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
   artworkTitle: {
     fontFamily: FontFamily.patrickHand,
     fontSize: FontSize.lg,
@@ -500,9 +502,9 @@ const styles = StyleSheet.create({
     color: Colors.warmBlack,
   },
   footer: {
-  marginTop: Spacing.sm,
-  marginBottom: 24,
-},
+    marginTop: Spacing.sm,
+    marginBottom: 24,
+  },
   countdownBox: {
     width: '100%',
     backgroundColor: Colors.primaryYellow,
@@ -585,39 +587,39 @@ const styles = StyleSheet.create({
     color: '#4A9B6F',
   },
   aiResultCard: {
-  width: '100%',
-  borderRadius: Radius.lg,
-  borderWidth: 2,
-  padding: Spacing.md,
-  marginTop: -18,
-  marginBottom: Spacing.md,
-},
+    width: '100%',
+    borderRadius: Radius.lg,
+    borderWidth: 2,
+    padding: Spacing.md,
+    marginTop: -18,
+    marginBottom: Spacing.md,
+  },
 
-aiResultSuccess: {
-  backgroundColor: '#E7F8EC',
-  borderColor: '#4CAF50',
-},
+  aiResultSuccess: {
+    backgroundColor: '#E7F8EC',
+    borderColor: '#4CAF50',
+  },
 
-aiResultFail: {
-  backgroundColor: '#FDECEC',
-  borderColor: '#E57373',
-},
+  aiResultFail: {
+    backgroundColor: '#FDECEC',
+    borderColor: '#E57373',
+  },
 
-aiResultTitle: {
-  fontFamily: FontFamily.patrickHand,
-  fontSize: FontSize.lg,
-  color: Colors.warmBlack,
-  textAlign: 'center',
-  marginBottom: Spacing.xs,
-},
+  aiResultTitle: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.lg,
+    color: Colors.warmBlack,
+    textAlign: 'center',
+    marginBottom: Spacing.xs,
+  },
 
-aiResultText: {
-  fontFamily: FontFamily.patrickHand,
-  fontSize: FontSize.md,
-  color: Colors.warmBlack,
-  textAlign: 'center',
-},
-containerSolo: {
-  justifyContent: 'flex-start',
-},
+  aiResultText: {
+    fontFamily: FontFamily.patrickHand,
+    fontSize: FontSize.md,
+    color: Colors.warmBlack,
+    textAlign: 'center',
+  },
+  containerSolo: {
+    justifyContent: 'flex-start',
+  },
 });

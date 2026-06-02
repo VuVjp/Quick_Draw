@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
 import firestore from '@react-native-firebase/firestore';
+import { useEffect, useRef } from 'react';
 import type { RoomState } from './useRoom';
 
 type HostElectionOptions = {
@@ -21,7 +21,7 @@ export function useHostElection(
     uid?: string | null,
     options?: HostElectionOptions
 ) {
-    const timeoutMs = options?.timeoutMs ?? 30000;
+    const timeoutMs = options?.timeoutMs ?? 15000;
     const inFlightRef = useRef(false);
 
     useEffect(() => {
@@ -72,10 +72,10 @@ export function useHostElection(
                     tx.update(roomRef, { hostId: nextHostId });
                     tx.set(newHostRef, { isHost: true }, { merge: true });
 
-                    if (currentHostId && currentHostId !== nextHostId) {
-                        const oldHostRef = roomRef.collection('players').doc(currentHostId);
-                        tx.set(oldHostRef, { isHost: false }, { merge: true });
-                    }
+                    // if (currentHostId && currentHostId !== nextHostId) {
+                    //     const oldHostRef = roomRef.collection('players').doc(currentHostId);
+                    //     tx.set(oldHostRef, { isHost: false }, { merge: true });
+                    // }
                 });
             } catch (err) {
                 console.warn('[useHostElection] failed to elect host', err);
