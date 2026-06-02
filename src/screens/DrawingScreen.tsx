@@ -9,6 +9,7 @@ import {
   View
 } from 'react-native';
 import { playClick } from '../store/useAudioStore';
+
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -103,7 +104,8 @@ const DrawingScreen = () => {
   const currentUid = uid || auth.currentUser?.uid || null;
   const lastRoomSyncKeyRef = useRef<string>('');
   const roundEndNavigateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  const [currentGuess, setCurrentGuess] = useState('...');
+  const [guessedCorrectly, setGuessedCorrectly] = useState(false);
   // useHostGameMaster(roomId ?? '', room?.roundDurationSecs ?? drawTime);
 
   const saveDrawingToStore = useCallback((scores: Record<string, number>, strokes: any[], size?: { width: number, height: number }) => {
@@ -285,11 +287,15 @@ const DrawingScreen = () => {
         }
 
         const result = await runInference(base64, currentWord);
+        if (result?.label) {
+  setCurrentGuess(result.label);
+}
         //console.log('Inference result:', result);
 
         if (isSinglePlayer) {
           if (!result) return;
           if (result.accepted) {
+            setGuessedCorrectly(true);
             recordSinglePlayerRound(true, result.label, result.score);
             const scores = drawTime > 0 && timeLeft > 0
               ? {
@@ -403,7 +409,27 @@ const DrawingScreen = () => {
 
         {/* ── In-Game Ranking Tab ── */}
         <InGameRanking />
+<View
+  style={[
+    styles.aiPanel,
+    guessedCorrectly && styles.aiPanelCorrect,
+  ]}
+>
+  <Text style={styles.aiTitle}>
+    {guessedCorrectly
+      ? 'AI guessed correctly!'
+      : 'AI thinks it is:'}
+  </Text>
 
+  <Text
+    style={[
+      styles.aiGuess,
+      guessedCorrectly && styles.aiGuessCorrect,
+    ]}
+  >
+    {currentGuess}
+  </Text>
+</View>
         {/* ── Canvas ── */}
         <View style={styles.canvasContainer}>
           <View
@@ -647,4 +673,53 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     opacity: 0.85,
   },
+  aiPanel: {
+  marginHorizontal: Spacing.xl,
+  marginBottom: Spacing.sm,
+  backgroundColor: Colors.paperWhite,
+  borderRadius: Radius.lg,
+  borderWidth: 1.5,
+  borderColor: Colors.border,
+  paddingVertical: 12,
+  alignItems: 'center',
+  ...Shadow.sketch,
+},
+
+aiPanelCorrect: {
+  borderColor: '#22C55E',
+  backgroundColor: '#F0FDF4',
+},
+
+aiTitle: {
+  fontFamily: FontFamily.patrickHand,
+  fontSize: FontSize.md,
+  color: Colors.warmBlack,
+  opacity: 0.7,
+},
+
+aiGuess: {
+  marginTop: 2,
+  fontFamily: FontFamily.patrickHand,
+  fontSize: 30,
+  color: '#3B82F6',
+},
+
+aiGuessCorrect: {
+  color: '#16A34A',
+  fontSize: 34,
+},
+
+aiHistory: {
+  marginTop: 6,
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  justifyContent: 'center',
+  gap: 8,
+},
+
+aiHistoryText: {
+  fontFamily: FontFamily.caveatBold,
+  fontSize: 16,
+  color: '#666',
+},
 });
