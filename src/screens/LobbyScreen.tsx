@@ -448,11 +448,8 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     marginTop: Spacing.sm,
   },
-  modalBtn: {
-    flex: 1,
-    flexBasis: 0,
-    minWidth: 140,
-    minHeight: 60,
-    justifyContent: 'center',
-  },
+ modalBtn: {
+  flex: 1,
+  minHeight: 56,
+}
 });

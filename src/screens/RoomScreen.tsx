@@ -359,7 +359,7 @@ const RoomScreen = () => {
                 style={styles.flex1}
               />
               <AnimatedButton
-                label="Start Game"
+                label="Start"
                 onPress={() => {
                   playClick();
                   handleStartGame();
@@ -585,4 +585,5 @@ const styles = StyleSheet.create({
   flex2: {
     flex: 2,
   },
+  
 });

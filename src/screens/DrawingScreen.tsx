@@ -131,6 +131,7 @@ const DrawingScreen = () => {
   }, [currentRound, currentWord, drawTime, timeLeft]);
 
   const handleRoundExpire = useCallback(() => {
+    console.log('TIME EXPIRED');
     if (roomId) {
       return;
     }
@@ -359,6 +360,7 @@ const DrawingScreen = () => {
   ]);
 
   useTimer(undefined, () => {
+    console.log('TIMER CALLBACK');
     if (roomId) {
       void finishRound();
       return;
