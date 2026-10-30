@@ -1,50 +1,89 @@
-# Welcome to your Expo app 👋
+# Quick Draw
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Ứng dụng vẽ và đoán hình theo thời gian thực, xây dựng bằng Expo, React Native,
+Firebase và TensorFlow Lite.
 
-## Get started
+## Yêu cầu
 
-1. Install dependencies
+- Node.js LTS và npm
+- Android Studio, Android SDK và một Android Emulator **hoặc** thiết bị Android
+- JDK tương thích với phiên bản React Native/Expo đang sử dụng
+- Tài khoản Firebase nếu cần đăng nhập, chơi nhiều người hoặc lưu dữ liệu
 
-   ```bash
-   npm install
-   ```
+Các thư viện native như React Native Skia, Firebase và TensorFlow Lite yêu cầu
+development build. Expo Go có thể không chạy đầy đủ ứng dụng này.
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Clone và cài đặt
 
 ```bash
-npm run reset-project
+git clone https://github.com/VuVjp/Quick_Draw.git
+cd Quick_Draw
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Cấu hình Firebase
 
-## Learn more
+1. Tạo hoặc chọn một project trên [Firebase Console](https://console.firebase.google.com/).
+2. Bật các dịch vụ cần thiết:
+   - Authentication: Anonymous và Google (nếu sử dụng đăng nhập Google).
+   - Cloud Firestore.
+3. Tải file cấu hình Android `google-services.json`.
+4. Đặt file vào thư mục gốc của dự án:
 
-To learn more about developing your project with Expo, look at the following resources:
+   ```text
+   Quick_Draw/google-services.json
+   ```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+File này đã được thêm vào `.gitignore`, không commit file cấu hình riêng của
+Firebase lên repository. Khi build bằng EAS, có thể truyền đường dẫn file qua
+biến môi trường `GOOGLE_SERVICES_JSON`.
 
-## Join the community
+## Khởi chạy trên Android
 
-Join our community of developers creating universal apps.
+Khởi động Metro Bundler:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npx expo start --dev-client
+```
+
+Hoặc build và cài development build trực tiếp lên emulator/thiết bị Android:
+
+```bash
+npm run android
+```
+
+Nếu dùng thiết bị thật, bật **Developer options** và **USB debugging**, sau đó
+kết nối thiết bị trước khi chạy lệnh trên. Có thể dùng phím `a` trong cửa sổ
+Expo để mở ứng dụng trên Android Emulator đang chạy.
+
+## Các lệnh thường dùng
+
+| Lệnh | Mục đích |
+| --- | --- |
+| `npm run start` | Khởi động Expo |
+| `npm run android` | Build và chạy development build Android |
+| `npm run ios` | Build và chạy trên iOS Simulator (macOS cần Xcode) |
+| `npm run web` | Chạy bản web |
+| `npm run lint` | Kiểm tra ESLint |
+
+## Cấu trúc chính
+
+- `app/`: màn hình và định tuyến bằng Expo Router.
+- `src/hooks/`: logic xác thực, phòng chơi, lượt chơi và Firestore.
+- `src/services/`: khởi tạo các dịch vụ dùng chung, bao gồm Firebase.
+- `assets/model.tflite`: mô hình nhận diện nét vẽ.
+
+## Xử lý lỗi thường gặp
+
+- **Thiếu `google-services.json`**: đặt đúng file vào thư mục gốc hoặc truyền
+  biến `GOOGLE_SERVICES_JSON` khi build.
+- **Không đăng nhập được Google**: kiểm tra Google provider đã bật trong Firebase
+  và Android app đã được đăng ký đúng package `com.BeHold.Quick_Draw`.
+- **Không kết nối được thiết bị**: kiểm tra emulator đã khởi động, hoặc thiết bị
+  thật đã bật USB debugging và được Android Studio nhận diện.
+
+## Tài liệu tham khảo
+
+- [Expo documentation](https://docs.expo.dev/)
+- [Expo Router](https://docs.expo.dev/router/introduction/)
+- [React Native Firebase](https://rnfirebase.io/)
